@@ -6,6 +6,8 @@
   <title>Formulae — Film Lab Chemical Database</title>
   <meta name="description" content="Store, manage, search, and version-control your photographic chemical formulas — built for the darkroom." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.0/dist/jspdf.umd.min.js"></script>
   <style>
     /* ── Reset & Tokens ──────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -879,7 +881,8 @@
   <div class="detail-inner">
     <div class="detail-back">
       <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← Back</button>
-      <button class="btn btn-secondary btn-sm" onclick="printDetail()" title="Print / save as PDF">⬇ PDF</button>
+      <button class="btn btn-secondary btn-sm" onclick="downloadDetailPDF()" title="Download as PDF">⬇ PDF</button>
+      <button class="btn btn-secondary btn-sm" onclick="downloadDetailJPEG()" title="Download as JPEG">⬇ JPEG</button>
     </div>
     <div id="detail-content"></div>
   </div>
@@ -1418,6 +1421,67 @@ function clearScale() {
 }
 
 /* ─── PDF / Print ────────────────────────────────────────────── */
+function downloadDetailPDF() {
+  const f = db.find(x => x.id === currentDetailId);
+  if (!f) { toast('No formula selected', 'error'); return; }
+  const el = document.getElementById('detail-content');
+  html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(function(canvas) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const margin = 15;
+    const usable = pageW - margin * 2;
+
+    // Header: formula title
+    pdf.setFontSize(18);
+    pdf.setFont(undefined, 'bold');
+    pdf.text(f.name, margin, 20);
+    pdf.setDrawColor(200);
+    pdf.line(margin, 23, pageW - margin, 23);
+
+    // Add captured image below header
+    const imgData = canvas.toDataURL('image/png');
+    const ratio = canvas.height / canvas.width;
+    const imgW = usable;
+    const imgH = imgW * ratio;
+    const startY = 28;
+    const pageH = pdf.internal.pageSize.getHeight();
+    const availH = pageH - startY - 10;
+
+    if (imgH <= availH) {
+      pdf.addImage(imgData, 'PNG', margin, startY, imgW, imgH);
+    } else {
+      // Scale to fit single page
+      const scale = availH / imgH;
+      pdf.addImage(imgData, 'PNG', margin, startY, imgW * scale, availH);
+    }
+
+    const safeName = f.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+    pdf.save(safeName + '.pdf');
+    toast('PDF downloaded ✓', 'success');
+  }).catch(function(err) {
+    console.error('PDF generation error:', err);
+    toast('PDF generation failed', 'error');
+  });
+}
+
+function downloadDetailJPEG() {
+  const f = db.find(x => x.id === currentDetailId);
+  if (!f) { toast('No formula selected', 'error'); return; }
+  const el = document.getElementById('detail-content');
+  html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(function(canvas) {
+    const link = document.createElement('a');
+    const safeName = f.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+    link.download = safeName + '.jpeg';
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+    toast('JPEG downloaded ✓', 'success');
+  }).catch(function(err) {
+    console.error('JPEG generation error:', err);
+    toast('JPEG generation failed', 'error');
+  });
+}
+
 function printDetail() {
   window.print();
 }

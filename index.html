@@ -1130,9 +1130,9 @@ function makeSeed() {
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    db = raw ? JSON.parse(raw) : [];
+    if (raw === null) { db = makeSeed(); save(); return; }
+    db = JSON.parse(raw);
   } catch { db = []; }
-  if (!db.length) { db = makeSeed(); save(); }
 }
 
 function save() {
@@ -1427,9 +1427,6 @@ function printAll() {
   const list = getFiltered();
   if (!list.length) { toast('No formulas to print', 'error'); return; }
 
-  const win = window.open('', '_blank', 'width=800,height=600');
-  if (!win) { toast('Allow pop-ups to use PDF export', 'error'); return; }
-
   const esc2 = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   const formulaHTML = list.map(f => {
@@ -1464,20 +1461,26 @@ function printAll() {
       </div>`;
   }).join('');
 
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
     <title>Formulae Export — ${new Date().toISOString().slice(0,10)}</title>
     <style>
       body { font-family: system-ui, sans-serif; padding: 2rem; color: #111; max-width: 800px; margin: 0 auto; }
       h1 { font-size: 1.5rem; margin-bottom: .5rem; }
       p.sub { color: #666; font-size: .875rem; margin-bottom: 1.5rem; }
-      @media print { button { display: none; } }
+      @media print { .no-print { display: none; } }
     </style></head><body>
     <h1>Formulae — Chemical Database</h1>
     <p class="sub">Exported ${list.length} formula${list.length!==1?'s':''} · ${new Date().toLocaleString()}</p>
-    <button onclick="window.print()" style="margin-bottom:1.5rem;padding:.5rem 1rem;cursor:pointer">🖨 Print / Save PDF</button>
+    <button class="no-print" onclick="window.print()" style="margin-bottom:1.5rem;padding:.5rem 1rem;cursor:pointer">🖨 Print / Save PDF</button>
     ${formulaHTML}
-  </body></html>`);
-  win.document.close();
+  </body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  if (!win) { toast('Allow pop-ups to use PDF export', 'error'); URL.revokeObjectURL(url); return; }
+  win.addEventListener('load', function() { URL.revokeObjectURL(url); });
+  setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
 }
 
 /* ─── Modal ──────────────────────────────────────────────────── */

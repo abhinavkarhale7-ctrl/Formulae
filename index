@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Formulae — Film Lab Chemical Database</title>
+  <meta name="description" content="Store, manage, search, and version-control your photographic chemical formulas — built for the darkroom." />
+  <style>
+    /* ── Reset & Tokens ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #f9fafb;
+      --surface:      #ffffff;
+      --border:       #e5e7eb;
+      --text:         #111827;
+      --muted:        #6b7280;
+      --accent:       #2563eb;
+      --accent-hover: #1d4ed8;
+      --danger:       #dc2626;
+      --danger-hover: #b91c1c;
+      --green:        #16a34a;
+      --orange:       #ea580c;
+      --purple:       #9333ea;
+      --radius:       0.5rem;
+      --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    }
+
+    /* ── Darkroom mode ───────────────────────────────────────────── */
+    body.darkroom {
+      --bg:           #0a0000;
+      --surface:      #140000;
+      --border:       #3a0000;
+      --text:         #ff4444;
+      --muted:        #992222;
+      --accent:       #ff2222;
+      --accent-hover: #cc1111;
+      --danger:       #ff6666;
+      --danger-hover: #ff3333;
+      --green:        #ff4444;
+      --orange:       #ff4444;
+      --purple:       #ff4444;
+      --shadow:       0 1px 3px rgba(255,0,0,.15);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      transition: background .2s, color .2s;
+    }
+
+    body.darkroom { font-size: 1.05rem; letter-spacing: .01em; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius);
+      transition: background .15s, opacity .15s;
+    }
+
+    input, select, textarea {
+      font-family: inherit;
+      font-size: .9375rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      padding: .5rem .75rem;
+      width: 100%;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+    body.darkroom input:focus,
+    body.darkroom select:focus,
+    body.darkroom textarea:focus {
+      box-shadow: 0 0 0 3px rgba(255,34,34,.2);
+    }
+    textarea { resize: vertical; min-height: 5rem; }
+    label { font-size: .875rem; font-weight: 600; display: block; margin-bottom: .3rem; }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: .875rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .logo-dot { color: var(--accent); }
+
+    .header-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+
+    /* ── Buttons ─────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .375rem;
+      padding: .5rem 1rem;
+      border-radius: var(--radius);
+      font-size: .875rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-primary   { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg); }
+    .btn-danger    { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-ghost     { background: transparent; color: var(--muted); padding: .375rem .625rem; }
+    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+    .btn-sm        { font-size: .8125rem; padding: .35rem .75rem; }
+
+    /* Darkroom toggle */
+    .darkroom-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .4rem .875rem;
+      font-size: .8125rem;
+      font-weight: 600;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+    }
+    .darkroom-btn:hover { background: var(--bg); }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* ── Toolbar ─────────────────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .toolbar-search { flex: 1; min-width: 180px; max-width: 360px; }
+    .toolbar-filters { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .toolbar-filters select { width: auto; font-size: .875rem; padding: .4rem .65rem; }
+    .toolbar-right { margin-left: auto; }
+
+    /* ── Stats bar ───────────────────────────────────────────────── */
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      font-size: .8125rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+    .stats-bar strong { color: var(--text); }
+
+    /* ── Formula cards ───────────────────────────────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .75rem;
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+      transition: box-shadow .15s;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    body.darkroom .card:hover { box-shadow: 0 4px 12px rgba(255,0,0,.15); }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--text);
+    }
+    .card-version {
+      font-size: .75rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: .1rem;
+    }
+
+    .card-actions { display: flex; gap: .25rem; flex-shrink: 0; }
+
+    .card-meta {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: .2rem .55rem;
+      border-radius: .3rem;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .badge-bw        { background: #374151; }
+    .badge-c41       { background: #ea580c; }
+    .badge-ecn2      { background: #9333ea; }
+    .badge-e6        { background: #2563eb; }
+    .badge-wetplate  { background: #92400e; }
+    .badge-fixer     { background: #475569; }
+    .badge-other     { background: #6b7280; }
+
+    body.darkroom .badge { color: #0a0000; background: #ff4444 !important; }
+
+    .status-badge {
+      display: inline-block;
+      padding: .2rem .55rem;
+      border-radius: .3rem;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .status-tested       { background: #dcfce7; color: #166534; }
+    .status-experimental { background: #fef9c3; color: #854d0e; }
+    .status-archived     { background: #f3f4f6; color: #6b7280; }
+    body.darkroom .status-tested,
+    body.darkroom .status-experimental,
+    body.darkroom .status-archived { background: #2a0000; color: #ff6666; }
+
+    .card-desc {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Ingredient mini-list inside card */
+    .ing-list {
+      font-size: .8125rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: .625rem;
+    }
+    .ing-list-title {
+      font-weight: 600;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: .35rem;
+      color: var(--muted);
+    }
+    .ing-row {
+      display: flex;
+      justify-content: space-between;
+      padding: .15rem 0;
+      gap: .5rem;
+    }
+    .ing-name { color: var(--text); }
+    .ing-qty  { white-space: nowrap; color: var(--muted); }
+    .ing-more { color: var(--accent); font-size: .75rem; margin-top: .2rem; }
+
+    /* Notes */
+    .card-notes {
+      font-size: .8125rem;
+      color: var(--muted);
+      font-style: italic;
+      border-top: 1px solid var(--border);
+      padding-top: .5rem;
+      line-height: 1.5;
+    }
+
+    /* ── Empty state ─────────────────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 5rem 1rem;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .empty h2 { font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; }
+    .empty p  { font-size: .9375rem; margin-bottom: 1.5rem; }
+
+    /* ── Modal ───────────────────────────────────────────────────── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 200;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 1rem;
+      overflow-y: auto;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .875rem;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 2rem;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-title { font-size: 1.125rem; font-weight: 700; }
+
+    .modal-body {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: .625rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Form row */
+    .form-row { display: flex; gap: .75rem; }
+    .form-row > * { flex: 1; }
+
+    /* ── Ingredient editor ───────────────────────────────────────── */
+    .ing-editor { display: flex; flex-direction: column; gap: .4rem; }
+    .ing-editor-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: .5rem;
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      padding: 0 .25rem;
+    }
+    .ing-editor-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: .5rem;
+      align-items: center;
+    }
+    .ing-editor-row input { padding: .4rem .6rem; font-size: .875rem; }
+    .drag-handle { cursor: grab; color: var(--muted); padding: .25rem; user-select: none; }
+    .drag-handle:active { cursor: grabbing; }
+    .ing-editor-row.drag-over { outline: 2px dashed var(--accent); border-radius: var(--radius); }
+
+    .add-ing-btn {
+      align-self: flex-start;
+      margin-top: .25rem;
+      font-size: .8125rem;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      color: var(--muted);
+      padding: .4rem .875rem;
+      border-radius: var(--radius);
+    }
+    .add-ing-btn:hover { background: var(--surface); color: var(--text); border-color: var(--accent); }
+
+    /* ── Confirm dialog ─────────────────��────────────────────────── */
+    .confirm-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .confirm-backdrop.open { display: flex; }
+    .confirm-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .75rem;
+      padding: 1.75rem;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .confirm-box h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: .5rem; }
+    .confirm-box p  { font-size: .9rem; color: var(--muted); margin-bottom: 1.25rem; }
+    .confirm-btns { display: flex; gap: .625rem; justify-content: center; }
+
+    /* ── Toast ───────────────────────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 400;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      pointer-events: none;
+    }
+    .toast {
+      background: #111827;
+      color: #fff;
+      padding: .65rem 1.1rem;
+      border-radius: var(--radius);
+      font-size: .875rem;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      animation: slideIn .2s ease;
+      pointer-events: auto;
+    }
+    .toast.success { background: #166534; }
+    .toast.error   { background: #991b1b; }
+    body.darkroom .toast { background: #2a0000; color: #ff8888; }
+
+    @keyframes slideIn {
+      from { opacity:0; transform: translateX(1rem); }
+      to   { opacity:1; transform: translateX(0); }
+    }
+
+    /* ── Detail panel (full-screen card view) ────────────────────── */
+    .detail-panel {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 150;
+      overflow-y: auto;
+    }
+    .detail-panel.open { display: block; }
+    .detail-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .detail-back { margin-bottom: 1.25rem; }
+    .detail-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin-bottom: .35rem;
+    }
+    .detail-meta {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    .detail-section { margin-bottom: 1.5rem; }
+    .detail-section-title {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: .75rem;
+    }
+    .detail-desc {
+      font-size: .9375rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* Full ingredient table */
+    .ing-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    .ing-table th {
+      text-align: left;
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      padding: .4rem .6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .ing-table td {
+      padding: .55rem .6rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .ing-table tr:last-child td { border-bottom: none; }
+
+    .detail-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      font-size: .9rem;
+      color: var(--muted);
+      line-height: 1.65;
+      font-style: italic;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: .625rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .page { padding: 1.25rem 1rem; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-search { max-width: 100%; }
+      .toolbar-right { margin-left: 0; }
+      .ing-editor-header,
+      .ing-editor-row { grid-template-columns: 1fr 1fr auto auto; }
+      .ing-editor-header span:nth-child(3),
+      .ing-editor-row input:nth-child(3) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <span>⬛</span> Formulae<span class="logo-dot">.</span>
+  </div>
+  <div class="header-right">
+    <button class="darkroom-btn" onclick="toggleDarkroom()">
+      <span id="dr-icon">🔴</span>
+      <span id="dr-label">Darkroom</span>
+    </button>
+    <button class="btn btn-secondary btn-sm" onclick="exportData()">↓ Export</button>
+    <label class="btn btn-secondary btn-sm" style="margin:0;cursor:pointer;">
+      ↑ Import <input type="file" accept=".json" style="display:none" onchange="importData(event)" />
+    </label>
+    <button class="btn btn-primary btn-sm" onclick="openModal()">+ New Formula</button>
+  </div>
+</header>
+
+<!-- ── MAIN ────────────────────────────────────────────────────── -->
+<main class="page" id="main-page">
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-search">
+      <input
+        type="search"
+        id="search-input"
+        placeholder="Search name, ingredient, notes…"
+        oninput="renderCards()"
+        aria-label="Search formulas"
+      />
+    </div>
+    <div class="toolbar-filters">
+      <select id="filter-process" onchange="renderCards()" aria-label="Filter by process">
+        <option value="">All processes</option>
+        <option value="B&W">B&amp;W</option>
+        <option value="C-41">C-41</option>
+        <option value="ECN-2">ECN-2</option>
+        <option value="E-6">E-6</option>
+        <option value="Wet Plate">Wet Plate</option>
+        <option value="Fixer">Fixer</option>
+        <option value="Other">Other</option>
+      </select>
+      <select id="filter-category" onchange="renderCards()" aria-label="Filter by category">
+        <option value="">All categories</option>
+        <option value="Developer">Developer</option>
+        <option value="Stop Bath">Stop Bath</option>
+        <option value="Fixer">Fixer</option>
+        <option value="Bleach">Bleach</option>
+        <option value="Stabilizer">Stabilizer</option>
+        <option value="Other">Other</option>
+      </select>
+      <select id="filter-status" onchange="renderCards()" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        <option value="Tested">Tested</option>
+        <option value="Experimental">Experimental</option>
+        <option value="Archived">Archived</option>
+      </select>
+      <select id="sort-select" onchange="renderCards()" aria-label="Sort by">
+        <option value="updated">Recently updated</option>
+        <option value="name">Name A–Z</option>
+        <option value="process">Process</option>
+        <option value="version">Version ↓</option>
+      </select>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear filters</button>
+    </div>
+  </div>
+
+  <!-- Cards grid -->
+  <div class="cards-grid" id="cards-grid"></div>
+  <div id="empty-state" class="empty" style="display:none"></div>
+</main>
+
+<!-- ── DETAIL PANEL ─────────────────────────────────────────────── -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-inner">
+    <div class="detail-back">
+      <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← Back</button>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- ── FORMULA MODAL ────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="backdropClose(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">New Formula</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <input type="hidden" id="edit-id" />
+
+      <div>
+        <label for="f-name">Formula Name *</label>
+        <input id="f-name" type="text" placeholder="e.g. HC-110 Dilution B" required />
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="f-process">Process *</label>
+          <select id="f-process" required>
+            <option value="">— select —</option>
+            <option>B&W</option>
+            <option>C-41</option>
+            <option>ECN-2</option>
+            <option>E-6</option>
+            <option>Wet Plate</option>
+            <option>Fixer</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-category">Category *</label>
+          <select id="f-category" required>
+            <option value="">— select —</option>
+            <option>Developer</option>
+            <option>Stop Bath</option>
+            <option>Fixer</option>
+            <option>Bleach</option>
+            <option>Stabilizer</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option>Experimental</option>
+            <option>Tested</option>
+            <option>Archived</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-version">Version</label>
+          <input id="f-version" type="text" placeholder="e.g. 1.0" value="1.0" />
+        </div>
+      </div>
+
+      <div>
+        <label for="f-desc">Description</label>
+        <textarea id="f-desc" placeholder="Short description…"></textarea>
+      </div>
+
+      <!-- Ingredient editor -->
+      <div>
+        <label>Ingredients</label>
+        <div class="ing-editor" id="ing-editor">
+          <div class="ing-editor-header">
+            <span>Chemical name</span>
+            <span>Quantity</span>
+            <span>Unit</span>
+            <span></span>
+          </div>
+        </div>
+        <button class="add-ing-btn" onclick="addIngRow()">+ Add ingredient</button>
+      </div>
+
+      <div>
+        <label for="f-temp">Temperature / Conditions</label>
+        <input id="f-temp" type="text" placeholder="e.g. 38°C / 100°F" />
+      </div>
+
+      <div>
+        <label for="f-time">Development Time</label>
+        <input id="f-time" type="text" placeholder="e.g. 3:30 min at 1:1" />
+      </div>
+
+      <div>
+        <label for="f-notes">Notes</label>
+        <textarea id="f-notes" placeholder="Any special notes, warnings, tips…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFormula()" id="save-btn">Save formula</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONFIRM DIALOG ───────────────────────────────────────────── -->
+<div class="confirm-backdrop" id="confirm-backdrop">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Delete formula?</h3>
+    <p id="confirm-msg">This action cannot be undone.</p>
+    <div class="confirm-btns">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST CONTAINER ──────────────────────────────────────────── -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ── SCRIPT ───────────────────────────────────────────────────── -->
+<script>
+'use strict';
+
+/* ─── State ───────────────────────────────────────────────────── */
+const STORAGE_KEY = 'formulae_v1';
+let db = [];
+let editingId = null;
+let confirmCallback = null;
+let dragSrcIdx = null;
+
+/* ─── Seed data ──────────────────────────────────────────────── */
+const SEED = [
+  {
+    id: uid(), name: "D-76 Stock",
+    process: "B&W", category: "Developer", status: "Tested", version: "1.0",
+    desc: "Kodak's classic general-purpose film developer. Gives full emulsion speed with fine grain.",
+    ingredients: [
+      { name: "Water (52°C / 125°F)", qty: "750", unit: "ml" },
+      { name: "Metol", qty: "2", unit: "g" },
+      { name: "Sodium Sulfite (anhydrous)", qty: "100", unit: "g" },
+      { name: "Hydroquinone", qty: "5", unit: "g" },
+      { name: "Borax", qty: "2", unit: "g" },
+      { name: "Water to make", qty: "1000", unit: "ml" },
+    ],
+    temp: "20°C / 68°F", time: "8 min (stock), 11 min (1:1)",
+    notes: "Mix in the order listed. Metol dissolves before adding Hydroquinone. Store in a full, tightly capped bottle.",
+    updatedAt: Date.now() - 86400000 * 2,
+  },
+  {
+    id: uid(), name: "Kodak C-41 Developer",
+    process: "C-41", category: "Developer", status: "Experimental", version: "1.2",
+    desc: "Color negative process CD-4 based developer formula for C-41 compatible films.",
+    ingredients: [
+      { name: "Water (38°C)", qty: "800", unit: "ml" },
+      { name: "Hydroxylamine Sulfate", qty: "1.9", unit: "g" },
+      { name: "Sodium Sulfite", qty: "4.25", unit: "g" },
+      { name: "CD-4 (color developer)", qty: "4.75", unit: "g" },
+      { name: "Sodium Carbonate (anhydrous)", qty: "37.5", unit: "g" },
+      { name: "Potassium Bromide", qty: "1.2", unit: "g" },
+      { name: "Water to make", qty: "1000", unit: "ml" },
+    ],
+    temp: "38°C ± 0.15°C / 100.4°F", time: "3:15 min",
+    notes: "Extremely temperature sensitive. Use a water bath. Adjust pH to 10.03 with sodium hydroxide or acetic acid.",
+    updatedAt: Date.now() - 86400000 * 5,
+  },
+  {
+    id: uid(), name: "TF-4 Alkaline Fixer",
+    process: "B&W", category: "Fixer", status: "Tested", version: "2.0",
+    desc: "Rapid archival alkaline fixer for film and paper. Ammonium thiosulfate based.",
+    ingredients: [
+      { name: "Water", qty: "800", unit: "ml" },
+      { name: "Ammonium Thiosulfate (60% sol.)", qty: "200", unit: "ml" },
+      { name: "Sodium Sulfite", qty: "15", unit: "g" },
+      { name: "Sodium Bicarbonate", qty: "8.5", unit: "g" },
+      { name: "Water to make", qty: "1000", unit: "ml" },
+    ],
+    temp: "18–24°C", time: "2–4 min (film), 1–2 min (RC paper)",
+    notes: "pH should be 7.5–8.0. Non-hardening, safe for rapid washing. Discard when grey or fixes slowly.",
+    updatedAt: Date.now() - 86400000 * 1,
+  },
+  {
+    id: uid(), name: "E-6 First Developer",
+    process: "E-6", category: "Developer", status: "Experimental", version: "1.0",
+    desc: "First developer for the E-6 reversal slide process. Critical step — controls overall density.",
+    ingredients: [
+      { name: "Water (38°C)", qty: "700", unit: "ml" },
+      { name: "Sodium Sulfite", qty: "30", unit: "g" },
+      { name: "Phenidone", qty: "0.3", unit: "g" },
+      { name: "Hydroquinone", qty: "6", unit: "g" },
+      { name: "Sodium Carbonate", qty: "18", unit: "g" },
+      { name: "Potassium Bromide", qty: "1.5", unit: "g" },
+      { name: "Potassium Thiocyanate", qty: "1.0", unit: "g" },
+      { name: "Water to make", qty: "1000", unit: "ml" },
+    ],
+    temp: "38°C ± 0.15°C", time: "6 min",
+    notes: "Do not expose to light after this step. Temperature control is critical. Replenish at 11 ml/roll.",
+    updatedAt: Date.now() - 86400000 * 10,
+  },
+  {
+    id: uid(), name: "Wet Plate Collodion Developer",
+    process: "Wet Plate", category: "Developer", status: "Tested", version: "3.1",
+    desc: "Pyrogallic acid developer for wet plate collodion ambrotypes and tintypes.",
+    ingredients: [
+      { name: "Distilled Water", qty: "1000", unit: "ml" },
+      { name: "Pyrogallic Acid", qty: "1", unit: "g" },
+      { name: "Glacial Acetic Acid", qty: "30", unit: "ml" },
+    ],
+    temp: "Ambient (18–22°C recommended)", time: "10–30 seconds (to taste)",
+    notes: "Develop in strong raking light. Pyrogallol stains skin — use gloves. Discard after each plate.",
+    updatedAt: Date.now(),
+  },
+];
+
+/* ─── Persistence ────────────────────────────────────────────── */
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    db = raw ? JSON.parse(raw) : [];
+  } catch { db = []; }
+  if (!db.length) { db = SEED; save(); }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+}
+
+/* ─── Utilities ─────────────────────────────────────────��────── */
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function processClass(p) {
+  const map = {
+    'B&W':'bw','C-41':'c41','ECN-2':'ecn2',
+    'E-6':'e6','Wet Plate':'wetplate','Fixer':'fixer'
+  };
+  return 'badge-' + (map[p] || 'other');
+}
+
+function statusClass(s) {
+  const map = { Tested:'tested', Experimental:'experimental', Archived:'archived' };
+  return 'status-' + (map[s] || 'experimental');
+}
+
+/* ─── Darkroom ───────────────────────────────────────────────── */
+function toggleDarkroom() {
+  document.body.classList.toggle('darkroom');
+  const on = document.body.classList.contains('darkroom');
+  document.getElementById('dr-icon').textContent  = on ? '💡' : '🔴';
+  document.getElementById('dr-label').textContent = on ? 'Normal' : 'Darkroom';
+  localStorage.setItem('formulae_darkroom', on ? '1' : '');
+}
+
+/* ─── Stats bar ──────────────────────────────────────────────── */
+function renderStats() {
+  const total      = db.length;
+  const tested     = db.filter(f => f.status === 'Tested').length;
+  const processes  = [...new Set(db.map(f => f.process))].length;
+  document.getElementById('stats-bar').innerHTML =
+    `<span><strong>${total}</strong> formula${total !== 1 ? 's' : ''}</span>` +
+    `<span><strong>${tested}</strong> tested</span>` +
+    `<span><strong>${processes}</strong> process${processes !== 1 ? 'es' : ''}</span>`;
+}
+
+/* ─── Cards rendering ────────────────────────────────────────── */
+function getFiltered() {
+  const q    = (document.getElementById('search-input').value || '').toLowerCase();
+  const proc = document.getElementById('filter-process').value;
+  const cat  = document.getElementById('filter-category').value;
+  const stat = document.getElementById('filter-status').value;
+  const sort = document.getElementById('sort-select').value;
+
+  let list = db.filter(f => {
+    if (proc && f.process  !== proc) return false;
+    if (cat  && f.category !== cat)  return false;
+    if (stat && f.status   !== stat) return false;
+    if (q) {
+      const blob = [
+        f.name, f.process, f.category, f.desc, f.notes, f.temp, f.time,
+        ...(f.ingredients || []).map(i => i.name),
+      ].join(' ').toLowerCase();
+      if (!blob.includes(q)) return false;
+    }
+    return true;
+  });
+
+  list.sort((a, b) => {
+    if (sort === 'name')    return a.name.localeCompare(b.name);
+    if (sort === 'process') return a.process.localeCompare(b.process);
+    if (sort === 'version') return parseFloat(b.version||0) - parseFloat(a.version||0);
+    return (b.updatedAt||0) - (a.updatedAt||0);
+  });
+
+  return list;
+}
+
+function renderCards() {
+  renderStats();
+  const list  = getFiltered();
+  const grid  = document.getElementById('cards-grid');
+  const empty = document.getElementById('empty-state');
+
+  if (!list.length) {
+    grid.innerHTML = '';
+    empty.style.display = '';
+    empty.innerHTML = db.length
+      ? `<div class="empty-icon">🔍</div>
+         <h2>No formulas match</h2>
+         <p>Try adjusting your search or filters.</p>
+         <button class="btn btn-secondary" onclick="clearFilters()">Clear filters</button>`
+      : `<div class="empty-icon">⬛</div>
+         <h2>No formulas yet</h2>
+         <p>Create your first chemical formula to get started.</p>
+         <button class="btn btn-primary" onclick="openModal()">+ New Formula</button>`;
+    return;
+  }
+
+  empty.style.display = 'none';
+  grid.innerHTML = list.map(f => cardHTML(f)).join('');
+}
+
+function cardHTML(f) {
+  const ings = f.ingredients || [];
+  const preview = ings.slice(0, 4);
+  const more    = ings.length - preview.length;
+
+  const ingHTML = ings.length
+    ? `<div class="ing-list">
+         <div class="ing-list-title">Ingredients (${ings.length})</div>
+         ${preview.map(i =>
+           `<div class="ing-row">
+              <span class="ing-name">${esc(i.name)}</span>
+              <span class="ing-qty">${esc(i.qty)}${i.unit ? ' ' + esc(i.unit) : ''}</span>
+            </div>`
+         ).join('')}
+         ${more > 0 ? `<div class="ing-more">+ ${more} more ingredient${more > 1 ? 's' : ''}</div>` : ''}
+       </div>` : '';
+
+  return `<div class="card" id="card-${esc(f.id)}">
+    <div class="card-header">
+      <div>
+        <div class="card-title">${esc(f.name)}</div>
+        <div class="card-version">v${esc(f.version||'1.0')} · ${esc(f.category)}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-ghost btn-sm" title="View details"
+          onclick="openDetail('${esc(f.id)}')">↗</button>
+        <button class="btn btn-ghost btn-sm" title="Edit"
+          onclick="openModal('${esc(f.id)}')">✏</button>
+        <button class="btn btn-ghost btn-sm" title="Duplicate"
+          onclick="duplicate('${esc(f.id)}')">⧉</button>
+        <button class="btn btn-ghost btn-sm" title="Delete"
+          style="color:var(--danger)"
+          onclick="confirmDelete('${esc(f.id)}')">✕</button>
+      </div>
+    </div>
+    <div class="card-meta">
+      <span class="badge ${processClass(f.process)}">${esc(f.process)}</span>
+      <span class="status-badge ${statusClass(f.status)}">${esc(f.status)}</span>
+      ${f.temp ? `<span style="font-size:.75rem;color:var(--muted)">🌡 ${esc(f.temp)}</span>` : ''}
+    </div>
+    ${f.desc ? `<div class="card-desc">${esc(f.desc)}</div>` : ''}
+    ${ingHTML}
+    ${f.notes ? `<div class="card-notes">${esc(f.notes)}</div>` : ''}
+  </div>`;
+}
+
+/* ─── Detail panel ───────────────────────────────────────────── */
+function openDetail(id) {
+  const f = db.find(x => x.id === id);
+  if (!f) return;
+  const ings = f.ingredients || [];
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-actions">
+      <button class="btn btn-secondary btn-sm" onclick="openModal('${esc(f.id)}')">✏ Edit</button>
+      <button class="btn btn-secondary btn-sm" onclick="duplicate('${esc(f.id)}');closeDetail()">⧉ Duplicate</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmDelete('${esc(f.id)}',true)">✕ Delete</button>
+    </div>
+    <h1 class="detail-title">${esc(f.name)}</h1>
+    <div class="detail-meta">
+      <span class="badge ${processClass(f.process)}">${esc(f.process)}</span>
+      <span class="status-badge ${statusClass(f.status)}">${esc(f.status)}</span>
+      <span style="color:var(--muted);font-size:.85rem">v${esc(f.version||'1.0')}</span>
+      <span style="color:var(--muted);font-size:.85rem">· ${esc(f.category)}</span>
+    </div>
+    ${f.desc ? `<div class="detail-section"><p class="detail-desc">${esc(f.desc)}</p></div>` : ''}
+
+    ${f.temp || f.time ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Process Parameters</div>
+      ${f.temp ? `<p style="font-size:.9rem;margin-bottom:.35rem">🌡 <strong>Temperature:</strong> ${esc(f.temp)}</p>` : ''}
+      ${f.time ? `<p style="font-size:.9rem">⏱ <strong>Time:</strong> ${esc(f.time)}</p>` : ''}
+    </div>` : ''}
+
+    ${ings.length ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Ingredients (${ings.length})</div>
+      <table class="ing-table">
+        <thead><tr>
+          <th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th>
+        </tr></thead>
+        <tbody>
+          ${ings.map((i,idx) => `
+            <tr>
+              <td style="color:var(--muted)">${idx+1}</td>
+              <td>${esc(i.name)}</td>
+              <td>${esc(i.qty)}</td>
+              <td style="color:var(--muted)">${esc(i.unit)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : ''}
+
+    ${f.notes ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Notes</div>
+      <div class="detail-notes">${esc(f.notes)}</div>
+    </div>` : ''}
+
+    <p style="font-size:.75rem;color:var(--muted);margin-top:1rem">
+      Last updated: ${new Date(f.updatedAt||Date.now()).toLocaleString()}
+    </p>
+  `;
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('main-page').style.visibility = 'hidden';
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('main-page').style.visibility = '';
+}
+
+/* ─── Modal ──────────────────────────────────────────────────── */
+function openModal(id) {
+  editingId = id || null;
+  const backdrop = document.getElementById('modal-backdrop');
+  const title    = document.getElementById('modal-title');
+
+  clearIngEditor();
+
+  if (id) {
+    const f = db.find(x => x.id === id);
+    if (!f) return;
+    title.textContent = 'Edit Formula';
+    document.getElementById('edit-id').value   = f.id;
+    document.getElementById('f-name').value    = f.name    || '';
+    document.getElementById('f-process').value = f.process || '';
+    document.getElementById('f-category').value= f.category|| '';
+    document.getElementById('f-status').value  = f.status  || 'Experimental';
+    document.getElementById('f-version').value = f.version || '1.0';
+    document.getElementById('f-desc').value    = f.desc    || '';
+    document.getElementById('f-temp').value    = f.temp    || '';
+    document.getElementById('f-time').value    = f.time    || '';
+    document.getElementById('f-notes').value   = f.notes   || '';
+    (f.ingredients || []).forEach(i => addIngRow(i));
+  } else {
+    title.textContent = 'New Formula';
+    document.getElementById('edit-id').value   = '';
+    document.getElementById('f-name').value    = '';
+    document.getElementById('f-process').value = '';
+    document.getElementById('f-category').value= '';
+    document.getElementById('f-status').value  = 'Experimental';
+    document.getElementById('f-version').value = '1.0';
+    document.getElementById('f-desc').value    = '';
+    document.getElementById('f-temp').value    = '';
+    document.getElementById('f-time').value    = '';
+    document.getElementById('f-notes').value   = '';
+    addIngRow();
+  }
+
+  backdrop.classList.add('open');
+  document.getElementById('f-name').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('open');
+  editingId = null;
+}
+
+function backdropClose(e) {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+}
+
+function saveFormula() {
+  const name     = document.getElementById('f-name').value.trim();
+  const process  = document.getElementById('f-process').value;
+  const category = document.getElementById('f-category').value;
+
+  if (!name)     { toast('Formula name is required', 'error'); document.getElementById('f-name').focus(); return; }
+  if (!process)  { toast('Please select a process', 'error'); return; }
+  if (!category) { toast('Please select a category', 'error'); return; }
+
+  const ingredients = readIngredients();
+  const now = Date.now();
+
+  if (editingId) {
+    const idx = db.findIndex(x => x.id === editingId);
+    if (idx === -1) return;
+    db[idx] = {
+      ...db[idx],
+      name, process, category,
+      status:  document.getElementById('f-status').value,
+      version: document.getElementById('f-version').value.trim() || '1.0',
+      desc:    document.getElementById('f-desc').value.trim(),
+      temp:    document.getElementById('f-temp').value.trim(),
+      time:    document.getElementById('f-time').value.trim(),
+      notes:   document.getElementById('f-notes').value.trim(),
+      ingredients, updatedAt: now,
+    };
+    toast('Formula updated ✓', 'success');
+  } else {
+    db.unshift({
+      id: uid(), name, process, category,
+      status:  document.getElementById('f-status').value,
+      version: document.getElementById('f-version').value.trim() || '1.0',
+      desc:    document.getElementById('f-desc').value.trim(),
+      temp:    document.getElementById('f-temp').value.trim(),
+      time:    document.getElementById('f-time').value.trim(),
+      notes:   document.getElementById('f-notes').value.trim(),
+      ingredients, createdAt: now, updatedAt: now,
+    });
+    toast('Formula created ✓', 'success');
+  }
+
+  save();
+  closeModal();
+  renderCards();
+}
+
+/* ─── Ingredient editor ──────────────────────────────────────── */
+function clearIngEditor() {
+  const editor = document.getElementById('ing-editor');
+  const header = editor.querySelector('.ing-editor-header');
+  editor.innerHTML = '';
+  editor.appendChild(header || (() => {
+    const h = document.createElement('div');
+    h.className = 'ing-editor-header';
+    h.innerHTML = '<span>Chemical name</span><span>Quantity</span><span>Unit</span><span></span>';
+    return h;
+  })());
+}
+
+function addIngRow(ing) {
+  const editor = document.getElementById('ing-editor');
+  const row = document.createElement('div');
+  row.className = 'ing-editor-row';
+  row.draggable = true;
+  row.innerHTML = `
+    <input type="text" placeholder="e.g. Sodium Sulfite" value="${esc(ing?.name||'')}" />
+    <input type="text" placeholder="e.g. 100" value="${esc(ing?.qty||'')}" />
+    <input type="text" placeholder="g / ml / oz" value="${esc(ing?.unit||'g')}" />
+    <button class="btn btn-ghost btn-sm drag-handle" title="Drag to reorder / Remove"
+      onclick="removeIngRow(this)">✕</button>
+  `;
+
+  row.addEventListener('dragstart', e => {
+    dragSrcIdx = rowIndex(row);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  row.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.ing-editor-row').forEach(r => r.classList.remove('drag-over'));
+    row.classList.add('drag-over');
+  });
+  row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+  row.addEventListener('drop', e => {
+    e.preventDefault();
+    row.classList.remove('drag-over');
+    const targetIdx = rowIndex(row);
+    if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+    const rows = [...editor.querySelectorAll('.ing-editor-row')];
+    const srcEl = rows[dragSrcIdx];
+    if (dragSrcIdx < targetIdx) row.after(srcEl);
+    else row.before(srcEl);
+    dragSrcIdx = null;
+  });
+
+  editor.appendChild(row);
+}
+
+function rowIndex(row) {
+  return [...document.querySelectorAll('.ing-editor-row')].indexOf(row);
+}
+
+function removeIngRow(btn) {
+  const row = btn.closest('.ing-editor-row');
+  if (document.querySelectorAll('.ing-editor-row').length > 1) row.remove();
+  else {
+    row.querySelectorAll('input').forEach(i => i.value = '');
+  }
+}
+
+function readIngredients() {
+  return [...document.querySelectorAll('.ing-editor-row')].map(row => {
+    const inputs = row.querySelectorAll('input');
+    return {
+      name: inputs[0].value.trim(),
+      qty:  inputs[1].value.trim(),
+      unit: inputs[2].value.trim(),
+    };
+  }).filter(i => i.name);
+}
+
+/* ─── Duplicate ──────────────────────────────────────────────── */
+function duplicate(id) {
+  const f = db.find(x => x.id === id);
+  if (!f) return;
+  const vNum = parseFloat(f.version || '1') + 0.1;
+  db.unshift({
+    ...JSON.parse(JSON.stringify(f)),
+    id: uid(),
+    name: f.name + ' (copy)',
+    version: vNum.toFixed(1),
+    status: 'Experimental',
+    updatedAt: Date.now(),
+    createdAt: Date.now(),
+  });
+  save();
+  renderCards();
+  toast('Formula duplicated ✓', 'success');
+}
+
+/* ─── Delete ─────────────────────────────────────────────────── */
+function confirmDelete(id, fromDetail) {
+  const f = db.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('confirm-title').textContent = `Delete "${f.name}"?`;
+  document.getElementById('confirm-msg').textContent   = 'This action cannot be undone.';
+  document.getElementById('confirm-backdrop').classList.add('open');
+  confirmCallback = () => {
+    db = db.filter(x => x.id !== id);
+    save();
+    renderCards();
+    if (fromDetail) closeDetail();
+    toast('Formula deleted', 'success');
+  };
+  document.getElementById('confirm-ok-btn').onclick = () => {
+    confirmCallback && confirmCallback();
+    closeConfirm();
+  };
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-backdrop').classList.remove('open');
+  confirmCallback = null;
+}
+
+/* ─── Clear filters ──────────────────────────────────────────── */
+function clearFilters() {
+  document.getElementById('search-input').value   = '';
+  document.getElementById('filter-process').value  = '';
+  document.getElementById('filter-category').value = '';
+  document.getElementById('filter-status').value   = '';
+  document.getElementById('sort-select').value     = 'updated';
+  renderCards();
+}
+
+/* ─── Export / Import ────────────────────────────────────────── */
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'formulae-export-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Exported ✓', 'success');
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const imported = JSON.parse(evt.target.result);
+      if (!Array.isArray(imported)) throw new Error();
+      const merged = [...db];
+      let added = 0;
+      imported.forEach(f => {
+        if (!merged.find(x => x.id === f.id)) {
+          merged.push(f); added++;
+        }
+      });
+      db = merged;
+      save();
+      renderCards();
+      toast(`Imported ${added} new formula${added !== 1 ? 's' : ''} ✓`, 'success');
+    } catch {
+      toast('Invalid JSON file', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+/* ─── Toast ──────────────────────────────────────────────────── */
+function toast(msg, type) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' '

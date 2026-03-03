@@ -11,11 +11,11 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:           #f9fafb;
+      --bg:           #f4f6fb;
       --surface:      #ffffff;
-      --border:       #e5e7eb;
-      --text:         #111827;
-      --muted:        #6b7280;
+      --border:       #e2e8f0;
+      --text:         #0f172a;
+      --muted:        #64748b;
       --accent:       #2563eb;
       --accent-hover: #1d4ed8;
       --danger:       #dc2626;
@@ -26,11 +26,8 @@
       --radius:       0.5rem;
       --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
       --shadow-md:    0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
-    }
-
-    /* ── Transitions ─────────────────────────────────────────────── */
-    body {
-      transition: background .3s, color .3s, border-color .3s;
+      --header-bg:    linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      --header-text:  #ffffff;
     }
 
     /* ── Darkroom mode ───────────────────────────────────────────── */
@@ -49,8 +46,11 @@
       --purple:       #ff5555;
       --shadow:       0 1px 3px rgba(255,0,0,.15);
       --shadow-md:    0 4px 6px -1px rgba(255,0,0,.12);
+      --header-bg:    linear-gradient(135deg, #2a0000 0%, #1a0000 100%);
+      --header-text:  #ff5555;
     }
 
+    /* Darkroom scanline overlay */
     body.darkroom::after {
       content: '';
       position: fixed;
@@ -72,57 +72,45 @@
       color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
+      transition: background .3s, color .3s;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* ── Header ──────────────────────────────────────────────────── */
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius);
+      transition: background .15s, opacity .15s, transform .1s;
+    }
+
+    input, select, textarea {
+      font-family: inherit;
+      font-size: .9375rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       background: var(--surface);
-      background: linear-gradient(135deg, var(--surface) 0%, var(--surface) 100%);
-      border-bottom: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      transition: background .3s, border-color .3s, box-shadow .3s;
-    }
-
-    body.darkroom .header {
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-
-    .header-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: .875rem 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-weight: 800;
-      font-size: 1.25rem;
-      letter-spacing: -.025em;
-      flex: 1;
       color: var(--text);
+      padding: .5rem .75rem;
+      width: 100%;
+      transition: border-color .15s;
     }
-
-    .logo-icon {
-      display: inline-flex;
-      align-items: center;
-      color: var(--accent);
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
     }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      flex-wrap: wrap;
+    body.darkroom input:focus,
+    body.darkroom select:focus,
+    body.darkroom textarea:focus {
+      box-shadow: 0 0 0 3px rgba(255,34,34,.2);
     }
+    textarea { resize: vertical; min-height: 5rem; }
+    label { font-size: .875rem; font-weight: 600; display: block; margin-bottom: .3rem; color: var(--text); }
 
     /* ── Buttons ─────────────────────────────────────────────────── */
     .btn {
@@ -132,178 +120,161 @@
       padding: .5rem 1rem;
       border-radius: var(--radius);
       font-size: .875rem;
-      font-weight: 500;
-      font-family: inherit;
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: background .15s, color .15s, border-color .15s, transform .1s, box-shadow .15s;
+      font-weight: 600;
       white-space: nowrap;
-      line-height: 1;
     }
-    .btn:active { transform: translateY(1px); }
+    .btn-primary   { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg); }
+    .btn-danger    { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-ghost     { background: transparent; color: var(--muted); padding: .375rem .625rem; }
+    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+    .btn-sm        { font-size: .8125rem; padding: .35rem .75rem; }
 
-    .btn-primary {
-      background: var(--accent);
+    /* ── Header ─────────────────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      border-bottom: 1px solid transparent;
+      padding: .875rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      transition: background .3s, box-shadow .3s;
+    }
+
+    body.darkroom header {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .logo {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: var(--header-text);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .logo-icon {
+      display: flex;
+      align-items: center;
+      color: var(--header-text);
+      opacity: .9;
+    }
+    .logo-dot { color: rgba(255,255,255,.6); }
+
+    .header-right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+    .header-right .btn {
+      background: rgba(255,255,255,.12);
       color: #fff;
-      border-color: var(--accent);
+      border: 1px solid rgba(255,255,255,.2);
+      backdrop-filter: blur(4px);
     }
-    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
-
-    .btn-secondary {
-      background: var(--surface);
-      color: var(--text);
-      border-color: var(--border);
+    .header-right .btn:hover {
+      background: rgba(255,255,255,.22);
     }
-    .btn-secondary:hover { background: var(--bg); box-shadow: var(--shadow); }
-
-    .btn-danger {
-      background: var(--danger);
-      color: #fff;
-      border-color: var(--danger);
-    }
-    .btn-danger:hover { background: var(--danger-hover); border-color: var(--danger-hover); }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--muted);
+    .header-right .btn-primary {
+      background: rgba(255,255,255,.9);
+      color: #1d4ed8;
       border-color: transparent;
     }
-    .btn-ghost:hover { background: var(--bg); color: var(--text); }
-
-    .btn-sm {
-      padding: .375rem .75rem;
-      font-size: .8125rem;
+    .header-right .btn-primary:hover {
+      background: #fff;
+    }
+    body.darkroom .header-right .btn-primary {
+      color: #7a0000;
     }
 
-    /* ── Main layout ─────────────────────────────────────────────── */
-    .page {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .page { flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; padding: 2rem 1.5rem; }
 
     /* ── Stats bar ───────────────────────────────────────────────── */
     .stats-bar {
       display: flex;
-      flex-wrap: wrap;
       gap: .75rem;
-      margin-bottom: 1.25rem;
-      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
     }
 
     .stat-card {
       display: flex;
       align-items: center;
-      gap: .625rem;
+      gap: .5rem;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 9999px;
-      padding: .5rem 1rem .5rem .75rem;
+      padding: .35rem .9rem;
       box-shadow: var(--shadow);
       transition: background .3s, border-color .3s;
     }
-
-    .stat-icon {
-      font-size: 1.1rem;
-      line-height: 1;
-    }
-
-    .stat-num {
-      font-weight: 700;
-      font-size: .9375rem;
-      color: var(--text);
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: .75rem;
-      color: var(--muted);
-      line-height: 1;
-    }
-
-    .stat-card-inner {
-      display: flex;
-      flex-direction: column;
-      gap: .1rem;
-    }
+    .stat-icon { font-size: 1rem; }
+    .stat-num  { font-size: .9375rem; font-weight: 700; color: var(--text); }
+    .stat-label { font-size: .8rem; color: var(--muted); margin-left: .2rem; }
 
     /* ── Toolbar ─────────────────────────────────────────────────── */
     .toolbar {
       display: flex;
-      flex-wrap: wrap;
       gap: .625rem;
-      margin-bottom: 1.25rem;
       align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
     }
 
+    /* Search input with icon */
     .search-wrapper {
       position: relative;
       flex: 1;
-      min-width: 200px;
+      min-width: 180px;
+      max-width: 360px;
     }
-
-    .search-icon {
+    .search-wrapper .search-icon {
       position: absolute;
       left: .625rem;
       top: 50%;
       transform: translateY(-50%);
+      font-size: .9rem;
       pointer-events: none;
-      font-size: .875rem;
-      color: var(--muted);
+    }
+    .search-wrapper input {
+      padding-left: 2rem;
     }
 
-    .search-input {
-      width: 100%;
-      padding: .5rem .75rem .5rem 2rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: .875rem;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text);
-      transition: border-color .15s, box-shadow .15s, background .3s, color .3s;
-    }
-    .search-input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
-    }
-    .search-input::placeholder { color: var(--muted); }
-
-    select.filter-select {
-      padding: .5rem .75rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: .875rem;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text);
-      cursor: pointer;
-      transition: border-color .15s, background .3s, color .3s;
+    /* Custom select chevron */
+    .toolbar select {
       appearance: none;
       -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right .625rem center;
-      padding-right: 2rem;
-    }
-    select.filter-select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+      background-position: right .65rem center;
+      padding-right: 1.85rem;
+      width: auto;
+      font-size: .875rem;
+      padding-top: .4rem;
+      padding-bottom: .4rem;
     }
 
     .results-count {
       font-size: .8125rem;
       color: var(--muted);
       white-space: nowrap;
-      padding: .25rem .5rem;
+      padding: .35rem .5rem;
     }
+    .results-count strong { color: var(--accent); }
 
-    /* ── Cards grid ──────────────────────────────────────────────── */
+    /* ── Cards grid / list ───────────────────────────────────────── */
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1rem;
     }
 
@@ -313,471 +284,294 @@
       flex-direction: column;
       gap: .5rem;
     }
-
     .cards-list .card {
       flex-direction: row;
       align-items: center;
       padding: .75rem 1.25rem;
-      border-radius: .5rem;
       gap: 1rem;
+      border-radius: .5rem;
+      border-left-width: 4px;
     }
-
-    .cards-list .card .ing-list,
-    .cards-list .card .card-notes {
-      display: none;
-    }
-
-    .cards-list .card-title {
+    .cards-list .card-body-col {
       flex: 1;
-      margin-bottom: 0;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
-
-    .cards-list .card-badges {
-      margin-bottom: 0;
-    }
-
-    .cards-list .card-actions {
-      margin-top: 0;
-    }
+    .cards-list .card .ing-list,
+    .cards-list .card .card-notes,
+    .cards-list .card .card-desc { display: none !important; }
+    .cards-list .card .card-header { flex: 1; min-width: 0; }
+    .cards-list .card .card-actions { opacity: 1 !important; }
+    .cards-list .card .card-meta { flex-shrink: 0; }
 
     /* ── Card ────────────────────────────────────────────────────── */
     .card {
-      background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem;
+      border-left: 4px solid var(--card-accent, var(--border));
+      border-radius: .75rem;
+      padding: 1.25rem;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
-      gap: .5rem;
-      cursor: pointer;
-      transition: transform .2s, box-shadow .2s, border-color .2s, background .3s;
+      gap: .75rem;
+      transition: box-shadow .2s, transform .2s, background .3s, border-color .3s;
       position: relative;
-      border-left: 4px solid var(--border);
     }
     .card:hover {
-      transform: translateY(-2px);
       box-shadow: var(--shadow-md);
-      border-color: var(--accent);
+      transform: translateY(-2px);
     }
+    body.darkroom .card:hover { box-shadow: 0 4px 12px rgba(255,0,0,.15); }
 
-    /* Process-based left border accent */
-    .card[data-process="developer"]  { border-left-color: #2563eb; }
-    .card[data-process="fixer"]      { border-left-color: #16a34a; }
-    .card[data-process="stop"]       { border-left-color: #ea580c; }
-    .card[data-process="bleach"]     { border-left-color: #9333ea; }
-    .card[data-process="toner"]      { border-left-color: #db2777; }
-    .card[data-process="other"]      { border-left-color: #6b7280; }
-    body.darkroom .card[data-process] { border-left-color: var(--accent); }
+    /* Process-specific card accent colours */
+    .card[data-process="B&W"]      { --card-accent: #374151; }
+    .card[data-process="C-41"]     { --card-accent: #ea580c; }
+    .card[data-process="ECN-2"]    { --card-accent: #9333ea; }
+    .card[data-process="E-6"]      { --card-accent: #2563eb; }
+    .card[data-process="Wet Plate"]{ --card-accent: #92400e; }
+    .card[data-process="Fixer"]    { --card-accent: #475569; }
+    .card[data-process="Other"]    { --card-accent: #6b7280; }
+    body.darkroom .card { --card-accent: #660000 !important; }
 
-    .card-title {
-      font-weight: 700;
-      font-size: 1rem;
-      line-height: 1.3;
-      margin-bottom: .125rem;
-    }
-
-    .card-badges {
+    .card-header {
       display: flex;
-      flex-wrap: wrap;
-      gap: .375rem;
-      margin-bottom: .25rem;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: .2rem .65rem;
-      border-radius: 9999px;
-      font-size: .7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      line-height: 1;
-    }
-
-    .badge-process-developer { background: rgba(37,99,235,.12); color: #2563eb; }
-    .badge-process-fixer     { background: rgba(22,163,74,.12); color: #16a34a; }
-    .badge-process-stop      { background: rgba(234,88,12,.12); color: #ea580c; }
-    .badge-process-bleach    { background: rgba(147,51,234,.12); color: #9333ea; }
-    .badge-process-toner     { background: rgba(219,39,119,.12); color: #db2777; }
-    .badge-process-other     { background: rgba(107,114,128,.12); color: #6b7280; }
-
-    body.darkroom .badge-process-developer,
-    body.darkroom .badge-process-fixer,
-    body.darkroom .badge-process-stop,
-    body.darkroom .badge-process-bleach,
-    body.darkroom .badge-process-toner,
-    body.darkroom .badge-process-other {
-      background: rgba(255,0,0,.15);
-      color: var(--accent);
-    }
-
-    .badge-status-active      { background: rgba(22,163,74,.12); color: #16a34a; }
-    .badge-status-testing     { background: rgba(234,88,12,.12); color: #ea580c; }
-    .badge-status-archived    { background: rgba(107,114,128,.12); color: #6b7280; }
-    .badge-status-deprecated  { background: rgba(220,38,38,.12); color: #dc2626; }
-
-    body.darkroom .badge-status-active,
-    body.darkroom .badge-status-testing,
-    body.darkroom .badge-status-archived,
-    body.darkroom .badge-status-deprecated {
-      background: rgba(255,0,0,.12);
-      color: var(--muted);
-    }
-
-    .ing-list {
-      font-size: .8125rem;
-      color: var(--muted);
-      margin-top: .25rem;
-    }
-
-    .ing-item {
-      display: flex;
+      align-items: flex-start;
       justify-content: space-between;
-      padding: .1rem 0;
-      border-bottom: 1px solid var(--border);
       gap: .5rem;
     }
-    .ing-item:last-child { border-bottom: none; }
-
-    .ing-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .ing-qty  { flex-shrink: 0; font-weight: 500; color: var(--text); }
-
-    .card-notes {
-      font-size: .8125rem;
-      color: var(--muted);
-      font-style: italic;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--text);
     }
-
-    .card-meta {
+    .card-version {
       font-size: .75rem;
+      font-weight: 500;
       color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      margin-top: .1rem;
     }
 
+    /* Action buttons visible only on hover */
     .card-actions {
       display: flex;
-      gap: .375rem;
-      margin-top: .25rem;
+      gap: .25rem;
+      flex-shrink: 0;
       opacity: 0;
       transition: opacity .2s;
     }
     .card:hover .card-actions { opacity: 1; }
 
-    /* ── Empty state ─────────────────────────────────────────────── */
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: .9; }
-      50% { transform: scale(1.08); opacity: 1; }
-    }
-
-    .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 4rem 2rem;
-      color: var(--muted);
-    }
-
-    .empty-icon {
-      font-size: 3.5rem;
-      display: block;
-      margin-bottom: 1rem;
-      animation: pulse 2.5s ease-in-out infinite;
-    }
-
-    .empty-state h3 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: .5rem;
-    }
-
-    .empty-state p { font-size: .9375rem; }
-
-    /* ── Detail panel ────────────────────────────────────────────── */
-    .detail-panel {
-      position: fixed;
-      top: 0; right: 0;
-      width: 480px;
-      max-width: 100vw;
-      height: 100vh;
-      background: var(--surface);
-      border-left: 1px solid var(--border);
-      box-shadow: -4px 0 24px rgba(0,0,0,.12);
-      z-index: 200;
+    .card-meta {
       display: flex;
-      flex-direction: column;
-      transform: translateX(110%);
-      transition: transform .3s cubic-bezier(.4,0,.2,1), background .3s;
+      gap: .4rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ── Badges ──────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: .2rem .65rem;
+      border-radius: 9999px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .badge-bw        { background: #374151; }
+    .badge-c41       { background: #ea580c; }
+    .badge-ecn2      { background: #9333ea; }
+    .badge-e6        { background: #2563eb; }
+    .badge-wetplate  { background: #92400e; }
+    .badge-fixer     { background: #475569; }
+    .badge-other     { background: #6b7280; }
+
+    body.darkroom .badge { color: #1a0000 !important; background: #ff4444 !important;
+      box-shadow: 0 0 6px rgba(255,68,68,.4); }
+
+    .status-badge {
+      display: inline-block;
+      padding: .2rem .65rem;
+      border-radius: 9999px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .status-tested       { background: #dcfce7; color: #166534; }
+    .status-experimental { background: #fef9c3; color: #854d0e; }
+    .status-archived     { background: #f3f4f6; color: #6b7280; }
+    body.darkroom .status-tested,
+    body.darkroom .status-experimental,
+    body.darkroom .status-archived { background: #2a0000; color: #ff6666; }
+
+    .card-desc {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .detail-panel.open { transform: translateX(0); }
 
-    .detail-header {
-      padding: 1.25rem 1.5rem 1rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: flex-start;
-      gap: .75rem;
-      flex-shrink: 0;
-    }
-
-    .detail-header-text { flex: 1; min-width: 0; }
-
-    .detail-title {
-      font-size: 1.25rem;
-      font-weight: 800;
-      line-height: 1.3;
-      margin-bottom: .375rem;
-    }
-
-    .detail-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.25rem 1.5rem;
-    }
-
-    .detail-section { margin-bottom: 1.5rem; }
-
-    .detail-section-title {
-      font-size: .75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
+    /* Ingredient mini-list inside card */
+    .ing-list {
+      font-size: .8125rem;
       color: var(--muted);
-      margin-bottom: .625rem;
-    }
-
-    .detail-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .875rem;
-    }
-    .detail-table th {
-      text-align: left;
-      font-weight: 600;
-      font-size: .75rem;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--muted);
-      padding: .375rem .5rem;
-      border-bottom: 2px solid var(--border);
-    }
-    .detail-table td {
-      padding: .5rem .5rem;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-    .detail-table tr:last-child td { border-bottom: none; }
-
-    .detail-notes {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: .875rem 1rem;
-      font-size: .875rem;
-      line-height: 1.7;
-      white-space: pre-wrap;
-      transition: background .3s;
-    }
-
-    .detail-footer {
-      padding: 1rem 1.5rem;
       border-top: 1px solid var(--border);
-      display: flex;
-      gap: .5rem;
-      flex-shrink: 0;
-      flex-wrap: wrap;
+      padding-top: .625rem;
     }
-
-    /* Scale section */
-    #scale-section input[type="number"] {
-      padding: .375rem .625rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: .875rem;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text);
-      transition: border-color .15s, background .3s;
-    }
-    #scale-section input[type="number"]:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
-    }
-
-    #scaled-table table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .875rem;
-      margin-top: .5rem;
-    }
-    #scaled-table th {
-      text-align: left;
+    .ing-list-title {
       font-weight: 600;
       font-size: .75rem;
       text-transform: uppercase;
       letter-spacing: .05em;
+      margin-bottom: .35rem;
       color: var(--muted);
-      padding: .375rem .5rem;
-      border-bottom: 2px solid var(--border);
     }
-    #scaled-table td {
-      padding: .4rem .5rem;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
+    .ing-row {
+      display: flex;
+      justify-content: space-between;
+      padding: .15rem 0;
+      gap: .5rem;
     }
-    #scaled-table tr:last-child td { border-bottom: none; }
+    .ing-name { color: var(--text); }
+    .ing-qty  { white-space: nowrap; color: var(--muted); }
+    .ing-more { color: var(--accent); font-size: .75rem; margin-top: .2rem; }
+
+    /* Notes */
+    .card-notes {
+      font-size: .8125rem;
+      color: var(--muted);
+      font-style: italic;
+      border-top: 1px solid var(--border);
+      padding-top: .5rem;
+      line-height: 1.5;
+    }
+
+    /* ── Empty state ─────────────────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 5rem 1rem;
+      color: var(--muted);
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.1); opacity: .7; }
+    }
+    .empty-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      display: inline-block;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    .empty h2 { font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; }
+    .empty p  { font-size: .9375rem; margin-bottom: 1.5rem; }
 
     /* ── Modal ───────────────────────────────────────────────────── */
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(24px) scale(.97); }
-      to   { opacity: 1; transform: translateY(0)    scale(1);   }
-    }
-
     .modal-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.45);
-      z-index: 300;
-      align-items: center;
+      background: rgba(0,0,0,.5);
+      z-index: 200;
+      align-items: flex-start;
       justify-content: center;
-      padding: 1rem;
+      padding: 2rem 1rem 1rem;
+      overflow-y: auto;
     }
     .modal-backdrop.open { display: flex; }
 
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     .modal {
       background: var(--surface);
-      border-radius: calc(var(--radius) * 1.5);
+      border: 1px solid var(--border);
+      border-radius: .875rem;
       width: 100%;
-      max-width: 600px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+      max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
       display: flex;
       flex-direction: column;
-      animation: slideUp .25s ease-out;
-      transition: background .3s;
+      margin-bottom: 2rem;
+      animation: slideUp .22s ease;
     }
 
     .modal-header {
-      padding: 1.25rem 1.5rem 1rem;
-      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: .75rem;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border);
     }
-
-    .modal-title {
-      font-size: 1.125rem;
-      font-weight: 700;
-      flex: 1;
-    }
+    .modal-title { font-size: 1.125rem; font-weight: 700; }
 
     .modal-body {
       padding: 1.25rem 1.5rem;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
       max-height: 70vh;
+      overflow-y: auto;
     }
 
     .modal-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--border);
       display: flex;
       justify-content: flex-end;
-      gap: .5rem;
+      gap: .625rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
     }
 
-    /* ── Form elements ───────────────────────────────────────────── */
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
-    label {
-      display: block;
-      font-size: .8125rem;
-      font-weight: 600;
-      margin-bottom: .375rem;
-      color: var(--text);
-    }
-
-    input[type="text"],
-    input[type="number"],
-    input[type="url"],
-    textarea,
-    select {
-      width: 100%;
-      padding: .5rem .75rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: .875rem;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text);
-      transition: border-color .15s, box-shadow .15s, background .3s, color .3s;
-    }
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    input[type="url"]:focus,
-    textarea:focus,
-    select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
-    }
-    textarea { resize: vertical; min-height: 80px; }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: .75rem;
-    }
+    /* Form row */
+    .form-row { display: flex; gap: .75rem; }
+    .form-row > * { flex: 1; }
 
     /* ── Ingredient editor ───────────────────────────────────────── */
+    .ing-editor { display: flex; flex-direction: column; gap: .4rem; }
     .ing-editor-header {
       display: grid;
-      grid-template-columns: 1fr .65fr .65fr auto;
+      grid-template-columns: 1fr 1fr 1fr auto;
       gap: .5rem;
       font-size: .75rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: .05em;
       color: var(--muted);
-      padding: .25rem .5rem;
-      margin-bottom: .25rem;
+      padding: 0 .25rem;
     }
-
-    .ing-row {
+    .ing-editor-row {
       display: grid;
-      grid-template-columns: 1fr .65fr .65fr auto;
+      grid-template-columns: 1fr 1fr 1fr auto;
       gap: .5rem;
       align-items: center;
-      margin-bottom: .375rem;
     }
+    .ing-editor-row input { padding: .4rem .6rem; font-size: .875rem; }
+    .drag-handle { cursor: grab; color: var(--muted); padding: .25rem; user-select: none; }
+    .drag-handle:active { cursor: grabbing; }
+    .ing-editor-row.drag-over { outline: 2px dashed var(--accent); border-radius: var(--radius); }
 
-    .ing-row input, .ing-row select {
-      padding: .4rem .5rem;
+    .add-ing-btn {
+      align-self: flex-start;
+      margin-top: .25rem;
       font-size: .8125rem;
-    }
-
-    .btn-icon {
-      padding: .4rem .5rem;
-      font-size: .875rem;
-      line-height: 1;
-      border-radius: var(--radius);
-      background: transparent;
-      border: 1px solid var(--border);
+      background: var(--bg);
+      border: 1px dashed var(--border);
       color: var(--muted);
-      cursor: pointer;
-      transition: background .15s, color .15s;
+      padding: .4rem .875rem;
+      border-radius: var(--radius);
     }
-    .btn-icon:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .add-ing-btn:hover { background: var(--surface); color: var(--text); border-color: var(--accent); }
 
     /* ── Confirm dialog ──────────────────────────────────────────── */
     .confirm-backdrop {
@@ -785,978 +579,1200 @@
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,.5);
-      z-index: 400;
+      z-index: 300;
       align-items: center;
       justify-content: center;
       padding: 1rem;
     }
     .confirm-backdrop.open { display: flex; }
-
-    .confirm-dialog {
+    .confirm-box {
       background: var(--surface);
-      border-radius: calc(var(--radius) * 1.5);
-      padding: 2rem;
-      max-width: 420px;
+      border: 1px solid var(--border);
+      border-radius: .75rem;
+      padding: 1.75rem;
+      max-width: 380px;
       width: 100%;
-      box-shadow: 0 20px 60px rgba(0,0,0,.3);
-      animation: slideUp .2s ease-out;
-      transition: background .3s;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      animation: slideUp .2s ease;
     }
-
-    .confirm-dialog h3 {
-      font-size: 1.125rem;
-      font-weight: 700;
-      margin-bottom: .5rem;
-    }
-
-    .confirm-dialog p {
-      color: var(--muted);
-      font-size: .9375rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .confirm-actions {
-      display: flex;
-      gap: .5rem;
-      justify-content: flex-end;
-    }
+    .confirm-box h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: .5rem; }
+    .confirm-box p  { font-size: .9rem; color: var(--muted); margin-bottom: 1.25rem; }
+    .confirm-btns { display: flex; gap: .625rem; justify-content: center; }
 
     /* ── Toast ───────────────────────────────────────────────────── */
-    @keyframes toastIn  { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
-
     .toast-container {
       position: fixed;
       bottom: 1.5rem;
       right: 1.5rem;
-      z-index: 9000;
+      z-index: 400;
       display: flex;
       flex-direction: column;
       gap: .5rem;
       pointer-events: none;
     }
-
     .toast {
-      padding: .75rem 1.25rem;
+      background: #111827;
+      color: #fff;
+      padding: .65rem 1.1rem;
       border-radius: var(--radius);
       font-size: .875rem;
       font-weight: 500;
-      background: #1f2937;
-      color: #f9fafb;
-      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      animation: slideIn .2s ease;
       pointer-events: auto;
-      animation: toastIn .25s ease-out;
-      max-width: 320px;
-      word-break: break-word;
     }
-    .toast.success { background: #16a34a; }
-    .toast.error   { background: #dc2626; }
-    .toast.info    { background: #2563eb; }
-    .toast.hide    { animation: toastOut .25s ease-in forwards; }
+    .toast.success { background: #166534; }
+    .toast.error   { background: #991b1b; }
+    body.darkroom .toast { background: #2a0000; color: #ff8888; }
 
-    /* ── Utility ─────────────────────────────────────────────────── */
-    .hidden { display: none !important; }
-
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 1rem 0;
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(1rem); }
+      to   { opacity: 1; transform: translateX(0); }
     }
+
+    /* ── Detail panel (full-screen card view) ────────────────────── */
+    .detail-panel {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 150;
+      overflow-y: auto;
+      transition: background .3s;
+    }
+    .detail-panel.open { display: block; }
+    .detail-inner {
+      max-width: 740px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .detail-back { margin-bottom: 1.25rem; display: flex; gap: .5rem; }
+    .detail-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin-bottom: .35rem;
+    }
+    .detail-meta {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    .detail-section { margin-bottom: 1.5rem; }
+    .detail-section-title {
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: .75rem;
+    }
+    .detail-desc {
+      font-size: .9375rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* Full ingredient table */
+    .ing-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    .ing-table th {
+      text-align: left;
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      padding: .4rem .6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .ing-table td {
+      padding: .55rem .6rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .ing-table tr:last-child td { border-bottom: none; }
+    .ing-table .scaled-col { color: var(--accent); font-weight: 600; }
+
+    .detail-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      font-size: .9rem;
+      color: var(--muted);
+      line-height: 1.65;
+      font-style: italic;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: .625rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    /* Scale recipe */
+    .scale-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+    .scale-row label { margin: 0; white-space: nowrap; font-weight: 500; }
+    .scale-row input { width: 130px; }
 
     /* ── Footer ──────────────────────────────────────────────────── */
     footer {
       text-align: center;
-      padding: 2rem 1rem;
+      padding: 1.25rem;
       font-size: .8125rem;
       color: var(--muted);
       border-top: 1px solid var(--border);
-      margin-top: 2rem;
+      margin-top: auto;
       transition: border-color .3s, color .3s;
     }
 
-    /* ── Print / PDF ─────────────────────────────────────────────── */
+    /* ── Print styles ────────────────────────────────────────────── */
     @media print {
-      .header, .toolbar, .stats-bar, .card-actions,
-      .btn, .detail-footer, footer,
-      .detail-panel .detail-footer,
-      #modal-backdrop, #confirm-backdrop,
-      .toast-container {
-        display: none !important;
-      }
+      header, footer, .toolbar, .stats-bar,
+      .detail-back, .detail-actions, .modal-backdrop,
+      .confirm-backdrop, .toast-container, #main-page,
+      .card-actions, .scale-row, #scale-section { display: none !important; }
+
+      .detail-panel { display: block !important; position: static !important; overflow: visible !important; }
+      .detail-inner { max-width: 100% !important; padding: 0 !important; }
+      .detail-panel .detail-title { font-size: 1.5rem; }
 
       body { background: #fff !important; color: #000 !important; }
+      .badge, .status-badge { border: 1px solid #ccc !important; color: #000 !important; background: #f3f3f3 !important; }
+      .ing-table th, .ing-table td { border-bottom: 1px solid #ccc !important; color: #000 !important; }
 
-      .detail-panel {
-        position: static !important;
-        transform: none !important;
-        width: 100% !important;
-        height: auto !important;
-        box-shadow: none !important;
-        border: none !important;
-      }
-
-      .detail-body { overflow: visible !important; }
-
-      .cards-grid, .cards-list {
+      /* Print all-cards view */
+      .print-all-container {
         display: block !important;
       }
+    }
 
-      .card {
-        page-break-inside: avoid;
-        break-inside: avoid;
-        border: 1px solid #ccc !important;
-        margin-bottom: 1rem;
-        box-shadow: none !important;
-      }
+    @media not print {
+      .print-all-container { display: none; }
+    }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .page { padding: 1.25rem 1rem; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-wrapper { max-width: 100%; }
+      .ing-editor-header,
+      .ing-editor-row { grid-template-columns: 1fr 1fr auto auto; }
+      .ing-editor-header span:nth-child(3),
+      .ing-editor-row input:nth-child(3) { display: none; }
+      .header-right .btn-sm { font-size: .75rem; padding: .3rem .6rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ── Header ───────────────────────────────────────────────────── -->
-  <header class="header" id="app-header">
-    <div class="header-inner">
-      <div class="logo">
-        <span class="logo-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2"/>
-            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-            <line x1="12" y1="12" x2="12" y2="16"/>
-            <line x1="10" y1="14" x2="14" y2="14"/>
-          </svg>
-        </span>
-        Formulae
-      </div>
-      <div class="header-actions">
-        <button class="btn btn-ghost btn-sm" onclick="exportData()" title="Export JSON">⬇ Export</button>
-        <button class="btn btn-ghost btn-sm" onclick="printAll()" title="Print / PDF all visible formulas">⬇ PDF</button>
-        <label class="btn btn-ghost btn-sm" style="cursor:pointer" title="Import JSON">
-          ⬆ Import
-          <input type="file" accept=".json" class="hidden" onchange="importData(event)" />
-        </label>
-        <button class="btn btn-ghost btn-sm" id="darkroom-btn" onclick="toggleDarkroom()" title="Toggle darkroom mode">🔆 Darkroom</button>
-        <button class="btn btn-primary btn-sm" onclick="openModal()" title="New formula (N)">+ New</button>
-      </div>
+<!-- ── HEADER ──────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <span class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="7" width="20" height="13" rx="2"/>
+        <path d="M2 11h2m16 0h2M2 15h2m16 0h2"/>
+        <circle cx="12" cy="13" r="2"/>
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      </svg>
+    </span>
+    Formulae<span class="logo-dot">.</span>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-sm" onclick="toggleDarkroom()" id="dr-btn" title="Toggle darkroom mode">
+      <span id="dr-icon">🔴</span>
+      <span id="dr-label">Darkroom</span>
+    </button>
+    <button class="btn btn-sm" onclick="exportData()" title="Export all formulas as JSON">↓ Export</button>
+    <button class="btn btn-sm" onclick="printAll()" title="Print / save PDF of all visible formulas">↓ PDF</button>
+    <label class="btn btn-sm" style="margin:0;cursor:pointer;" title="Import from JSON">
+      ↑ Import <input type="file" accept=".json" style="display:none" onchange="importData(event)" />
+    </label>
+    <button class="btn btn-primary btn-sm" onclick="openModal()" title="New formula (press N)">+ New Formula</button>
+  </div>
+</header>
+
+<!-- ── MAIN ────────────────────────────────────────────────────── -->
+<main class="page" id="main-page">
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrapper">
+      <span class="search-icon">🔍</span>
+      <input
+        type="search"
+        id="search-input"
+        placeholder="Search name, ingredient, notes… (/)"
+        oninput="renderCards()"
+        aria-label="Search formulas"
+      />
     </div>
-  </header>
-
-  <!-- ── Main ─────────────────────────────────────────────────────── -->
-  <main class="page">
-
-    <!-- Stats bar -->
-    <div class="stats-bar" id="stats-bar">
-      <!-- populated by renderStats() -->
-    </div>
-
-    <!-- Toolbar -->
-    <div class="toolbar">
-      <div class="search-wrapper">
-        <span class="search-icon">🔍</span>
-        <input
-          id="search-input"
-          class="search-input"
-          type="search"
-          placeholder="Search formulas… (/)"
-          oninput="renderCards()"
-          aria-label="Search formulas"
-        />
-      </div>
-
-      <select id="filter-category" class="filter-select" onchange="renderCards()" aria-label="Filter by process">
-        <option value="">All processes</option>
-        <option value="developer">Developer</option>
-        <option value="fixer">Fixer</option>
-        <option value="stop">Stop Bath</option>
-        <option value="bleach">Bleach</option>
-        <option value="toner">Toner</option>
-        <option value="other">Other</option>
-      </select>
-
-      <select id="filter-status" class="filter-select" onchange="renderCards()" aria-label="Filter by status">
-        <option value="">All statuses</option>
-        <option value="active">Active</option>
-        <option value="testing">Testing</option>
-        <option value="archived">Archived</option>
-        <option value="deprecated">Deprecated</option>
-      </select>
-
-      <select id="sort-select" class="filter-select" onchange="renderCards()" aria-label="Sort">
-        <option value="updated">Recently updated</option>
-        <option value="created">Recently created</option>
-        <option value="name">Name A–Z</option>
-      </select>
-
-      <button class="btn btn-ghost btn-sm" onclick="clearFilters()" title="Clear filters">✕ Clear</button>
-      <button id="view-toggle" class="btn btn-ghost btn-sm" onclick="toggleView()" title="Toggle grid/list view">⊞ Grid</button>
-      <div id="results-count" class="results-count"></div>
-    </div>
-
-    <!-- Cards -->
-    <div class="cards-grid" id="cards-grid">
-      <!-- populated by renderCards() -->
-    </div>
-
-  </main>
-
-  <!-- ── Footer ───────────────────────────────────────────────────── -->
-  <footer>© 2026 Formulae · Film Lab Chemical Database</footer>
-
-  <!-- ── Detail panel ─────────────────────────────────────────────── -->
-  <aside class="detail-panel" id="detail-panel" aria-label="Formula detail">
-    <div class="detail-header">
-      <div class="detail-header-text">
-        <div class="detail-title" id="detail-title"></div>
-        <div class="card-badges" id="detail-badges"></div>
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="closeDetail()" title="Close">✕</button>
-    </div>
-    <div class="detail-body" id="detail-body">
-      <!-- populated by openDetail() -->
-    </div>
-    <div class="detail-footer" id="detail-footer">
-      <!-- populated by openDetail() -->
-    </div>
-  </aside>
-
-  <!-- ── Modal backdrop ───────────────────────────────────────────── -->
-  <div class="modal-backdrop" id="modal-backdrop" onclick="backdropClose(event)">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-header">
-        <span class="modal-title" id="modal-title">New Formula</span>
-        <button class="btn btn-ghost btn-sm" onclick="closeModal()" title="Close">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="f-name">Formula name *</label>
-          <input id="f-name" type="text" placeholder="e.g. D-76 Stock" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="f-category">Process *</label>
-            <select id="f-category">
-              <option value="developer">Developer</option>
-              <option value="fixer">Fixer</option>
-              <option value="stop">Stop Bath</option>
-              <option value="bleach">Bleach</option>
-              <option value="toner">Toner</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="f-status">Status</label>
-            <select id="f-status">
-              <option value="active">Active</option>
-              <option value="testing">Testing</option>
-              <option value="archived">Archived</option>
-              <option value="deprecated">Deprecated</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="f-notes">Notes</label>
-          <textarea id="f-notes" placeholder="Usage notes, temperature, timing…"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Ingredients</label>
-          <div id="ing-editor">
-            <!-- populated by clearIngEditor() -->
-          </div>
-          <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="addIngRow()">+ Add ingredient</button>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveFormula()">Save formula</button>
-      </div>
-    </div>
+    <select id="filter-process" onchange="renderCards()" aria-label="Filter by process">
+      <option value="">All processes</option>
+      <option value="B&W">B&amp;W</option>
+      <option value="C-41">C-41</option>
+      <option value="ECN-2">ECN-2</option>
+      <option value="E-6">E-6</option>
+      <option value="Wet Plate">Wet Plate</option>
+      <option value="Fixer">Fixer</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="filter-category" onchange="renderCards()" aria-label="Filter by category">
+      <option value="">All categories</option>
+      <option value="Developer">Developer</option>
+      <option value="Stop Bath">Stop Bath</option>
+      <option value="Fixer">Fixer</option>
+      <option value="Bleach">Bleach</option>
+      <option value="Stabilizer">Stabilizer</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="filter-status" onchange="renderCards()" aria-label="Filter by status">
+      <option value="">All statuses</option>
+      <option value="Tested">Tested</option>
+      <option value="Experimental">Experimental</option>
+      <option value="Archived">Archived</option>
+    </select>
+    <select id="sort-select" onchange="renderCards()" aria-label="Sort by">
+      <option value="updated">Recently updated</option>
+      <option value="name">Name A–Z</option>
+      <option value="process">Process</option>
+      <option value="version">Version ↓</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="clearFilters()" title="Clear all filters">✕ Clear</button>
+    <button class="btn btn-ghost btn-sm" id="view-toggle-btn" onclick="toggleView()" title="Toggle grid/list view">⊞ Grid</button>
+    <div id="results-count" class="results-count"></div>
   </div>
 
-  <!-- ── Confirm backdrop ──────────────────────────────────────────── -->
-  <div class="confirm-backdrop" id="confirm-backdrop">
-    <div class="confirm-dialog" role="alertdialog" aria-modal="true">
-      <h3 id="confirm-title">Delete formula?</h3>
-      <p id="confirm-msg">This action cannot be undone.</p>
-      <div class="confirm-actions">
-        <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
-        <button class="btn btn-danger" id="confirm-ok-btn" onclick="confirmDelete()">Delete</button>
+  <!-- Cards grid -->
+  <div class="cards-grid" id="cards-grid"></div>
+  <div id="empty-state" class="empty" style="display:none"></div>
+</main>
+
+<!-- ── FOOTER ──────────────────────────────────────────────────── -->
+<footer>© 2026 Formulae · Film Lab Chemical Database</footer>
+
+<!-- ── DETAIL PANEL ─────────────────────────────────────────────── -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-inner">
+    <div class="detail-back">
+      <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← Back</button>
+      <button class="btn btn-secondary btn-sm" onclick="printDetail()" title="Print / save as PDF">⬇ PDF</button>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- ── FORMULA MODAL ────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="backdropClose(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">New Formula</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <input type="hidden" id="edit-id" />
+
+      <div>
+        <label for="f-name">Formula Name *</label>
+        <input id="f-name" type="text" placeholder="e.g. HC-110 Dilution B" required />
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="f-process">Process *</label>
+          <select id="f-process" required>
+            <option value="">— select —</option>
+            <option>B&W</option>
+            <option>C-41</option>
+            <option>ECN-2</option>
+            <option>E-6</option>
+            <option>Wet Plate</option>
+            <option>Fixer</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-category">Category *</label>
+          <select id="f-category" required>
+            <option value="">— select —</option>
+            <option>Developer</option>
+            <option>Stop Bath</option>
+            <option>Fixer</option>
+            <option>Bleach</option>
+            <option>Stabilizer</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option>Experimental</option>
+            <option>Tested</option>
+            <option>Archived</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-version">Version</label>
+          <input id="f-version" type="text" placeholder="e.g. 1.0" value="1.0" />
+        </div>
+      </div>
+
+      <div>
+        <label for="f-desc">Description</label>
+        <textarea id="f-desc" placeholder="Short description…"></textarea>
+      </div>
+
+      <!-- Ingredient editor -->
+      <div>
+        <label>Ingredients</label>
+        <div class="ing-editor" id="ing-editor">
+          <!-- header rebuilt by clearIngEditor() -->
+        </div>
+        <button class="add-ing-btn" onclick="addIngRow()">+ Add ingredient</button>
+      </div>
+
+      <div>
+        <label for="f-temp">Temperature / Conditions</label>
+        <input id="f-temp" type="text" placeholder="e.g. 38°C / 100°F" />
+      </div>
+
+      <div>
+        <label for="f-time">Development Time</label>
+        <input id="f-time" type="text" placeholder="e.g. 3:30 min at 1:1" />
+      </div>
+
+      <div>
+        <label for="f-notes">Notes</label>
+        <textarea id="f-notes" placeholder="Any special notes, warnings, tips…"></textarea>
       </div>
     </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFormula()" id="save-btn">Save formula</button>
+    </div>
   </div>
+</div>
 
-  <!-- ── Toast container ──────────────────────────────────────────── -->
-  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+<!-- ── CONFIRM DIALOG ───────────────────────────────────────────── -->
+<div class="confirm-backdrop" id="confirm-backdrop">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Delete formula?</h3>
+    <p id="confirm-msg">This action cannot be undone.</p>
+    <div class="confirm-btns">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
 
-  <script>
-  /* ─── State ──────────────────────────────────────────────────── */
-  let db          = [];
-  let editingId   = null;
-  let deleteId    = null;
-  let detailId    = null;
-  let viewMode    = 'grid';
+<!-- ── TOAST CONTAINER ──────────────────────────────────────────── -->
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
 
-  const STORAGE_KEY  = 'formulae_v1';
-  const DARKROOM_KEY = 'formulae_darkroom';
+<!-- ── SCRIPT ───────────────────────────────────────────────────── -->
+<script>
+'use strict';
 
-  /* ─── Utilities ──────────────────────────────────────────────── */
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
+/* ─── State ───────────────────────────────────────────────────── */
+const STORAGE_KEY  = 'formulae_v1';
+const DARKROOM_KEY = 'formulae_darkroom';
+let db            = [];
+let editingId     = null;
+let confirmCallback = null;
+let dragSrcIdx    = null;
+let viewMode      = 'grid';
+let currentDetailId = null;
 
-  function esc(str) {
-    return String(str ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
+/* ─── Utilities ──────────────────────────────────────────────── */
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
 
-  function processClass(p) {
-    return 'badge badge-process-' + (p || 'other');
-  }
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
-  function statusClass(s) {
-    return 'badge badge-status-' + (s || 'active');
-  }
+function processClass(p) {
+  const map = {
+    'B&W':'bw','C-41':'c41','ECN-2':'ecn2',
+    'E-6':'e6','Wet Plate':'wetplate','Fixer':'fixer'
+  };
+  return 'badge-' + (map[p] || 'other');
+}
 
-  function processLabel(p) {
-    const labels = { developer: 'Developer', fixer: 'Fixer', stop: 'Stop Bath', bleach: 'Bleach', toner: 'Toner', other: 'Other' };
-    return labels[p] || p || 'Other';
-  }
+function statusClass(s) {
+  const map = { Tested:'tested', Experimental:'experimental', Archived:'archived' };
+  return 'status-' + (map[s] || 'experimental');
+}
 
-  function statusLabel(s) {
-    const labels = { active: 'Active', testing: 'Testing', archived: 'Archived', deprecated: 'Deprecated' };
-    return labels[s] || s || 'Active';
-  }
+/* ─── Seed data (inside a function so uid() is defined first) ── */
+function makeSeed() {
+  return [
+    {
+      id: uid(), name: "D-76 Stock",
+      process: "B&W", category: "Developer", status: "Tested", version: "1.0",
+      desc: "Kodak's classic general-purpose film developer. Gives full emulsion speed with fine grain.",
+      ingredients: [
+        { name: "Water (52°C / 125°F)", qty: "750", unit: "ml" },
+        { name: "Metol", qty: "2", unit: "g" },
+        { name: "Sodium Sulfite (anhydrous)", qty: "100", unit: "g" },
+        { name: "Hydroquinone", qty: "5", unit: "g" },
+        { name: "Borax", qty: "2", unit: "g" },
+        { name: "Water to make", qty: "1000", unit: "ml" },
+      ],
+      temp: "20°C / 68°F", time: "8 min (stock), 11 min (1:1)",
+      notes: "Mix in the order listed. Metol dissolves before adding Hydroquinone. Store in a full, tightly capped bottle.",
+      updatedAt: Date.now() - 86400000 * 2,
+    },
+    {
+      id: uid(), name: "Kodak C-41 Developer",
+      process: "C-41", category: "Developer", status: "Experimental", version: "1.2",
+      desc: "Color negative process CD-4 based developer formula for C-41 compatible films.",
+      ingredients: [
+        { name: "Water (38°C)", qty: "800", unit: "ml" },
+        { name: "Hydroxylamine Sulfate", qty: "1.9", unit: "g" },
+        { name: "Sodium Sulfite", qty: "4.25", unit: "g" },
+        { name: "CD-4 (color developer)", qty: "4.75", unit: "g" },
+        { name: "Sodium Carbonate (anhydrous)", qty: "37.5", unit: "g" },
+        { name: "Potassium Bromide", qty: "1.2", unit: "g" },
+        { name: "Water to make", qty: "1000", unit: "ml" },
+      ],
+      temp: "38°C ± 0.15°C / 100.4°F", time: "3:15 min",
+      notes: "Extremely temperature sensitive. Use a water bath. Adjust pH to 10.03 with sodium hydroxide or acetic acid.",
+      updatedAt: Date.now() - 86400000 * 5,
+    },
+    {
+      id: uid(), name: "TF-4 Alkaline Fixer",
+      process: "B&W", category: "Fixer", status: "Tested", version: "2.0",
+      desc: "Rapid archival alkaline fixer for film and paper. Ammonium thiosulfate based.",
+      ingredients: [
+        { name: "Water", qty: "800", unit: "ml" },
+        { name: "Ammonium Thiosulfate (60% sol.)", qty: "200", unit: "ml" },
+        { name: "Sodium Sulfite", qty: "15", unit: "g" },
+        { name: "Sodium Bicarbonate", qty: "8.5", unit: "g" },
+        { name: "Water to make", qty: "1000", unit: "ml" },
+      ],
+      temp: "18–24°C", time: "2–4 min (film), 1–2 min (RC paper)",
+      notes: "pH should be 7.5–8.0. Non-hardening, safe for rapid washing. Discard when grey or fixes slowly.",
+      updatedAt: Date.now() - 86400000 * 1,
+    },
+    {
+      id: uid(), name: "E-6 First Developer",
+      process: "E-6", category: "Developer", status: "Experimental", version: "1.0",
+      desc: "First developer for the E-6 reversal slide process. Critical step — controls overall density.",
+      ingredients: [
+        { name: "Water (38°C)", qty: "700", unit: "ml" },
+        { name: "Sodium Sulfite", qty: "30", unit: "g" },
+        { name: "Phenidone", qty: "0.3", unit: "g" },
+        { name: "Hydroquinone", qty: "6", unit: "g" },
+        { name: "Sodium Carbonate", qty: "18", unit: "g" },
+        { name: "Potassium Bromide", qty: "1.5", unit: "g" },
+        { name: "Potassium Thiocyanate", qty: "1.0", unit: "g" },
+        { name: "Water to make", qty: "1000", unit: "ml" },
+      ],
+      temp: "38°C ± 0.15°C", time: "6 min",
+      notes: "Do not expose to light after this step. Temperature control is critical. Replenish at 11 ml/roll.",
+      updatedAt: Date.now() - 86400000 * 10,
+    },
+    {
+      id: uid(), name: "Wet Plate Collodion Developer",
+      process: "Wet Plate", category: "Developer", status: "Tested", version: "3.1",
+      desc: "Pyrogallic acid developer for wet plate collodion ambrotypes and tintypes.",
+      ingredients: [
+        { name: "Distilled Water", qty: "1000", unit: "ml" },
+        { name: "Pyrogallic Acid", qty: "1", unit: "g" },
+        { name: "Glacial Acetic Acid", qty: "30", unit: "ml" },
+      ],
+      temp: "Ambient (18–22°C recommended)", time: "10–30 seconds (to taste)",
+      notes: "Develop in strong raking light. Pyrogallol stains skin — use gloves. Discard after each plate.",
+      updatedAt: Date.now(),
+    },
+  ];
+}
 
-  /* ─── Seed data ──────────────────────────────────────────────── */
-  function makeSeed() {
-    return [
-      {
-        id: uid(), name: 'D-76 Stock', category: 'developer', status: 'active',
-        notes: 'Classic Kodak developer. Use 1:1 dilution for box speed. 68°F / 8 min for Tri-X 400.',
-        ingredients: [
-          { name: 'Water (52°C)', qty: '750', unit: 'ml' },
-          { name: 'Metol', qty: '2', unit: 'g' },
-          { name: 'Sodium Sulfite (anhydrous)', qty: '100', unit: 'g' },
-          { name: 'Hydroquinone', qty: '5', unit: 'g' },
-          { name: 'Borax', qty: '2', unit: 'g' },
-          { name: 'Water to make', qty: '1000', unit: 'ml' },
-        ],
-        created: Date.now() - 86400000 * 10,
-        updated: Date.now() - 86400000 * 2,
-      },
-      {
-        id: uid(), name: 'Kodak Rapid Fixer', category: 'fixer', status: 'active',
-        notes: 'Ammonium thiosulfate-based rapid fixer. Dilute 1:4 for film, 1:7 for paper.',
-        ingredients: [
-          { name: 'Ammonium Thiosulfate (58% sol.)', qty: '800', unit: 'ml' },
-          { name: 'Sodium Sulfite', qty: '60', unit: 'g' },
-          { name: 'Acetic Acid (28%)', qty: '75', unit: 'ml' },
-          { name: 'Aluminum Sulfate', qty: '15', unit: 'g' },
-          { name: 'Water to make', qty: '1000', unit: 'ml' },
-        ],
-        created: Date.now() - 86400000 * 8,
-        updated: Date.now() - 86400000 * 1,
-      },
-      {
-        id: uid(), name: 'Ilford Stop Bath', category: 'stop', status: 'active',
-        notes: 'Indicator stop bath. Turns purple when exhausted. Dilute 1:19 for film.',
-        ingredients: [
-          { name: 'Acetic Acid (glacial)', qty: '20', unit: 'ml' },
-          { name: 'Bromophenol Blue (0.1%)', qty: '5', unit: 'ml' },
-          { name: 'Water to make', qty: '1000', unit: 'ml' },
-        ],
-        created: Date.now() - 86400000 * 5,
-        updated: Date.now() - 86400000 * 5,
-      },
-      {
-        id: uid(), name: 'Selenium Toner 1:9', category: 'toner', status: 'testing',
-        notes: 'Archival selenium toner for warm brown tones on fiber paper. Provides good archival permanence.',
-        ingredients: [
-          { name: 'Kodak Rapid Selenium Toner', qty: '100', unit: 'ml' },
-          { name: 'Hypo Clearing Agent solution', qty: '900', unit: 'ml' },
-        ],
-        created: Date.now() - 86400000 * 3,
-        updated: Date.now() - 86400000 * 3,
-      },
-      {
-        id: uid(), name: 'Farmer\'s Reducer', category: 'bleach', status: 'active',
-        notes: 'Potassium ferricyanide bleach for reducing density / lightening shadow areas. Mix immediately before use.',
-        ingredients: [
-          { name: 'Potassium Ferricyanide', qty: '7.5', unit: 'g' },
-          { name: 'Sodium Thiosulfate (anhydrous)', qty: '180', unit: 'g' },
-          { name: 'Water to make', qty: '1000', unit: 'ml' },
-        ],
-        created: Date.now() - 86400000 * 1,
-        updated: Date.now(),
-      },
-    ];
-  }
-
-  /* ─── Persistence ────────────────────────────────────────────── */
-  function load() {
+/* ─── Persistence ────────────────────────────────────────────── */
+function load() {
+  try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try { db = JSON.parse(raw); } catch { db = []; }
+    db = raw ? JSON.parse(raw) : [];
+  } catch { db = []; }
+  if (!db.length) { db = makeSeed(); save(); }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+}
+
+/* ─── Darkroom ───────────────────────────────────────────────── */
+function updateDarkroomBtn(on) {
+  document.getElementById('dr-icon').textContent  = on ? '💡' : '��';
+  document.getElementById('dr-label').textContent = on ? 'Normal' : 'Darkroom';
+}
+
+function toggleDarkroom() {
+  document.body.classList.toggle('darkroom');
+  const on = document.body.classList.contains('darkroom');
+  updateDarkroomBtn(on);
+  localStorage.setItem(DARKROOM_KEY, on ? '1' : '');
+}
+
+/* ─── View toggle ────────────────────────────────────────────── */
+function toggleView() {
+  viewMode = viewMode === 'grid' ? 'list' : 'grid';
+  const btn = document.getElementById('view-toggle-btn');
+  btn.textContent = viewMode === 'grid' ? '⊞ Grid' : '☰ List';
+  renderCards();
+}
+
+/* ─── Stats bar ──────────────────────────────────────────────── */
+function renderStats() {
+  const total     = db.length;
+  const tested    = db.filter(f => f.status === 'Tested').length;
+  const processes = [...new Set(db.map(f => f.process))].length;
+  document.getElementById('stats-bar').innerHTML =
+    `<div class="stat-card"><span class="stat-icon">🎞</span><span class="stat-num">${total}</span><span class="stat-label">Formula${total !== 1 ? 's' : ''}</span></div>` +
+    `<div class="stat-card"><span class="stat-icon">✅</span><span class="stat-num">${tested}</span><span class="stat-label">Tested</span></div>` +
+    `<div class="stat-card"><span class="stat-icon">🧪</span><span class="stat-num">${processes}</span><span class="stat-label">Process${processes !== 1 ? 'es' : ''}</span></div>`;
+}
+
+/* ─── Cards rendering ────────────────────────────────────────── */
+function getFiltered() {
+  const q    = (document.getElementById('search-input').value || '').toLowerCase();
+  const proc = document.getElementById('filter-process').value;
+  const cat  = document.getElementById('filter-category').value;
+  const stat = document.getElementById('filter-status').value;
+  const sort = document.getElementById('sort-select').value;
+
+  let list = db.filter(f => {
+    if (proc && f.process  !== proc) return false;
+    if (cat  && f.category !== cat)  return false;
+    if (stat && f.status   !== stat) return false;
+    if (q) {
+      const blob = [
+        f.name, f.process, f.category, f.desc, f.notes, f.temp, f.time,
+        ...(f.ingredients || []).map(i => i.name),
+      ].join(' ').toLowerCase();
+      if (!blob.includes(q)) return false;
     }
-    if (!db.length) {
-      db = makeSeed();
-      save();
-    }
+    return true;
+  });
+
+  list.sort((a, b) => {
+    if (sort === 'name')    return a.name.localeCompare(b.name);
+    if (sort === 'process') return a.process.localeCompare(b.process);
+    if (sort === 'version') return parseFloat(b.version||0) - parseFloat(a.version||0);
+    return (b.updatedAt||0) - (a.updatedAt||0);
+  });
+
+  return list;
+}
+
+function renderCards() {
+  renderStats();
+  const list  = getFiltered();
+  const grid  = document.getElementById('cards-grid');
+  const empty = document.getElementById('empty-state');
+  const rc    = document.getElementById('results-count');
+
+  // Results count
+  if (list.length < db.length) {
+    rc.innerHTML = `<strong>${list.length}</strong> of ${db.length} formula${db.length !== 1 ? 's' : ''}`;
+  } else {
+    rc.textContent = '';
   }
 
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  if (!list.length) {
+    grid.innerHTML = '';
+    empty.style.display = '';
+    empty.innerHTML = db.length
+      ? `<div class="empty-icon">🔍</div>
+         <h2>No formulas match</h2>
+         <p>Try adjusting your search or filters.</p>
+         <button class="btn btn-secondary" onclick="clearFilters()">Clear filters</button>`
+      : `<div class="empty-icon">⬛</div>
+         <h2>No formulas yet</h2>
+         <p>Create your first chemical formula to get started.</p>
+         <button class="btn btn-primary" onclick="openModal()">+ New Formula</button>`;
+    return;
   }
 
-  /* ─── Darkroom ───────────────────────────────────────────────── */
-  function toggleDarkroom() {
-    const body = document.body;
-    const on   = body.classList.toggle('darkroom');
-    localStorage.setItem(DARKROOM_KEY, on ? '1' : '');
-    updateDarkroomBtn(on);
-    toast(on ? '🔴 Darkroom mode on' : '🔆 Darkroom mode off', 'info');
-  }
+  empty.style.display = 'none';
+  grid.className = viewMode === 'list' ? 'cards-list' : 'cards-grid';
+  grid.innerHTML = list.map(f => cardHTML(f)).join('');
+}
 
-  function updateDarkroomBtn(on) {
-    const btn = document.getElementById('darkroom-btn');
-    if (!btn) return;
-    btn.textContent = on ? '🔆 Light' : '🔆 Darkroom';
-  }
+function cardHTML(f) {
+  const ings   = f.ingredients || [];
+  const preview = ings.slice(0, 4);
+  const more    = ings.length - preview.length;
 
-  /* ─── Stats ──────────────────────────────────────────────────── */
-  function renderStats() {
-    const bar      = document.getElementById('stats-bar');
-    const total    = db.length;
-    const active   = db.filter(f => f.status === 'active').length;
-    const testing  = db.filter(f => f.status === 'testing').length;
-    const processes = [...new Set(db.map(f => f.category))].length;
+  const ingHTML = ings.length
+    ? `<div class="ing-list">
+         <div class="ing-list-title">Ingredients (${ings.length})</div>
+         ${preview.map(i =>
+           `<div class="ing-row">
+              <span class="ing-name">${esc(i.name)}</span>
+              <span class="ing-qty">${esc(i.qty)}${i.unit ? ' ' + esc(i.unit) : ''}</span>
+            </div>`
+         ).join('')}
+         ${more > 0 ? `<div class="ing-more">+ ${more} more ingredient${more > 1 ? 's' : ''}</div>` : ''}
+       </div>` : '';
 
-    bar.innerHTML = `
-      <div class="stat-card">
-        <span class="stat-icon">🎞</span>
-        <div class="stat-card-inner">
-          <span class="stat-num">${total}</span>
-          <span class="stat-label">Formula${total !== 1 ? 's' : ''}</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon">✅</span>
-        <div class="stat-card-inner">
-          <span class="stat-num">${active}</span>
-          <span class="stat-label">Active</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon">🧪</span>
-        <div class="stat-card-inner">
-          <span class="stat-num">${testing}</span>
-          <span class="stat-label">Testing</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon">⚗️</span>
-        <div class="stat-card-inner">
-          <span class="stat-num">${processes}</span>
-          <span class="stat-label">Process type${processes !== 1 ? 's' : ''}</span>
-        </div>
-      </div>
-    `;
-  }
-
-  /* ─── Filtering / sorting ────────────────────────────────────── */
-  function getFiltered() {
-    const q   = (document.getElementById('search-input').value || '').toLowerCase();
-    const cat = document.getElementById('filter-category').value;
-    const st  = document.getElementById('filter-status').value;
-    const srt = document.getElementById('sort-select').value;
-
-    let list = db.filter(f => {
-      const matchQ   = !q ||
-        f.name.toLowerCase().includes(q) ||
-        (f.notes || '').toLowerCase().includes(q) ||
-        (f.ingredients || []).some(i => i.name.toLowerCase().includes(q));
-      const matchCat = !cat || f.category === cat;
-      const matchSt  = !st  || f.status === st;
-      return matchQ && matchCat && matchSt;
-    });
-
-    list.sort((a, b) => {
-      if (srt === 'name')    return a.name.localeCompare(b.name);
-      if (srt === 'created') return b.created - a.created;
-      return b.updated - a.updated;
-    });
-
-    return list;
-  }
-
-  /* ─── Render cards ───────────────────────────────────────────── */
-  function renderCards() {
-    const list    = getFiltered();
-    const grid    = document.getElementById('cards-grid');
-    const counter = document.getElementById('results-count');
-
-    // Update result count
-    if (list.length < db.length) {
-      counter.textContent = `Showing ${list.length} of ${db.length} formula${db.length !== 1 ? 's' : ''}`;
-    } else {
-      counter.textContent = '';
-    }
-
-    // Update view class
-    grid.className = viewMode === 'list' ? 'cards-list' : 'cards-grid';
-
-    renderStats();
-
-    if (!list.length) {
-      const hasFilter = document.getElementById('search-input').value ||
-                        document.getElementById('filter-category').value ||
-                        document.getElementById('filter-status').value;
-      grid.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-icon">${hasFilter ? '🔍' : '🎞'}</span>
-          <h3>${hasFilter ? 'No formulas match your search' : 'No formulas yet'}</h3>
-          <p>${hasFilter ? 'Try different search terms or clear filters.' : 'Click <strong>+ New</strong> to add your first formula.'}</p>
-        </div>
-      `;
-      return;
-    }
-
-    grid.innerHTML = list.map(f => cardHTML(f)).join('');
-  }
-
-  function cardHTML(f) {
-    const ings = (f.ingredients || []).slice(0, 4);
-    const ingHTML = ings.map(i =>
-      `<div class="ing-item">
-        <span class="ing-name">${esc(i.name)}</span>
-        <span class="ing-qty">${esc(i.qty)} ${esc(i.unit)}</span>
-      </div>`
-    ).join('') + (f.ingredients.length > 4
-      ? `<div class="ing-item"><span class="ing-name" style="color:var(--muted)">+${f.ingredients.length - 4} more…</span></div>`
-      : '');
-
-    const notesHTML = f.notes
-      ? `<div class="card-notes">${esc(f.notes)}</div>`
-      : '';
-
-    const updated = new Date(f.updated).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-
-    return `
-      <div class="card" data-process="${esc(f.category)}" onclick="openDetail('${esc(f.id)}')">
+  return `<div class="card" data-process="${esc(f.process)}" id="card-${esc(f.id)}">
+    <div class="card-header">
+      <div>
         <div class="card-title">${esc(f.name)}</div>
-        <div class="card-badges">
-          <span class="${processClass(f.category)}">${processLabel(f.category)}</span>
-          <span class="${statusClass(f.status)}">${statusLabel(f.status)}</span>
-        </div>
-        ${ings.length ? `<div class="ing-list">${ingHTML}</div>` : ''}
-        ${notesHTML}
-        <div class="card-meta">
-          <span>${f.ingredients.length} ingredient${f.ingredients.length !== 1 ? 's' : ''}</span>
-          <span>${updated}</span>
-        </div>
-        <div class="card-actions" onclick="event.stopPropagation()">
-          <button class="btn btn-secondary btn-sm" onclick="openModal('${esc(f.id)}')">Edit</button>
-          <button class="btn btn-secondary btn-sm" onclick="duplicateFormula('${esc(f.id)}')">Dup.</button>
-          <button class="btn btn-danger btn-sm" onclick="openConfirm('${esc(f.id)}')">Delete</button>
-        </div>
+        <div class="card-version">v${esc(f.version||'1.0')} · ${esc(f.category)}</div>
       </div>
-    `;
-  }
-
-  /* ─── View toggle ────────────────────────────────────────────── */
-  function toggleView() {
-    viewMode = viewMode === 'grid' ? 'list' : 'grid';
-    const btn = document.getElementById('view-toggle');
-    btn.textContent = viewMode === 'grid' ? '⊞ Grid' : '☰ List';
-    renderCards();
-  }
-
-  /* ─── Detail panel ───────────────────────────────────────────── */
-  function openDetail(id) {
-    const f = db.find(x => x.id === id);
-    if (!f) return;
-    detailId = id;
-
-    document.getElementById('detail-title').textContent = f.name;
-    document.getElementById('detail-badges').innerHTML =
-      `<span class="${processClass(f.category)}">${processLabel(f.category)}</span>
-       <span class="${statusClass(f.status)}">${statusLabel(f.status)}</span>`;
-
-    const created = new Date(f.created).toLocaleDateString(undefined, { dateStyle: 'medium' });
-    const updated = new Date(f.updated).toLocaleDateString(undefined, { dateStyle: 'medium' });
-
-    const rows = (f.ingredients || []).map(i =>
-      `<tr><td>${esc(i.name)}</td><td>${esc(i.qty)}</td><td>${esc(i.unit)}</td></tr>`
-    ).join('');
-
-    const notesSection = f.notes
-      ? `<div class="detail-section">
-           <div class="detail-section-title">Notes</div>
-           <div class="detail-notes">${esc(f.notes)}</div>
-         </div>`
-      : '';
-
-    document.getElementById('detail-body').innerHTML = `
-      <div class="detail-section">
-        <div class="detail-section-title">Ingredients</div>
-        <table class="detail-table">
-          <thead><tr><th>Chemical</th><th>Qty</th><th>Unit</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
+      <div class="card-actions">
+        <button class="btn btn-ghost btn-sm" title="View details" onclick="openDetail('${esc(f.id)}')">↗</button>
+        <button class="btn btn-ghost btn-sm" title="Edit" onclick="openModal('${esc(f.id)}')">✏</button>
+        <button class="btn btn-ghost btn-sm" title="Duplicate" onclick="duplicate('${esc(f.id)}')">⧉</button>
+        <button class="btn btn-ghost btn-sm" title="Delete" style="color:var(--danger)"
+          onclick="confirmDelete('${esc(f.id)}')">✕</button>
       </div>
+    </div>
+    <div class="card-meta">
+      <span class="badge ${processClass(f.process)}">${esc(f.process)}</span>
+      <span class="status-badge ${statusClass(f.status)}">${esc(f.status)}</span>
+      ${f.temp ? `<span style="font-size:.75rem;color:var(--muted)">🌡 ${esc(f.temp)}</span>` : ''}
+    </div>
+    ${f.desc ? `<div class="card-desc">${esc(f.desc)}</div>` : ''}
+    ${ingHTML}
+    ${f.notes ? `<div class="card-notes">${esc(f.notes)}</div>` : ''}
+  </div>`;
+}
 
-      <div class="detail-section" id="scale-section">
-        <div class="detail-section-title">Scale Recipe</div>
-        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap">
-          <label for="scale-volume" style="margin:0;white-space:nowrap;font-size:.875rem">Scale to</label>
-          <input id="scale-volume" type="number" min="1" placeholder="e.g. 500" style="width:120px" oninput="scaleRecipe()" />
-          <span style="font-size:.875rem;color:var(--muted)">ml total volume</span>
-        </div>
-        <div id="scaled-table"></div>
-      </div>
+/* ─── Detail panel ───────────────────────────────────────────── */
+function openDetail(id) {
+  const f = db.find(x => x.id === id);
+  if (!f) return;
+  currentDetailId = id;
+  const ings = f.ingredients || [];
 
-      ${notesSection}
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-actions">
+      <button class="btn btn-secondary btn-sm" onclick="openModal('${esc(f.id)}')">✏ Edit</button>
+      <button class="btn btn-secondary btn-sm" onclick="duplicate('${esc(f.id)}');closeDetail()">⧉ Duplicate</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmDelete('${esc(f.id)}',true)">✕ Delete</button>
+    </div>
+    <h1 class="detail-title">${esc(f.name)}</h1>
+    <div class="detail-meta">
+      <span class="badge ${processClass(f.process)}">${esc(f.process)}</span>
+      <span class="status-badge ${statusClass(f.status)}">${esc(f.status)}</span>
+      <span style="color:var(--muted);font-size:.85rem">v${esc(f.version||'1.0')}</span>
+      <span style="color:var(--muted);font-size:.85rem">· ${esc(f.category)}</span>
+    </div>
+    ${f.desc ? `<div class="detail-section"><p class="detail-desc">${esc(f.desc)}</p></div>` : ''}
 
-      <div class="detail-section">
-        <div class="detail-section-title">Metadata</div>
-        <table class="detail-table">
-          <tbody>
-            <tr><td style="color:var(--muted);width:40%">Created</td><td>${created}</td></tr>
-            <tr><td style="color:var(--muted)">Updated</td><td>${updated}</td></tr>
-            <tr><td style="color:var(--muted)">ID</td><td style="font-family:monospace;font-size:.75rem">${esc(f.id)}</td></tr>
-          </tbody>
-        </table>
-      </div>
-    `;
+    ${f.temp || f.time ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Process Parameters</div>
+      ${f.temp ? `<p style="font-size:.9rem;margin-bottom:.35rem">🌡 <strong>Temperature:</strong> ${esc(f.temp)}</p>` : ''}
+      ${f.time ? `<p style="font-size:.9rem">⏱ <strong>Time:</strong> ${esc(f.time)}</p>` : ''}
+    </div>` : ''}
 
-    document.getElementById('detail-footer').innerHTML = `
-      <button class="btn btn-secondary btn-sm" onclick="window.print()" title="Print / PDF this formula">⬇ PDF</button>
-      <button class="btn btn-secondary btn-sm" onclick="openModal('${esc(f.id)}')">Edit</button>
-      <button class="btn btn-secondary btn-sm" onclick="duplicateFormula('${esc(f.id)}')">Duplicate</button>
-      <button class="btn btn-danger btn-sm" onclick="openConfirm('${esc(f.id)}')">Delete</button>
-      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeDetail()">Close</button>
-    `;
-
-    document.getElementById('detail-panel').classList.add('open');
-  }
-
-  function closeDetail() {
-    document.getElementById('detail-panel').classList.remove('open');
-    detailId = null;
-  }
-
-  /* ─── Scale recipe ───────────────────────────────────────────── */
-  function scaleRecipe() {
-    const f = db.find(x => x.id === detailId);
-    if (!f) return;
-
-    const targetVol = parseFloat(document.getElementById('scale-volume').value);
-    const el        = document.getElementById('scaled-table');
-
-    if (!targetVol || targetVol <= 0) {
-      el.innerHTML = '';
-      return;
-    }
-
-    // Sum ml quantities to find base volume
-    let totalMl = 0;
-    (f.ingredients || []).forEach(i => {
-      if (i.unit === 'ml') {
-        const qty = parseFloat(i.qty);
-        if (!isNaN(qty)) totalMl += qty;
-      }
-    });
-    const base = totalMl > 0 ? totalMl : 1000;
-    const factor = targetVol / base;
-
-    const rows = (f.ingredients || []).map(i => {
-      const qty = parseFloat(i.qty);
-      const scaled = isNaN(qty) ? esc(i.qty) : (qty * factor).toFixed(2).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
-      return `<tr><td>${esc(i.name)}</td><td><strong>${scaled}</strong></td><td>${esc(i.unit)}</td></tr>`;
-    }).join('');
-
-    el.innerHTML = `
-      <table>
-        <thead><tr><th>Chemical</th><th>Qty</th><th>Unit</th></tr></thead>
-        <tbody>${rows}</tbody>
+    ${ings.length ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Ingredients (${ings.length})</div>
+      <table class="ing-table" id="ing-table-main">
+        <thead><tr>
+          <th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th><th class="scaled-col" id="scaled-header" style="display:none">Scaled</th>
+        </tr></thead>
+        <tbody id="ing-tbody">
+          ${ings.map((i,idx) => `
+            <tr>
+              <td style="color:var(--muted)">${idx+1}</td>
+              <td>${esc(i.name)}</td>
+              <td id="qty-${idx}">${esc(i.qty)}</td>
+              <td style="color:var(--muted)">${esc(i.unit)}</td>
+              <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
+            </tr>`).join('')}
+        </tbody>
       </table>
-      <p style="font-size:.75rem;color:var(--muted);margin-top:.5rem">
-        Scaled from ${base}ml base to ${targetVol}ml (×${factor.toFixed(3)})
-      </p>
-    `;
+    </div>
+
+    <div class="detail-section" id="scale-section">
+      <div class="detail-section-title">Scale Recipe</div>
+      <div class="scale-row">
+        <label for="scale-volume" style="font-weight:500;margin:0">Scale to</label>
+        <input id="scale-volume" type="number" min="1" placeholder="e.g. 500"
+          oninput="scaleRecipe()" style="width:130px" />
+        <span style="font-size:.875rem;color:var(--muted)">ml total volume</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearScale()" title="Clear scaling">✕ Reset</button>
+      </div>
+    </div>` : ''}
+
+    ${f.notes ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Notes</div>
+      <div class="detail-notes">${esc(f.notes)}</div>
+    </div>` : ''}
+
+    <p style="font-size:.75rem;color:var(--muted);margin-top:1rem">
+      Last updated: ${new Date(f.updatedAt||Date.now()).toLocaleString()}
+    </p>
+  `;
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('main-page').style.visibility = 'hidden';
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('main-page').style.visibility = '';
+  currentDetailId = null;
+}
+
+/* ─── Scale Recipe ───────────────────────────────────────────── */
+function scaleRecipe() {
+  const targetVol = parseFloat(document.getElementById('scale-volume').value);
+  const f = currentDetailId ? db.find(x => x.id === currentDetailId) : null;
+  if (!f) return;
+
+  const ings = f.ingredients || [];
+  const scaledHeader = document.getElementById('scaled-header');
+  if (!scaledHeader) return;
+
+  if (!targetVol || targetVol <= 0) {
+    clearScale();
+    return;
   }
 
-  /* ─── Modal ──────────────────────────────────────────────────── */
-  function openModal(id) {
-    editingId = id || null;
-    clearIngEditor();
+  // Calculate base volume: sum of all ml quantities
+  let baseMl = ings.reduce((sum, i) => {
+    if ((i.unit || '').toLowerCase() === 'ml') {
+      const n = parseFloat(i.qty);
+      if (!isNaN(n)) sum += n;
+    }
+    return sum;
+  }, 0);
+  // Fall back to 1000ml if no ml-based ingredients were found (e.g. all in grams).
+  // This gives a relative scale factor rather than an absolute volume conversion.
+  if (baseMl <= 0) baseMl = 1000;
 
-    if (id) {
-      const f = db.find(x => x.id === id);
-      if (!f) return;
-      document.getElementById('modal-title').textContent    = 'Edit Formula';
-      document.getElementById('f-name').value              = f.name;
-      document.getElementById('f-category').value          = f.category;
-      document.getElementById('f-status').value            = f.status;
-      document.getElementById('f-notes').value             = f.notes || '';
-      (f.ingredients || []).forEach(i => addIngRow(i.name, i.qty, i.unit));
+  const factor = targetVol / baseMl;
+
+  // Show scaled column
+  scaledHeader.style.display = '';
+
+  ings.forEach((i, idx) => {
+    const cell = document.getElementById('scaled-' + idx);
+    if (!cell) return;
+    cell.style.display = '';
+    const n = parseFloat(i.qty);
+    if (!isNaN(n)) {
+      const scaled = n * factor;
+      // Show up to 4 significant figures, strip unnecessary trailing zeros
+      cell.textContent = parseFloat(scaled.toPrecision(4)) + ' ' + (i.unit || '');
     } else {
-      document.getElementById('modal-title').textContent = 'New Formula';
-      document.getElementById('f-name').value            = '';
-      document.getElementById('f-category').value        = 'developer';
-      document.getElementById('f-status').value          = 'active';
-      document.getElementById('f-notes').value           = '';
+      cell.textContent = i.qty; // non-numeric, leave as-is
     }
+  });
+}
 
-    document.getElementById('modal-backdrop').classList.add('open');
-    setTimeout(() => document.getElementById('f-name').focus(), 50);
-  }
+function clearScale() {
+  const scaledHeader = document.getElementById('scaled-header');
+  if (scaledHeader) scaledHeader.style.display = 'none';
+  document.querySelectorAll('[id^="scaled-"]').forEach(el => {
+    el.style.display = 'none';
+    el.textContent = '—';
+  });
+  const inp = document.getElementById('scale-volume');
+  if (inp) inp.value = '';
+}
 
-  function closeModal() {
-    document.getElementById('modal-backdrop').classList.remove('open');
-    editingId = null;
-  }
+/* ─── PDF / Print ────────────────────────────────────────────── */
+function printDetail() {
+  window.print();
+}
 
-  function backdropClose(e) {
-    if (e.target === document.getElementById('modal-backdrop')) closeModal();
-  }
+function printAll() {
+  // Collect currently visible (filtered) formulas and open a print window
+  const list = getFiltered();
+  if (!list.length) { toast('No formulas to print', 'error'); return; }
 
-  function saveFormula() {
-    const name = document.getElementById('f-name').value.trim();
-    if (!name) {
-      toast('Formula name is required', 'error');
-      document.getElementById('f-name').focus();
-      return;
-    }
+  const win = window.open('', '_blank', 'width=800,height=600');
+  if (!win) { toast('Allow pop-ups to use PDF export', 'error'); return; }
 
-    const ingredients = [];
-    const rows = document.querySelectorAll('.ing-row');
-    rows.forEach(row => {
-      const inputs = row.querySelectorAll('input, select');
-      const n = inputs[0].value.trim();
-      const q = inputs[1].value.trim();
-      const u = inputs[2].value;
-      if (n) ingredients.push({ name: n, qty: q, unit: u });
-    });
+  const esc2 = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    const now = Date.now();
+  const formulaHTML = list.map(f => {
+    const ings = f.ingredients || [];
+    return `
+      <div class="formula" style="page-break-inside:avoid;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid #ccc">
+        <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:.25rem">${esc2(f.name)}</h2>
+        <p style="font-size:.85rem;color:#555;margin-bottom:.5rem">
+          ${esc2(f.process)} · ${esc2(f.category)} · v${esc2(f.version||'1.0')} · ${esc2(f.status)}
+        </p>
+        ${f.desc ? `<p style="font-size:.875rem;margin-bottom:.5rem">${esc2(f.desc)}</p>` : ''}
+        ${f.temp ? `<p style="font-size:.875rem;margin-bottom:.25rem">🌡 ${esc2(f.temp)}</p>` : ''}
+        ${f.time ? `<p style="font-size:.875rem;margin-bottom:.5rem">⏱ ${esc2(f.time)}</p>` : ''}
+        ${ings.length ? `
+        <table style="width:100%;border-collapse:collapse;font-size:.875rem;margin-top:.5rem">
+          <thead><tr>
+            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid #ccc;font-size:.75rem;text-transform:uppercase">#</th>
+            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid #ccc;font-size:.75rem;text-transform:uppercase">Chemical</th>
+            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid #ccc;font-size:.75rem;text-transform:uppercase">Qty</th>
+            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid #ccc;font-size:.75rem;text-transform:uppercase">Unit</th>
+          </tr></thead>
+          <tbody>${ings.map((i,n)=>`
+            <tr>
+              <td style="padding:.3rem .5rem;border-bottom:1px solid #eee;color:#777">${n+1}</td>
+              <td style="padding:.3rem .5rem;border-bottom:1px solid #eee">${esc2(i.name)}</td>
+              <td style="padding:.3rem .5rem;border-bottom:1px solid #eee">${esc2(i.qty)}</td>
+              <td style="padding:.3rem .5rem;border-bottom:1px solid #eee;color:#777">${esc2(i.unit)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>` : ''}
+        ${f.notes ? `<p style="font-size:.8rem;color:#666;margin-top:.5rem;font-style:italic">${esc2(f.notes)}</p>` : ''}
+      </div>`;
+  }).join('');
 
-    if (editingId) {
-      const idx = db.findIndex(x => x.id === editingId);
-      if (idx > -1) {
-        db[idx] = {
-          ...db[idx],
-          name,
-          category: document.getElementById('f-category').value,
-          status:   document.getElementById('f-status').value,
-          notes:    document.getElementById('f-notes').value.trim(),
-          ingredients,
-          updated: now,
-        };
-        toast('Formula updated ✓', 'success');
-        // Refresh detail panel if open
-        if (detailId === editingId) openDetail(editingId);
-      }
-    } else {
-      db.unshift({
-        id:          uid(),
-        name,
-        category:    document.getElementById('f-category').value,
-        status:      document.getElementById('f-status').value,
-        notes:       document.getElementById('f-notes').value.trim(),
-        ingredients,
-        created:     now,
-        updated:     now,
-      });
-      toast('Formula saved ✓', 'success');
-    }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Formulae Export — ${new Date().toISOString().slice(0,10)}</title>
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 2rem; color: #111; max-width: 800px; margin: 0 auto; }
+      h1 { font-size: 1.5rem; margin-bottom: .5rem; }
+      p.sub { color: #666; font-size: .875rem; margin-bottom: 1.5rem; }
+      @media print { button { display: none; } }
+    </style></head><body>
+    <h1>Formulae — Chemical Database</h1>
+    <p class="sub">Exported ${list.length} formula${list.length!==1?'s':''} · ${new Date().toLocaleString()}</p>
+    <button onclick="window.print()" style="margin-bottom:1.5rem;padding:.5rem 1rem;cursor:pointer">🖨 Print / Save PDF</button>
+    ${formulaHTML}
+  </body></html>`);
+  win.document.close();
+}
 
-    save();
-    renderCards();
-    closeModal();
-  }
+/* ─── Modal ──────────────────────────────────────────────────── */
+function openModal(id) {
+  editingId = id || null;
+  const backdrop = document.getElementById('modal-backdrop');
+  const title    = document.getElementById('modal-title');
 
-  /* ─── Ingredient editor ──────────────────────────────────────── */
-  function clearIngEditor() {
-    const editor = document.getElementById('ing-editor');
-    editor.innerHTML = '';
-    const h = document.createElement('div');
-    h.className = 'ing-editor-header';
-    h.innerHTML = '<span>Chemical name</span><span>Quantity</span><span>Unit</span><span></span>';
-    editor.appendChild(h);
-  }
+  clearIngEditor();
 
-  function addIngRow(name, qty, unit) {
-    const editor = document.getElementById('ing-editor');
-    const row    = document.createElement('div');
-    row.className = 'ing-row';
-
-    const units = ['g', 'ml', 'l', 'kg', 'mg', 'oz', 'fl oz', 'tsp', 'tbsp', '%', 'drops', 'grains'];
-    const unitOptions = units.map(u =>
-      `<option value="${u}" ${u === (unit || 'g') ? 'selected' : ''}>${u}</option>`
-    ).join('');
-
-    row.innerHTML = `
-      <input type="text" placeholder="Chemical name" value="${esc(name || '')}" />
-      <input type="text" placeholder="Amount" value="${esc(qty || '')}" />
-      <select>${unitOptions}</select>
-      <button class="btn-icon" onclick="this.closest('.ing-row').remove()" title="Remove">✕</button>
-    `;
-    editor.appendChild(row);
-  }
-
-  /* ─── Duplicate ──────────────────────────────────────────────── */
-  function duplicateFormula(id) {
+  if (id) {
     const f = db.find(x => x.id === id);
     if (!f) return;
-    const now  = Date.now();
-    const copy = {
-      ...JSON.parse(JSON.stringify(f)),
-      id:      uid(),
-      name:    f.name + ' (copy)',
-      status:  'testing',
-      created: now,
-      updated: now,
+    title.textContent = 'Edit Formula';
+    document.getElementById('edit-id').value    = f.id;
+    document.getElementById('f-name').value     = f.name    || '';
+    document.getElementById('f-process').value  = f.process || '';
+    document.getElementById('f-category').value = f.category|| '';
+    document.getElementById('f-status').value   = f.status  || 'Experimental';
+    document.getElementById('f-version').value  = f.version || '1.0';
+    document.getElementById('f-desc').value     = f.desc    || '';
+    document.getElementById('f-temp').value     = f.temp    || '';
+    document.getElementById('f-time').value     = f.time    || '';
+    document.getElementById('f-notes').value    = f.notes   || '';
+    (f.ingredients || []).forEach(i => addIngRow(i));
+  } else {
+    title.textContent = 'New Formula';
+    document.getElementById('edit-id').value    = '';
+    document.getElementById('f-name').value     = '';
+    document.getElementById('f-process').value  = '';
+    document.getElementById('f-category').value = '';
+    document.getElementById('f-status').value   = 'Experimental';
+    document.getElementById('f-version').value  = '1.0';
+    document.getElementById('f-desc').value     = '';
+    document.getElementById('f-temp').value     = '';
+    document.getElementById('f-time').value     = '';
+    document.getElementById('f-notes').value    = '';
+    addIngRow();
+  }
+
+  backdrop.classList.add('open');
+  document.getElementById('f-name').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('open');
+  editingId = null;
+}
+
+function backdropClose(e) {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+}
+
+function saveFormula() {
+  const name     = document.getElementById('f-name').value.trim();
+  const process  = document.getElementById('f-process').value;
+  const category = document.getElementById('f-category').value;
+
+  if (!name)     { toast('Formula name is required', 'error'); document.getElementById('f-name').focus(); return; }
+  if (!process)  { toast('Please select a process', 'error'); return; }
+  if (!category) { toast('Please select a category', 'error'); return; }
+
+  const ingredients = readIngredients();
+  const now = Date.now();
+
+  if (editingId) {
+    const idx = db.findIndex(x => x.id === editingId);
+    if (idx === -1) return;
+    db[idx] = {
+      ...db[idx],
+      name, process, category,
+      status:  document.getElementById('f-status').value,
+      version: document.getElementById('f-version').value.trim() || '1.0',
+      desc:    document.getElementById('f-desc').value.trim(),
+      temp:    document.getElementById('f-temp').value.trim(),
+      time:    document.getElementById('f-time').value.trim(),
+      notes:   document.getElementById('f-notes').value.trim(),
+      ingredients, updatedAt: now,
     };
-    db.unshift(copy);
+    toast('Formula updated ✓', 'success');
+  } else {
+    db.unshift({
+      id: uid(), name, process, category,
+      status:  document.getElementById('f-status').value,
+      version: document.getElementById('f-version').value.trim() || '1.0',
+      desc:    document.getElementById('f-desc').value.trim(),
+      temp:    document.getElementById('f-temp').value.trim(),
+      time:    document.getElementById('f-time').value.trim(),
+      notes:   document.getElementById('f-notes').value.trim(),
+      ingredients, createdAt: now, updatedAt: now,
+    });
+    toast('Formula created ✓', 'success');
+  }
+
+  save();
+  closeModal();
+  renderCards();
+}
+
+/* ─── Ingredient editor ──────────────────────────────────────── */
+function clearIngEditor() {
+  const editor = document.getElementById('ing-editor');
+  editor.innerHTML = '';
+  const h = document.createElement('div');
+  h.className = 'ing-editor-header';
+  h.innerHTML = '<span>Chemical name</span><span>Quantity</span><span>Unit</span><span></span>';
+  editor.appendChild(h);
+}
+
+function addIngRow(ing) {
+  const editor = document.getElementById('ing-editor');
+  const row = document.createElement('div');
+  row.className = 'ing-editor-row';
+  row.draggable = true;
+  row.innerHTML = `
+    <input type="text" placeholder="e.g. Sodium Sulfite" value="${esc(ing?.name||'')}" />
+    <input type="text" placeholder="e.g. 100" value="${esc(ing?.qty||'')}" />
+    <input type="text" placeholder="g / ml / oz" value="${esc(ing?.unit||'g')}" />
+    <button class="btn btn-ghost btn-sm drag-handle" title="Remove" onclick="removeIngRow(this)">✕</button>
+  `;
+
+  row.addEventListener('dragstart', e => {
+    dragSrcIdx = rowIndex(row);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  row.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.ing-editor-row').forEach(r => r.classList.remove('drag-over'));
+    row.classList.add('drag-over');
+  });
+  row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+  row.addEventListener('drop', e => {
+    e.preventDefault();
+    row.classList.remove('drag-over');
+    const targetIdx = rowIndex(row);
+    if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+    const rows = [...editor.querySelectorAll('.ing-editor-row')];
+    const srcEl = rows[dragSrcIdx];
+    if (dragSrcIdx < targetIdx) row.after(srcEl);
+    else row.before(srcEl);
+    dragSrcIdx = null;
+  });
+
+  editor.appendChild(row);
+}
+
+function rowIndex(row) {
+  return [...document.querySelectorAll('.ing-editor-row')].indexOf(row);
+}
+
+function removeIngRow(btn) {
+  const row = btn.closest('.ing-editor-row');
+  if (document.querySelectorAll('.ing-editor-row').length > 1) row.remove();
+  else row.querySelectorAll('input').forEach(i => i.value = '');
+}
+
+function readIngredients() {
+  return [...document.querySelectorAll('.ing-editor-row')].map(row => {
+    const inputs = row.querySelectorAll('input');
+    return {
+      name: inputs[0].value.trim(),
+      qty:  inputs[1].value.trim(),
+      unit: inputs[2].value.trim(),
+    };
+  }).filter(i => i.name);
+}
+
+/* ─── Duplicate ──────────────────────────────────────────────── */
+function duplicate(id) {
+  const f = db.find(x => x.id === id);
+  if (!f) return;
+  const vNum = parseFloat(f.version || '1') + 0.1;
+  db.unshift({
+    ...JSON.parse(JSON.stringify(f)),
+    id: uid(),
+    name: f.name + ' (copy)',
+    version: vNum.toFixed(1),
+    status: 'Experimental',
+    updatedAt: Date.now(),
+    createdAt: Date.now(),
+  });
+  save();
+  renderCards();
+  toast('Formula duplicated ✓', 'success');
+}
+
+/* ─── Delete ─────────────────────────────────────────────────── */
+function confirmDelete(id, fromDetail) {
+  const f = db.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('confirm-title').textContent = `Delete "${f.name}"?`;
+  document.getElementById('confirm-msg').textContent   = 'This action cannot be undone.';
+  document.getElementById('confirm-backdrop').classList.add('open');
+  confirmCallback = () => {
+    db = db.filter(x => x.id !== id);
     save();
     renderCards();
-    toast('Duplicated ✓', 'success');
-  }
-
-  /* ─── Confirm / delete ───────────────────────────────────────── */
-  function openConfirm(id) {
-    deleteId = id;
-    const f = db.find(x => x.id === id);
-    document.getElementById('confirm-title').textContent = 'Delete formula?';
-    document.getElementById('confirm-msg').textContent   =
-      `"${f ? f.name : 'This formula'}" will be permanently deleted.`;
-    document.getElementById('confirm-backdrop').classList.add('open');
-  }
-
-  function closeConfirm() {
-    document.getElementById('confirm-backdrop').classList.remove('open');
-    deleteId = null;
-  }
-
-  function confirmDelete() {
-    if (!deleteId) return;
-    db = db.filter(x => x.id !== deleteId);
-    if (detailId === deleteId) closeDetail();
-    save();
-    renderCards();
-    toast('Deleted', 'info');
+    if (fromDetail) closeDetail();
+    toast('Formula deleted', 'success');
+  };
+  document.getElementById('confirm-ok-btn').onclick = () => {
+    confirmCallback && confirmCallback();
     closeConfirm();
-  }
+  };
+}
 
-  /* ─── Clear filters ──────────────────────────────────────────── */
-  function clearFilters() {
-    document.getElementById('search-input').value      = '';
-    document.getElementById('filter-category').value  = '';
-    document.getElementById('filter-status').value    = '';
-    document.getElementById('sort-select').value      = 'updated';
-    renderCards();
-  }
+function closeConfirm() {
+  document.getElementById('confirm-backdrop').classList.remove('open');
+  confirmCallback = null;
+}
 
-  /* ─── Export / Import ────────────────────────────────────────── */
-  function exportData() {
-    const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = 'formulae-export-' + new Date().toISOString().slice(0, 10) + '.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    toast('Exported ✓', 'success');
-  }
+/* ─── Clear filters ──────────────────────────────────────────── */
+function clearFilters() {
+  document.getElementById('search-input').value    = '';
+  document.getElementById('filter-process').value  = '';
+  document.getElementById('filter-category').value = '';
+  document.getElementById('filter-status').value   = '';
+  document.getElementById('sort-select').value     = 'updated';
+  renderCards();
+}
 
-  function importData(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = evt => {
-      try {
-        const imported = JSON.parse(evt.target.result);
-        if (!Array.isArray(imported)) throw new Error('Expected an array of formulas');
-        const merged = [...db];
-        let added = 0;
-        imported.forEach(f => {
-          if (!merged.find(x => x.id === f.id)) {
-            merged.push(f);
-            added++;
-          }
-        });
-        db = merged;
-        save();
-        renderCards();
-        toast(`Imported ${added} new formula${added !== 1 ? 's' : ''} ✓`, 'success');
-      } catch {
-        toast('Invalid JSON: expected an array of formulas', 'error');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  }
+/* ─── Export / Import ────────────────────────────────────────── */
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'formulae-export-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Exported ✓', 'success');
+}
 
-  /* ─── Print all visible ──────────────────────────────────────── */
-  function printAll() {
-    // Temporarily hide detail panel for full-list print
-    const panel = document.getElementById('detail-panel');
-    const wasOpen = panel.classList.contains('open');
-    if (wasOpen) panel.classList.remove('open');
-    window.print();
-    if (wasOpen) panel.classList.add('open');
-  }
-
-  /* ─── Toast ──────────────────────────────────────────────────── */
-  function toast(msg, type) {
-    const c = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = 'toast' + (type ? ' ' + type : '');
-    t.textContent = msg;
-    c.appendChild(t);
-    setTimeout(() => {
-      t.classList.add('hide');
-      t.addEventListener('animationend', () => t.remove());
-    }, 3000);
-  }
-
-  /* ─── Keyboard shortcuts ─────────────────────────────────────── */
-  document.addEventListener('keydown', e => {
-    const tag = e.target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-
-    if (e.key === 'n' || e.key === 'N') {
-      if (!document.getElementById('modal-backdrop').classList.contains('open') &&
-          !document.getElementById('detail-panel').classList.contains('open')) {
-        openModal();
-      }
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const imported = JSON.parse(evt.target.result);
+      if (!Array.isArray(imported)) throw new Error();
+      const merged = [...db];
+      let added = 0;
+      imported.forEach(f => {
+        if (!merged.find(x => x.id === f.id)) {
+          merged.push(f); added++;
+        }
+      });
+      db = merged;
+      save();
+      renderCards();
+      toast(`Imported ${added} new formula${added !== 1 ? 's' : ''} ✓`, 'success');
+    } catch {
+      toast('Invalid JSON file', 'error');
     }
-    if (e.key === 'Escape') {
-      if (document.getElementById('modal-backdrop').classList.contains('open'))    closeModal();
-      else if (document.getElementById('detail-panel').classList.contains('open')) closeDetail();
-      else if (document.getElementById('confirm-backdrop').classList.contains('open')) closeConfirm();
-    }
-    if (e.key === '/') {
-      e.preventDefault();
-      document.getElementById('search-input').focus();
-    }
-  });
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
 
-  /* ─── Init ───────────────────────────────────────────────────── */
-  document.addEventListener('DOMContentLoaded', () => {
-    load();
+/* ─── Toast ──────────────────────────────────────────────────── */
+function toast(msg, type) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transition = 'opacity .3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
 
-    // Restore darkroom preference
-    const darkPref = localStorage.getItem(DARKROOM_KEY);
-    if (darkPref) {
-      document.body.classList.add('darkroom');
-      updateDarkroomBtn(true);
+/* ─── Keyboard shortcuts ─────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  if (e.key === 'Escape') {
+    if (document.getElementById('modal-backdrop').classList.contains('open'))    closeModal();
+    else if (document.getElementById('detail-panel').classList.contains('open')) closeDetail();
+    else if (document.getElementById('confirm-backdrop').classList.contains('open')) closeConfirm();
+    return;
+  }
+  if ((e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey) {
+    if (!document.getElementById('modal-backdrop').classList.contains('open') &&
+        !document.getElementById('detail-panel').classList.contains('open')) {
+      openModal();
     }
+    return;
+  }
+  if (e.key === '/') {
+    e.preventDefault();
+    document.getElementById('search-input').focus();
+  }
+});
 
-    renderCards();
-  });
-  </script>
+/* ─── Init ───────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  load();
+
+  // Restore darkroom preference
+  if (localStorage.getItem(DARKROOM_KEY)) {
+    document.body.classList.add('darkroom');
+    updateDarkroomBtn(true);
+  }
+
+  renderCards();
+});
+</script>
 </body>
 </html>

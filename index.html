@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Formulae — Film Lab Chemical Database</title>
   <meta name="description" content="Store, manage, search, and version-control your photographic chemical formulas — built for the darkroom." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     /* ── Reset & Tokens ──────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:           #f9fafb;
+      --bg:           #f4f6fb;
       --surface:      #ffffff;
-      --border:       #e5e7eb;
-      --text:         #111827;
-      --muted:        #6b7280;
+      --border:       #e2e8f0;
+      --text:         #0f172a;
+      --muted:        #64748b;
       --accent:       #2563eb;
       --accent-hover: #1d4ed8;
       --danger:       #dc2626;
@@ -24,35 +25,57 @@
       --purple:       #9333ea;
       --radius:       0.5rem;
       --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md:    0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+      --header-bg:    linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      --header-text:  #ffffff;
     }
 
     /* ── Darkroom mode ───────────────────────────────────────────── */
     body.darkroom {
-      --bg:           #0a0000;
-      --surface:      #140000;
-      --border:       #3a0000;
-      --text:         #ff4444;
-      --muted:        #992222;
+      --bg:           #1a0000;
+      --surface:      #200000;
+      --border:       #4a0000;
+      --text:         #ff5555;
+      --muted:        #993333;
       --accent:       #ff2222;
       --accent-hover: #cc1111;
       --danger:       #ff6666;
       --danger-hover: #ff3333;
       --green:        #ff4444;
       --orange:       #ff4444;
-      --purple:       #ff4444;
+      --purple:       #ff5555;
       --shadow:       0 1px 3px rgba(255,0,0,.15);
+      --shadow-md:    0 4px 6px -1px rgba(255,0,0,.12);
+      --header-bg:    linear-gradient(135deg, #2a0000 0%, #1a0000 100%);
+      --header-text:  #ff5555;
+    }
+
+    /* Darkroom scanline overlay */
+    body.darkroom::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,0,0,.02) 2px,
+        rgba(255,0,0,.02) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
-      transition: background .2s, color .2s;
+      transition: background .3s, color .3s;
+      display: flex;
+      flex-direction: column;
     }
-
-    body.darkroom { font-size: 1.05rem; letter-spacing: .01em; }
 
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
@@ -62,7 +85,7 @@
       cursor: pointer;
       border: none;
       border-radius: var(--radius);
-      transition: background .15s, opacity .15s;
+      transition: background .15s, opacity .15s, transform .1s;
     }
 
     input, select, textarea {
@@ -87,36 +110,7 @@
       box-shadow: 0 0 0 3px rgba(255,34,34,.2);
     }
     textarea { resize: vertical; min-height: 5rem; }
-    label { font-size: .875rem; font-weight: 600; display: block; margin-bottom: .3rem; }
-
-    /* ── Header ─────────────────────────────────────────────────── */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: .875rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: .75rem;
-      flex-wrap: wrap;
-      box-shadow: var(--shadow);
-    }
-
-    .logo {
-      font-size: 1.15rem;
-      font-weight: 800;
-      letter-spacing: -.03em;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-    }
-    .logo-dot { color: var(--accent); }
-
-    .header-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    label { font-size: .875rem; font-weight: 600; display: block; margin-bottom: .3rem; color: var(--text); }
 
     /* ── Buttons ─────────────────────────────────────────────────── */
     .btn {
@@ -139,68 +133,209 @@
     .btn-ghost:hover { background: var(--bg); color: var(--text); }
     .btn-sm        { font-size: .8125rem; padding: .35rem .75rem; }
 
-    /* Darkroom toggle */
-    .darkroom-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: .4rem .875rem;
-      font-size: .8125rem;
-      font-weight: 600;
-      border-radius: var(--radius);
+    /* ── Header ─────────────────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      border-bottom: 1px solid transparent;
+      padding: .875rem 1.5rem;
       display: flex;
       align-items: center;
-      gap: .35rem;
+      justify-content: space-between;
+      gap: .75rem;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      transition: background .3s, box-shadow .3s;
     }
-    .darkroom-btn:hover { background: var(--bg); }
+
+    body.darkroom header {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .logo {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: var(--header-text);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .logo-icon {
+      display: flex;
+      align-items: center;
+      color: var(--header-text);
+      opacity: .9;
+    }
+    .logo-dot { color: rgba(255,255,255,.6); }
+
+    .header-right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+    .header-right .btn {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.2);
+      backdrop-filter: blur(4px);
+    }
+    .header-right .btn:hover {
+      background: rgba(255,255,255,.22);
+    }
+    .header-right .btn-primary {
+      background: rgba(255,255,255,.9);
+      color: #1d4ed8;
+      border-color: transparent;
+    }
+    .header-right .btn-primary:hover {
+      background: #fff;
+    }
+    body.darkroom .header-right .btn-primary {
+      color: #7a0000;
+    }
 
     /* ── Layout ─────────────────────────────────────────────────── */
-    .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-
-    /* ── Toolbar ─────────────────────────────────────────────────── */
-    .toolbar {
-      display: flex;
-      gap: .75rem;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 1.5rem;
-    }
-    .toolbar-search { flex: 1; min-width: 180px; max-width: 360px; }
-    .toolbar-filters { display: flex; gap: .5rem; flex-wrap: wrap; }
-    .toolbar-filters select { width: auto; font-size: .875rem; padding: .4rem .65rem; }
-    .toolbar-right { margin-left: auto; }
+    .page { flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; padding: 2rem 1.5rem; }
 
     /* ── Stats bar ───────────────────────────────────────────────── */
     .stats-bar {
       display: flex;
-      gap: 1.5rem;
-      margin-bottom: 1.25rem;
-      font-size: .8125rem;
-      color: var(--muted);
+      gap: .75rem;
+      margin-bottom: 1.5rem;
       flex-wrap: wrap;
     }
-    .stats-bar strong { color: var(--text); }
 
-    /* ── Formula cards ───────────────────────────────────────────── */
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: .35rem .9rem;
+      box-shadow: var(--shadow);
+      transition: background .3s, border-color .3s;
+    }
+    .stat-icon { font-size: 1rem; }
+    .stat-num  { font-size: .9375rem; font-weight: 700; color: var(--text); }
+    .stat-label { font-size: .8rem; color: var(--muted); margin-left: .2rem; }
+
+    /* ── Toolbar ─────────────────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      gap: .625rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Search input with icon */
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 180px;
+      max-width: 360px;
+    }
+    .search-wrapper .search-icon {
+      position: absolute;
+      left: .625rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: .9rem;
+      pointer-events: none;
+    }
+    .search-wrapper input {
+      padding-left: 2rem;
+    }
+
+    /* Custom select chevron */
+    .toolbar select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .65rem center;
+      padding-right: 1.85rem;
+      width: auto;
+      font-size: .875rem;
+      padding-top: .4rem;
+      padding-bottom: .4rem;
+    }
+
+    .results-count {
+      font-size: .8125rem;
+      color: var(--muted);
+      white-space: nowrap;
+      padding: .35rem .5rem;
+    }
+    .results-count strong { color: var(--accent); }
+
+    /* ── Cards grid / list ───────────────────────────────────────── */
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1rem;
     }
 
+    /* List view */
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .cards-list .card {
+      flex-direction: row;
+      align-items: center;
+      padding: .75rem 1.25rem;
+      gap: 1rem;
+      border-radius: .5rem;
+      border-left-width: 4px;
+    }
+    .cards-list .card-body-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .cards-list .card .ing-list,
+    .cards-list .card .card-notes,
+    .cards-list .card .card-desc { display: none !important; }
+    .cards-list .card .card-header { flex: 1; min-width: 0; }
+    .cards-list .card .card-actions { opacity: 1 !important; }
+    .cards-list .card .card-meta { flex-shrink: 0; }
+
+    /* ── Card ────────────────────────────────────────────────────── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
+      border-left: 4px solid var(--card-accent, var(--border));
       border-radius: .75rem;
       padding: 1.25rem;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       gap: .75rem;
-      transition: box-shadow .15s;
+      transition: box-shadow .2s, transform .2s, background .3s, border-color .3s;
+      position: relative;
     }
-    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    .card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
     body.darkroom .card:hover { box-shadow: 0 4px 12px rgba(255,0,0,.15); }
+
+    /* Process-specific card accent colours */
+    .card[data-process="B&W"]      { --card-accent: #374151; }
+    .card[data-process="C-41"]     { --card-accent: #ea580c; }
+    .card[data-process="ECN-2"]    { --card-accent: #9333ea; }
+    .card[data-process="E-6"]      { --card-accent: #2563eb; }
+    .card[data-process="Wet Plate"]{ --card-accent: #92400e; }
+    .card[data-process="Fixer"]    { --card-accent: #475569; }
+    .card[data-process="Other"]    { --card-accent: #6b7280; }
+    body.darkroom .card { --card-accent: #660000 !important; }
 
     .card-header {
       display: flex;
@@ -208,7 +343,6 @@
       justify-content: space-between;
       gap: .5rem;
     }
-
     .card-title {
       font-size: 1rem;
       font-weight: 700;
@@ -222,7 +356,15 @@
       margin-top: .1rem;
     }
 
-    .card-actions { display: flex; gap: .25rem; flex-shrink: 0; }
+    /* Action buttons visible only on hover */
+    .card-actions {
+      display: flex;
+      gap: .25rem;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .card:hover .card-actions { opacity: 1; }
 
     .card-meta {
       display: flex;
@@ -231,11 +373,11 @@
       align-items: center;
     }
 
-    /* Badges */
+    /* ── Badges ──────────────────────────────────────────────────── */
     .badge {
       display: inline-block;
-      padding: .2rem .55rem;
-      border-radius: .3rem;
+      padding: .2rem .65rem;
+      border-radius: 9999px;
       font-size: .7rem;
       font-weight: 700;
       letter-spacing: .05em;
@@ -250,12 +392,13 @@
     .badge-fixer     { background: #475569; }
     .badge-other     { background: #6b7280; }
 
-    body.darkroom .badge { color: #0a0000; background: #ff4444 !important; }
+    body.darkroom .badge { color: #1a0000 !important; background: #ff4444 !important;
+      box-shadow: 0 0 6px rgba(255,68,68,.4); }
 
     .status-badge {
       display: inline-block;
-      padding: .2rem .55rem;
-      border-radius: .3rem;
+      padding: .2rem .65rem;
+      border-radius: 9999px;
       font-size: .7rem;
       font-weight: 700;
       letter-spacing: .04em;
@@ -319,7 +462,16 @@
       padding: 5rem 1rem;
       color: var(--muted);
     }
-    .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.1); opacity: .7; }
+    }
+    .empty-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      display: inline-block;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
     .empty h2 { font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; }
     .empty p  { font-size: .9375rem; margin-bottom: 1.5rem; }
 
@@ -328,7 +480,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.45);
+      background: rgba(0,0,0,.5);
       z-index: 200;
       align-items: flex-start;
       justify-content: center;
@@ -336,6 +488,11 @@
       overflow-y: auto;
     }
     .modal-backdrop.open { display: flex; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
     .modal {
       background: var(--surface);
@@ -346,8 +503,8 @@
       box-shadow: 0 20px 60px rgba(0,0,0,.2);
       display: flex;
       flex-direction: column;
-      gap: 0;
       margin-bottom: 2rem;
+      animation: slideUp .22s ease;
     }
 
     .modal-header {
@@ -364,6 +521,8 @@
       display: flex;
       flex-direction: column;
       gap: 1.1rem;
+      max-height: 70vh;
+      overflow-y: auto;
     }
 
     .modal-footer {
@@ -414,7 +573,7 @@
     }
     .add-ing-btn:hover { background: var(--surface); color: var(--text); border-color: var(--accent); }
 
-    /* ── Confirm dialog ─────────────────��────────────────────────── */
+    /* ── Confirm dialog ──────────────────────────────────────────── */
     .confirm-backdrop {
       display: none;
       position: fixed;
@@ -435,6 +594,7 @@
       width: 100%;
       text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      animation: slideUp .2s ease;
     }
     .confirm-box h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: .5rem; }
     .confirm-box p  { font-size: .9rem; color: var(--muted); margin-bottom: 1.25rem; }
@@ -467,8 +627,8 @@
     body.darkroom .toast { background: #2a0000; color: #ff8888; }
 
     @keyframes slideIn {
-      from { opacity:0; transform: translateX(1rem); }
-      to   { opacity:1; transform: translateX(0); }
+      from { opacity: 0; transform: translateX(1rem); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
     /* ── Detail panel (full-screen card view) ────────────────────── */
@@ -479,14 +639,15 @@
       background: var(--bg);
       z-index: 150;
       overflow-y: auto;
+      transition: background .3s;
     }
     .detail-panel.open { display: block; }
     .detail-inner {
-      max-width: 700px;
+      max-width: 740px;
       margin: 0 auto;
       padding: 1.5rem;
     }
-    .detail-back { margin-bottom: 1.25rem; }
+    .detail-back { margin-bottom: 1.25rem; display: flex; gap: .5rem; }
     .detail-title {
       font-size: 1.75rem;
       font-weight: 800;
@@ -533,6 +694,7 @@
       color: var(--text);
     }
     .ing-table tr:last-child td { border-bottom: none; }
+    .ing-table .scaled-col { color: var(--accent); font-weight: 600; }
 
     .detail-notes {
       background: var(--surface);
@@ -549,6 +711,53 @@
       display: flex;
       gap: .625rem;
       margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    /* Scale recipe */
+    .scale-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+    .scale-row label { margin: 0; white-space: nowrap; font-weight: 500; }
+    .scale-row input { width: 130px; }
+
+    /* ── Footer ──────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 1.25rem;
+      font-size: .8125rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+      transition: border-color .3s, color .3s;
+    }
+
+    /* ── Print styles ────────────────────────────────────────────── */
+    @media print {
+      header, footer, .toolbar, .stats-bar,
+      .detail-back, .detail-actions, .modal-backdrop,
+      .confirm-backdrop, .toast-container, #main-page,
+      .card-actions, .scale-row, #scale-section { display: none !important; }
+
+      .detail-panel { display: block !important; position: static !important; overflow: visible !important; }
+      .detail-inner { max-width: 100% !important; padding: 0 !important; }
+      .detail-panel .detail-title { font-size: 1.5rem; }
+
+      body { background: #fff !important; color: #000 !important; }
+      .badge, .status-badge { border: 1px solid #ccc !important; color: #000 !important; background: #f3f3f3 !important; }
+      .ing-table th, .ing-table td { border-bottom: 1px solid #ccc !important; color: #000 !important; }
+
+      /* Print all-cards view */
+      .print-all-container {
+        display: block !important;
+      }
+    }
+
+    @media not print {
+      .print-all-container { display: none; }
     }
 
     /* ── Responsive ─────────────────────────────────────────────── */
@@ -556,12 +765,12 @@
       .page { padding: 1.25rem 1rem; }
       .cards-grid { grid-template-columns: 1fr; }
       .toolbar { flex-direction: column; align-items: stretch; }
-      .toolbar-search { max-width: 100%; }
-      .toolbar-right { margin-left: 0; }
+      .search-wrapper { max-width: 100%; }
       .ing-editor-header,
       .ing-editor-row { grid-template-columns: 1fr 1fr auto auto; }
       .ing-editor-header span:nth-child(3),
       .ing-editor-row input:nth-child(3) { display: none; }
+      .header-right .btn-sm { font-size: .75rem; padding: .3rem .6rem; }
     }
   </style>
 </head>
@@ -570,18 +779,27 @@
 <!-- ── HEADER ──────────────────────────────────────────────────── -->
 <header>
   <div class="logo">
-    <span>⬛</span> Formulae<span class="logo-dot">.</span>
+    <span class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="7" width="20" height="13" rx="2"/>
+        <path d="M2 11h2m16 0h2M2 15h2m16 0h2"/>
+        <circle cx="12" cy="13" r="2"/>
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      </svg>
+    </span>
+    Formulae<span class="logo-dot">.</span>
   </div>
   <div class="header-right">
-    <button class="darkroom-btn" onclick="toggleDarkroom()">
+    <button class="btn btn-sm" onclick="toggleDarkroom()" id="dr-btn" title="Toggle darkroom mode">
       <span id="dr-icon">🔴</span>
       <span id="dr-label">Darkroom</span>
     </button>
-    <button class="btn btn-secondary btn-sm" onclick="exportData()">↓ Export</button>
-    <label class="btn btn-secondary btn-sm" style="margin:0;cursor:pointer;">
+    <button class="btn btn-sm" onclick="exportData()" title="Export all formulas as JSON">↓ Export</button>
+    <button class="btn btn-sm" onclick="printAll()" title="Print / save PDF of all visible formulas">↓ PDF</button>
+    <label class="btn btn-sm" style="margin:0;cursor:pointer;" title="Import from JSON">
       ↑ Import <input type="file" accept=".json" style="display:none" onchange="importData(event)" />
     </label>
-    <button class="btn btn-primary btn-sm" onclick="openModal()">+ New Formula</button>
+    <button class="btn btn-primary btn-sm" onclick="openModal()" title="New formula (press N)">+ New Formula</button>
   </div>
 </header>
 
@@ -592,51 +810,50 @@
 
   <!-- Toolbar -->
   <div class="toolbar">
-    <div class="toolbar-search">
+    <div class="search-wrapper">
+      <span class="search-icon">🔍</span>
       <input
         type="search"
         id="search-input"
-        placeholder="Search name, ingredient, notes…"
+        placeholder="Search name, ingredient, notes… (/)"
         oninput="renderCards()"
         aria-label="Search formulas"
       />
     </div>
-    <div class="toolbar-filters">
-      <select id="filter-process" onchange="renderCards()" aria-label="Filter by process">
-        <option value="">All processes</option>
-        <option value="B&W">B&amp;W</option>
-        <option value="C-41">C-41</option>
-        <option value="ECN-2">ECN-2</option>
-        <option value="E-6">E-6</option>
-        <option value="Wet Plate">Wet Plate</option>
-        <option value="Fixer">Fixer</option>
-        <option value="Other">Other</option>
-      </select>
-      <select id="filter-category" onchange="renderCards()" aria-label="Filter by category">
-        <option value="">All categories</option>
-        <option value="Developer">Developer</option>
-        <option value="Stop Bath">Stop Bath</option>
-        <option value="Fixer">Fixer</option>
-        <option value="Bleach">Bleach</option>
-        <option value="Stabilizer">Stabilizer</option>
-        <option value="Other">Other</option>
-      </select>
-      <select id="filter-status" onchange="renderCards()" aria-label="Filter by status">
-        <option value="">All statuses</option>
-        <option value="Tested">Tested</option>
-        <option value="Experimental">Experimental</option>
-        <option value="Archived">Archived</option>
-      </select>
-      <select id="sort-select" onchange="renderCards()" aria-label="Sort by">
-        <option value="updated">Recently updated</option>
-        <option value="name">Name A–Z</option>
-        <option value="process">Process</option>
-        <option value="version">Version ↓</option>
-      </select>
-    </div>
-    <div class="toolbar-right">
-      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear filters</button>
-    </div>
+    <select id="filter-process" onchange="renderCards()" aria-label="Filter by process">
+      <option value="">All processes</option>
+      <option value="B&W">B&amp;W</option>
+      <option value="C-41">C-41</option>
+      <option value="ECN-2">ECN-2</option>
+      <option value="E-6">E-6</option>
+      <option value="Wet Plate">Wet Plate</option>
+      <option value="Fixer">Fixer</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="filter-category" onchange="renderCards()" aria-label="Filter by category">
+      <option value="">All categories</option>
+      <option value="Developer">Developer</option>
+      <option value="Stop Bath">Stop Bath</option>
+      <option value="Fixer">Fixer</option>
+      <option value="Bleach">Bleach</option>
+      <option value="Stabilizer">Stabilizer</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="filter-status" onchange="renderCards()" aria-label="Filter by status">
+      <option value="">All statuses</option>
+      <option value="Tested">Tested</option>
+      <option value="Experimental">Experimental</option>
+      <option value="Archived">Archived</option>
+    </select>
+    <select id="sort-select" onchange="renderCards()" aria-label="Sort by">
+      <option value="updated">Recently updated</option>
+      <option value="name">Name A–Z</option>
+      <option value="process">Process</option>
+      <option value="version">Version ↓</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="clearFilters()" title="Clear all filters">✕ Clear</button>
+    <button class="btn btn-ghost btn-sm" id="view-toggle-btn" onclick="toggleView()" title="Toggle grid/list view">⊞ Grid</button>
+    <div id="results-count" class="results-count"></div>
   </div>
 
   <!-- Cards grid -->
@@ -644,11 +861,15 @@
   <div id="empty-state" class="empty" style="display:none"></div>
 </main>
 
+<!-- ── FOOTER ──────────────────────────────────────────────────── -->
+<footer>© 2026 Formulae · Film Lab Chemical Database</footer>
+
 <!-- ── DETAIL PANEL ─────────────────────────────────────────────── -->
 <div class="detail-panel" id="detail-panel">
   <div class="detail-inner">
     <div class="detail-back">
       <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← Back</button>
+      <button class="btn btn-secondary btn-sm" onclick="printDetail()" title="Print / save as PDF">⬇ PDF</button>
     </div>
     <div id="detail-content"></div>
   </div>
@@ -721,12 +942,7 @@
       <div>
         <label>Ingredients</label>
         <div class="ing-editor" id="ing-editor">
-          <div class="ing-editor-header">
-            <span>Chemical name</span>
-            <span>Quantity</span>
-            <span>Unit</span>
-            <span></span>
-          </div>
+          <!-- header rebuilt by clearIngEditor() -->
         </div>
         <button class="add-ing-btn" onclick="addIngRow()">+ Add ingredient</button>
       </div>
@@ -766,116 +982,23 @@
 </div>
 
 <!-- ── TOAST CONTAINER ──────────────────────────────────────────── -->
-<div class="toast-container" id="toast-container"></div>
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
 
 <!-- ── SCRIPT ───────────────────────────────────────────────────── -->
 <script>
 'use strict';
 
 /* ─── State ───────────────────────────────────────────────────── */
-const STORAGE_KEY = 'formulae_v1';
-let db = [];
-let editingId = null;
+const STORAGE_KEY  = 'formulae_v1';
+const DARKROOM_KEY = 'formulae_darkroom';
+let db            = [];
+let editingId     = null;
 let confirmCallback = null;
-let dragSrcIdx = null;
+let dragSrcIdx    = null;
+let viewMode      = 'grid';
+let currentDetailId = null;
 
-/* ─── Seed data ──────────────────────────────────────────────── */
-const SEED = [
-  {
-    id: uid(), name: "D-76 Stock",
-    process: "B&W", category: "Developer", status: "Tested", version: "1.0",
-    desc: "Kodak's classic general-purpose film developer. Gives full emulsion speed with fine grain.",
-    ingredients: [
-      { name: "Water (52°C / 125°F)", qty: "750", unit: "ml" },
-      { name: "Metol", qty: "2", unit: "g" },
-      { name: "Sodium Sulfite (anhydrous)", qty: "100", unit: "g" },
-      { name: "Hydroquinone", qty: "5", unit: "g" },
-      { name: "Borax", qty: "2", unit: "g" },
-      { name: "Water to make", qty: "1000", unit: "ml" },
-    ],
-    temp: "20°C / 68°F", time: "8 min (stock), 11 min (1:1)",
-    notes: "Mix in the order listed. Metol dissolves before adding Hydroquinone. Store in a full, tightly capped bottle.",
-    updatedAt: Date.now() - 86400000 * 2,
-  },
-  {
-    id: uid(), name: "Kodak C-41 Developer",
-    process: "C-41", category: "Developer", status: "Experimental", version: "1.2",
-    desc: "Color negative process CD-4 based developer formula for C-41 compatible films.",
-    ingredients: [
-      { name: "Water (38°C)", qty: "800", unit: "ml" },
-      { name: "Hydroxylamine Sulfate", qty: "1.9", unit: "g" },
-      { name: "Sodium Sulfite", qty: "4.25", unit: "g" },
-      { name: "CD-4 (color developer)", qty: "4.75", unit: "g" },
-      { name: "Sodium Carbonate (anhydrous)", qty: "37.5", unit: "g" },
-      { name: "Potassium Bromide", qty: "1.2", unit: "g" },
-      { name: "Water to make", qty: "1000", unit: "ml" },
-    ],
-    temp: "38°C ± 0.15°C / 100.4°F", time: "3:15 min",
-    notes: "Extremely temperature sensitive. Use a water bath. Adjust pH to 10.03 with sodium hydroxide or acetic acid.",
-    updatedAt: Date.now() - 86400000 * 5,
-  },
-  {
-    id: uid(), name: "TF-4 Alkaline Fixer",
-    process: "B&W", category: "Fixer", status: "Tested", version: "2.0",
-    desc: "Rapid archival alkaline fixer for film and paper. Ammonium thiosulfate based.",
-    ingredients: [
-      { name: "Water", qty: "800", unit: "ml" },
-      { name: "Ammonium Thiosulfate (60% sol.)", qty: "200", unit: "ml" },
-      { name: "Sodium Sulfite", qty: "15", unit: "g" },
-      { name: "Sodium Bicarbonate", qty: "8.5", unit: "g" },
-      { name: "Water to make", qty: "1000", unit: "ml" },
-    ],
-    temp: "18–24°C", time: "2–4 min (film), 1–2 min (RC paper)",
-    notes: "pH should be 7.5–8.0. Non-hardening, safe for rapid washing. Discard when grey or fixes slowly.",
-    updatedAt: Date.now() - 86400000 * 1,
-  },
-  {
-    id: uid(), name: "E-6 First Developer",
-    process: "E-6", category: "Developer", status: "Experimental", version: "1.0",
-    desc: "First developer for the E-6 reversal slide process. Critical step — controls overall density.",
-    ingredients: [
-      { name: "Water (38°C)", qty: "700", unit: "ml" },
-      { name: "Sodium Sulfite", qty: "30", unit: "g" },
-      { name: "Phenidone", qty: "0.3", unit: "g" },
-      { name: "Hydroquinone", qty: "6", unit: "g" },
-      { name: "Sodium Carbonate", qty: "18", unit: "g" },
-      { name: "Potassium Bromide", qty: "1.5", unit: "g" },
-      { name: "Potassium Thiocyanate", qty: "1.0", unit: "g" },
-      { name: "Water to make", qty: "1000", unit: "ml" },
-    ],
-    temp: "38°C ± 0.15°C", time: "6 min",
-    notes: "Do not expose to light after this step. Temperature control is critical. Replenish at 11 ml/roll.",
-    updatedAt: Date.now() - 86400000 * 10,
-  },
-  {
-    id: uid(), name: "Wet Plate Collodion Developer",
-    process: "Wet Plate", category: "Developer", status: "Tested", version: "3.1",
-    desc: "Pyrogallic acid developer for wet plate collodion ambrotypes and tintypes.",
-    ingredients: [
-      { name: "Distilled Water", qty: "1000", unit: "ml" },
-      { name: "Pyrogallic Acid", qty: "1", unit: "g" },
-      { name: "Glacial Acetic Acid", qty: "30", unit: "ml" },
-    ],
-    temp: "Ambient (18–22°C recommended)", time: "10–30 seconds (to taste)",
-    notes: "Develop in strong raking light. Pyrogallol stains skin — use gloves. Discard after each plate.",
-    updatedAt: Date.now(),
-  },
-];
-
-/* ─── Persistence ────────────────────────────────────────────── */
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    db = raw ? JSON.parse(raw) : [];
-  } catch { db = []; }
-  if (!db.length) { db = SEED; save(); }
-}
-
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-}
-
-/* ─── Utilities ─────────────────────────────────────────��────── */
+/* ─── Utilities ──────────────────────────────────────────────── */
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
@@ -883,10 +1006,10 @@ function uid() {
 function esc(str) {
   if (!str) return '';
   return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function processClass(p) {
@@ -902,24 +1025,134 @@ function statusClass(s) {
   return 'status-' + (map[s] || 'experimental');
 }
 
+/* ─── Seed data (inside a function so uid() is defined first) ── */
+function makeSeed() {
+  return [
+    {
+      id: uid(), name: "D-76 Stock",
+      process: "B&W", category: "Developer", status: "Tested", version: "1.0",
+      desc: "Kodak's classic general-purpose film developer. Gives full emulsion speed with fine grain.",
+      ingredients: [
+        { name: "Water (52°C / 125°F)", qty: "750", unit: "ml" },
+        { name: "Metol", qty: "2", unit: "g" },
+        { name: "Sodium Sulfite (anhydrous)", qty: "100", unit: "g" },
+        { name: "Hydroquinone", qty: "5", unit: "g" },
+        { name: "Borax", qty: "2", unit: "g" },
+        { name: "Water to make", qty: "1000", unit: "ml" },
+      ],
+      temp: "20°C / 68°F", time: "8 min (stock), 11 min (1:1)",
+      notes: "Mix in the order listed. Metol dissolves before adding Hydroquinone. Store in a full, tightly capped bottle.",
+      updatedAt: Date.now() - 86400000 * 2,
+    },
+    {
+      id: uid(), name: "Kodak C-41 Developer",
+      process: "C-41", category: "Developer", status: "Experimental", version: "1.2",
+      desc: "Color negative process CD-4 based developer formula for C-41 compatible films.",
+      ingredients: [
+        { name: "Water (38°C)", qty: "800", unit: "ml" },
+        { name: "Hydroxylamine Sulfate", qty: "1.9", unit: "g" },
+        { name: "Sodium Sulfite", qty: "4.25", unit: "g" },
+        { name: "CD-4 (color developer)", qty: "4.75", unit: "g" },
+        { name: "Sodium Carbonate (anhydrous)", qty: "37.5", unit: "g" },
+        { name: "Potassium Bromide", qty: "1.2", unit: "g" },
+        { name: "Water to make", qty: "1000", unit: "ml" },
+      ],
+      temp: "38°C ± 0.15°C / 100.4°F", time: "3:15 min",
+      notes: "Extremely temperature sensitive. Use a water bath. Adjust pH to 10.03 with sodium hydroxide or acetic acid.",
+      updatedAt: Date.now() - 86400000 * 5,
+    },
+    {
+      id: uid(), name: "TF-4 Alkaline Fixer",
+      process: "B&W", category: "Fixer", status: "Tested", version: "2.0",
+      desc: "Rapid archival alkaline fixer for film and paper. Ammonium thiosulfate based.",
+      ingredients: [
+        { name: "Water", qty: "800", unit: "ml" },
+        { name: "Ammonium Thiosulfate (60% sol.)", qty: "200", unit: "ml" },
+        { name: "Sodium Sulfite", qty: "15", unit: "g" },
+        { name: "Sodium Bicarbonate", qty: "8.5", unit: "g" },
+        { name: "Water to make", qty: "1000", unit: "ml" },
+      ],
+      temp: "18–24°C", time: "2–4 min (film), 1–2 min (RC paper)",
+      notes: "pH should be 7.5–8.0. Non-hardening, safe for rapid washing. Discard when grey or fixes slowly.",
+      updatedAt: Date.now() - 86400000 * 1,
+    },
+    {
+      id: uid(), name: "E-6 First Developer",
+      process: "E-6", category: "Developer", status: "Experimental", version: "1.0",
+      desc: "First developer for the E-6 reversal slide process. Critical step — controls overall density.",
+      ingredients: [
+        { name: "Water (38°C)", qty: "700", unit: "ml" },
+        { name: "Sodium Sulfite", qty: "30", unit: "g" },
+        { name: "Phenidone", qty: "0.3", unit: "g" },
+        { name: "Hydroquinone", qty: "6", unit: "g" },
+        { name: "Sodium Carbonate", qty: "18", unit: "g" },
+        { name: "Potassium Bromide", qty: "1.5", unit: "g" },
+        { name: "Potassium Thiocyanate", qty: "1.0", unit: "g" },
+        { name: "Water to make", qty: "1000", unit: "ml" },
+      ],
+      temp: "38°C ± 0.15°C", time: "6 min",
+      notes: "Do not expose to light after this step. Temperature control is critical. Replenish at 11 ml/roll.",
+      updatedAt: Date.now() - 86400000 * 10,
+    },
+    {
+      id: uid(), name: "Wet Plate Collodion Developer",
+      process: "Wet Plate", category: "Developer", status: "Tested", version: "3.1",
+      desc: "Pyrogallic acid developer for wet plate collodion ambrotypes and tintypes.",
+      ingredients: [
+        { name: "Distilled Water", qty: "1000", unit: "ml" },
+        { name: "Pyrogallic Acid", qty: "1", unit: "g" },
+        { name: "Glacial Acetic Acid", qty: "30", unit: "ml" },
+      ],
+      temp: "Ambient (18–22°C recommended)", time: "10–30 seconds (to taste)",
+      notes: "Develop in strong raking light. Pyrogallol stains skin — use gloves. Discard after each plate.",
+      updatedAt: Date.now(),
+    },
+  ];
+}
+
+/* ─── Persistence ────────────────────────────────────────────── */
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    db = raw ? JSON.parse(raw) : [];
+  } catch { db = []; }
+  if (!db.length) { db = makeSeed(); save(); }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+}
+
 /* ─── Darkroom ───────────────────────────────────────────────── */
+function updateDarkroomBtn(on) {
+  document.getElementById('dr-icon').textContent  = on ? '💡' : '��';
+  document.getElementById('dr-label').textContent = on ? 'Normal' : 'Darkroom';
+}
+
 function toggleDarkroom() {
   document.body.classList.toggle('darkroom');
   const on = document.body.classList.contains('darkroom');
-  document.getElementById('dr-icon').textContent  = on ? '💡' : '🔴';
-  document.getElementById('dr-label').textContent = on ? 'Normal' : 'Darkroom';
-  localStorage.setItem('formulae_darkroom', on ? '1' : '');
+  updateDarkroomBtn(on);
+  localStorage.setItem(DARKROOM_KEY, on ? '1' : '');
+}
+
+/* ─── View toggle ────────────────────────────────────────────── */
+function toggleView() {
+  viewMode = viewMode === 'grid' ? 'list' : 'grid';
+  const btn = document.getElementById('view-toggle-btn');
+  btn.textContent = viewMode === 'grid' ? '⊞ Grid' : '☰ List';
+  renderCards();
 }
 
 /* ─── Stats bar ──────────────────────────────────────────────── */
 function renderStats() {
-  const total      = db.length;
-  const tested     = db.filter(f => f.status === 'Tested').length;
-  const processes  = [...new Set(db.map(f => f.process))].length;
+  const total     = db.length;
+  const tested    = db.filter(f => f.status === 'Tested').length;
+  const processes = [...new Set(db.map(f => f.process))].length;
   document.getElementById('stats-bar').innerHTML =
-    `<span><strong>${total}</strong> formula${total !== 1 ? 's' : ''}</span>` +
-    `<span><strong>${tested}</strong> tested</span>` +
-    `<span><strong>${processes}</strong> process${processes !== 1 ? 'es' : ''}</span>`;
+    `<div class="stat-card"><span class="stat-icon">🎞</span><span class="stat-num">${total}</span><span class="stat-label">Formula${total !== 1 ? 's' : ''}</span></div>` +
+    `<div class="stat-card"><span class="stat-icon">✅</span><span class="stat-num">${tested}</span><span class="stat-label">Tested</span></div>` +
+    `<div class="stat-card"><span class="stat-icon">🧪</span><span class="stat-num">${processes}</span><span class="stat-label">Process${processes !== 1 ? 'es' : ''}</span></div>`;
 }
 
 /* ─── Cards rendering ────────────────────────────────────────── */
@@ -959,6 +1192,14 @@ function renderCards() {
   const list  = getFiltered();
   const grid  = document.getElementById('cards-grid');
   const empty = document.getElementById('empty-state');
+  const rc    = document.getElementById('results-count');
+
+  // Results count
+  if (list.length < db.length) {
+    rc.innerHTML = `<strong>${list.length}</strong> of ${db.length} formula${db.length !== 1 ? 's' : ''}`;
+  } else {
+    rc.textContent = '';
+  }
 
   if (!list.length) {
     grid.innerHTML = '';
@@ -976,11 +1217,12 @@ function renderCards() {
   }
 
   empty.style.display = 'none';
+  grid.className = viewMode === 'list' ? 'cards-list' : 'cards-grid';
   grid.innerHTML = list.map(f => cardHTML(f)).join('');
 }
 
 function cardHTML(f) {
-  const ings = f.ingredients || [];
+  const ings   = f.ingredients || [];
   const preview = ings.slice(0, 4);
   const more    = ings.length - preview.length;
 
@@ -996,21 +1238,17 @@ function cardHTML(f) {
          ${more > 0 ? `<div class="ing-more">+ ${more} more ingredient${more > 1 ? 's' : ''}</div>` : ''}
        </div>` : '';
 
-  return `<div class="card" id="card-${esc(f.id)}">
+  return `<div class="card" data-process="${esc(f.process)}" id="card-${esc(f.id)}">
     <div class="card-header">
       <div>
         <div class="card-title">${esc(f.name)}</div>
         <div class="card-version">v${esc(f.version||'1.0')} · ${esc(f.category)}</div>
       </div>
       <div class="card-actions">
-        <button class="btn btn-ghost btn-sm" title="View details"
-          onclick="openDetail('${esc(f.id)}')">↗</button>
-        <button class="btn btn-ghost btn-sm" title="Edit"
-          onclick="openModal('${esc(f.id)}')">✏</button>
-        <button class="btn btn-ghost btn-sm" title="Duplicate"
-          onclick="duplicate('${esc(f.id)}')">⧉</button>
-        <button class="btn btn-ghost btn-sm" title="Delete"
-          style="color:var(--danger)"
+        <button class="btn btn-ghost btn-sm" title="View details" onclick="openDetail('${esc(f.id)}')">↗</button>
+        <button class="btn btn-ghost btn-sm" title="Edit" onclick="openModal('${esc(f.id)}')">✏</button>
+        <button class="btn btn-ghost btn-sm" title="Duplicate" onclick="duplicate('${esc(f.id)}')">⧉</button>
+        <button class="btn btn-ghost btn-sm" title="Delete" style="color:var(--danger)"
           onclick="confirmDelete('${esc(f.id)}')">✕</button>
       </div>
     </div>
@@ -1029,7 +1267,9 @@ function cardHTML(f) {
 function openDetail(id) {
   const f = db.find(x => x.id === id);
   if (!f) return;
+  currentDetailId = id;
   const ings = f.ingredients || [];
+
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-actions">
       <button class="btn btn-secondary btn-sm" onclick="openModal('${esc(f.id)}')">✏ Edit</button>
@@ -1055,20 +1295,32 @@ function openDetail(id) {
     ${ings.length ? `
     <div class="detail-section">
       <div class="detail-section-title">Ingredients (${ings.length})</div>
-      <table class="ing-table">
+      <table class="ing-table" id="ing-table-main">
         <thead><tr>
-          <th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th>
+          <th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th><th class="scaled-col" id="scaled-header" style="display:none">Scaled</th>
         </tr></thead>
-        <tbody>
+        <tbody id="ing-tbody">
           ${ings.map((i,idx) => `
             <tr>
               <td style="color:var(--muted)">${idx+1}</td>
               <td>${esc(i.name)}</td>
-              <td>${esc(i.qty)}</td>
+              <td id="qty-${idx}">${esc(i.qty)}</td>
               <td style="color:var(--muted)">${esc(i.unit)}</td>
+              <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
             </tr>`).join('')}
         </tbody>
       </table>
+    </div>
+
+    <div class="detail-section" id="scale-section">
+      <div class="detail-section-title">Scale Recipe</div>
+      <div class="scale-row">
+        <label for="scale-volume" style="font-weight:500;margin:0">Scale to</label>
+        <input id="scale-volume" type="number" min="1" placeholder="e.g. 500"
+          oninput="scaleRecipe()" style="width:130px" />
+        <span style="font-size:.875rem;color:var(--muted)">ml total volume</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearScale()" title="Clear scaling">✕ Reset</button>
+      </div>
     </div>` : ''}
 
     ${f.notes ? `
@@ -1088,6 +1340,128 @@ function openDetail(id) {
 function closeDetail() {
   document.getElementById('detail-panel').classList.remove('open');
   document.getElementById('main-page').style.visibility = '';
+  currentDetailId = null;
+}
+
+/* ─── Scale Recipe ───────────────────────────────────────────── */
+function scaleRecipe() {
+  const targetVol = parseFloat(document.getElementById('scale-volume').value);
+  const f = currentDetailId ? db.find(x => x.id === currentDetailId) : null;
+  if (!f) return;
+
+  const ings = f.ingredients || [];
+  const scaledHeader = document.getElementById('scaled-header');
+  if (!scaledHeader) return;
+
+  if (!targetVol || targetVol <= 0) {
+    clearScale();
+    return;
+  }
+
+  // Calculate base volume: sum of all ml quantities
+  let baseMl = ings.reduce((sum, i) => {
+    if ((i.unit || '').toLowerCase() === 'ml') {
+      const n = parseFloat(i.qty);
+      if (!isNaN(n)) sum += n;
+    }
+    return sum;
+  }, 0);
+  // Fall back to 1000ml if no ml-based ingredients were found (e.g. all in grams).
+  // This gives a relative scale factor rather than an absolute volume conversion.
+  if (baseMl <= 0) baseMl = 1000;
+
+  const factor = targetVol / baseMl;
+
+  // Show scaled column
+  scaledHeader.style.display = '';
+
+  ings.forEach((i, idx) => {
+    const cell = document.getElementById('scaled-' + idx);
+    if (!cell) return;
+    cell.style.display = '';
+    const n = parseFloat(i.qty);
+    if (!isNaN(n)) {
+      const scaled = n * factor;
+      // Show up to 4 significant figures, strip unnecessary trailing zeros
+      cell.textContent = parseFloat(scaled.toPrecision(4)) + ' ' + (i.unit || '');
+    } else {
+      cell.textContent = i.qty; // non-numeric, leave as-is
+    }
+  });
+}
+
+function clearScale() {
+  const scaledHeader = document.getElementById('scaled-header');
+  if (scaledHeader) scaledHeader.style.display = 'none';
+  document.querySelectorAll('[id^="scaled-"]').forEach(el => {
+    el.style.display = 'none';
+    el.textContent = '—';
+  });
+  const inp = document.getElementById('scale-volume');
+  if (inp) inp.value = '';
+}
+
+/* ─── PDF / Print ────────────────────────────────────────────── */
+function printDetail() {
+  window.print();
+}
+
+function printAll() {
+  // Collect currently visible (filtered) formulas and open a print window
+  const list = getFiltered();
+  if (!list.length) { toast('No formulas to print', 'error'); return; }
+
+  const win = window.open('', '_blank', 'width=800,height=600');
+  if (!win) { toast('Allow pop-ups to use PDF export', 'error'); return; }
+
+  const esc2 = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const formulaHTML = list.map(f => {
+    const ings = f.ingredients || [];
+    return `
+      <div class="formula" style="page-break-inside:avoid;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid #ccc">
+        <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:.25rem">${esc2(f.name)}</h2>
+        <p style="font-size:.85rem;color:#555;margin-bottom:.5rem">
+          ${esc2(f.process)} · ${esc2(f.category)} · v${esc2(f.version||'1.0')} · ${esc2(f.status)}
+        </p>
+        ${f.desc ? `<p style="font-size:.875rem;margin-bottom:.5rem">${esc2(f.desc)}</p>` : ''}
+        ${f.temp ? `<p style="font-size:.875rem;margin-bottom:.25rem">🌡 ${esc2(f.temp)}</p>` : ''}
+        ${f.time ? `<p style="font-size:.875rem;margin-bottom:.5rem">⏱ ${esc2(f.time)}</p>` : ''}
+        ${ings.length ? `
+        <table style="width:100%;border-collapse:collapse;font-size:.875rem;margin-top:.5rem">
+          <thead><tr>
+            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid #ccc;font-size:.75rem;text-transform:uppercase">#</th>
+            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid #ccc;font-size:.75rem;text-transform:uppercase">Chemical</th>
+            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid #ccc;font-size:.75rem;text-transform:uppercase">Qty</th>
+            <th style="text-align:left;padding:.3rem .5rem;border-bottom:1px solid #ccc;font-size:.75rem;text-transform:uppercase">Unit</th>
+          </tr></thead>
+          <tbody>${ings.map((i,n)=>`
+            <tr>
+              <td style="padding:.3rem .5rem;border-bottom:1px solid #eee;color:#777">${n+1}</td>
+              <td style="padding:.3rem .5rem;border-bottom:1px solid #eee">${esc2(i.name)}</td>
+              <td style="padding:.3rem .5rem;border-bottom:1px solid #eee">${esc2(i.qty)}</td>
+              <td style="padding:.3rem .5rem;border-bottom:1px solid #eee;color:#777">${esc2(i.unit)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>` : ''}
+        ${f.notes ? `<p style="font-size:.8rem;color:#666;margin-top:.5rem;font-style:italic">${esc2(f.notes)}</p>` : ''}
+      </div>`;
+  }).join('');
+
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Formulae Export — ${new Date().toISOString().slice(0,10)}</title>
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 2rem; color: #111; max-width: 800px; margin: 0 auto; }
+      h1 { font-size: 1.5rem; margin-bottom: .5rem; }
+      p.sub { color: #666; font-size: .875rem; margin-bottom: 1.5rem; }
+      @media print { button { display: none; } }
+    </style></head><body>
+    <h1>Formulae — Chemical Database</h1>
+    <p class="sub">Exported ${list.length} formula${list.length!==1?'s':''} · ${new Date().toLocaleString()}</p>
+    <button onclick="window.print()" style="margin-bottom:1.5rem;padding:.5rem 1rem;cursor:pointer">🖨 Print / Save PDF</button>
+    ${formulaHTML}
+  </body></html>`);
+  win.document.close();
 }
 
 /* ─── Modal ──────────────────────────────────────────────────── */
@@ -1102,29 +1476,29 @@ function openModal(id) {
     const f = db.find(x => x.id === id);
     if (!f) return;
     title.textContent = 'Edit Formula';
-    document.getElementById('edit-id').value   = f.id;
-    document.getElementById('f-name').value    = f.name    || '';
-    document.getElementById('f-process').value = f.process || '';
-    document.getElementById('f-category').value= f.category|| '';
-    document.getElementById('f-status').value  = f.status  || 'Experimental';
-    document.getElementById('f-version').value = f.version || '1.0';
-    document.getElementById('f-desc').value    = f.desc    || '';
-    document.getElementById('f-temp').value    = f.temp    || '';
-    document.getElementById('f-time').value    = f.time    || '';
-    document.getElementById('f-notes').value   = f.notes   || '';
+    document.getElementById('edit-id').value    = f.id;
+    document.getElementById('f-name').value     = f.name    || '';
+    document.getElementById('f-process').value  = f.process || '';
+    document.getElementById('f-category').value = f.category|| '';
+    document.getElementById('f-status').value   = f.status  || 'Experimental';
+    document.getElementById('f-version').value  = f.version || '1.0';
+    document.getElementById('f-desc').value     = f.desc    || '';
+    document.getElementById('f-temp').value     = f.temp    || '';
+    document.getElementById('f-time').value     = f.time    || '';
+    document.getElementById('f-notes').value    = f.notes   || '';
     (f.ingredients || []).forEach(i => addIngRow(i));
   } else {
     title.textContent = 'New Formula';
-    document.getElementById('edit-id').value   = '';
-    document.getElementById('f-name').value    = '';
-    document.getElementById('f-process').value = '';
-    document.getElementById('f-category').value= '';
-    document.getElementById('f-status').value  = 'Experimental';
-    document.getElementById('f-version').value = '1.0';
-    document.getElementById('f-desc').value    = '';
-    document.getElementById('f-temp').value    = '';
-    document.getElementById('f-time').value    = '';
-    document.getElementById('f-notes').value   = '';
+    document.getElementById('edit-id').value    = '';
+    document.getElementById('f-name').value     = '';
+    document.getElementById('f-process').value  = '';
+    document.getElementById('f-category').value = '';
+    document.getElementById('f-status').value   = 'Experimental';
+    document.getElementById('f-version').value  = '1.0';
+    document.getElementById('f-desc').value     = '';
+    document.getElementById('f-temp').value     = '';
+    document.getElementById('f-time').value     = '';
+    document.getElementById('f-notes').value    = '';
     addIngRow();
   }
 
@@ -1190,14 +1564,11 @@ function saveFormula() {
 /* ─── Ingredient editor ──────────────────────────────────────── */
 function clearIngEditor() {
   const editor = document.getElementById('ing-editor');
-  const header = editor.querySelector('.ing-editor-header');
   editor.innerHTML = '';
-  editor.appendChild(header || (() => {
-    const h = document.createElement('div');
-    h.className = 'ing-editor-header';
-    h.innerHTML = '<span>Chemical name</span><span>Quantity</span><span>Unit</span><span></span>';
-    return h;
-  })());
+  const h = document.createElement('div');
+  h.className = 'ing-editor-header';
+  h.innerHTML = '<span>Chemical name</span><span>Quantity</span><span>Unit</span><span></span>';
+  editor.appendChild(h);
 }
 
 function addIngRow(ing) {
@@ -1209,8 +1580,7 @@ function addIngRow(ing) {
     <input type="text" placeholder="e.g. Sodium Sulfite" value="${esc(ing?.name||'')}" />
     <input type="text" placeholder="e.g. 100" value="${esc(ing?.qty||'')}" />
     <input type="text" placeholder="g / ml / oz" value="${esc(ing?.unit||'g')}" />
-    <button class="btn btn-ghost btn-sm drag-handle" title="Drag to reorder / Remove"
-      onclick="removeIngRow(this)">✕</button>
+    <button class="btn btn-ghost btn-sm drag-handle" title="Remove" onclick="removeIngRow(this)">✕</button>
   `;
 
   row.addEventListener('dragstart', e => {
@@ -1246,9 +1616,7 @@ function rowIndex(row) {
 function removeIngRow(btn) {
   const row = btn.closest('.ing-editor-row');
   if (document.querySelectorAll('.ing-editor-row').length > 1) row.remove();
-  else {
-    row.querySelectorAll('input').forEach(i => i.value = '');
-  }
+  else row.querySelectorAll('input').forEach(i => i.value = '');
 }
 
 function readIngredients() {
@@ -1308,7 +1676,7 @@ function closeConfirm() {
 
 /* ─── Clear filters ──────────────────────────────────────────── */
 function clearFilters() {
-  document.getElementById('search-input').value   = '';
+  document.getElementById('search-input').value    = '';
   document.getElementById('filter-process').value  = '';
   document.getElementById('filter-category').value = '';
   document.getElementById('filter-status').value   = '';
@@ -1359,4 +1727,52 @@ function importData(e) {
 function toast(msg, type) {
   const c = document.getElementById('toast-container');
   const t = document.createElement('div');
-  t.className = 'toast' + (type ? ' '
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transition = 'opacity .3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+/* ─── Keyboard shortcuts ─────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  if (e.key === 'Escape') {
+    if (document.getElementById('modal-backdrop').classList.contains('open'))    closeModal();
+    else if (document.getElementById('detail-panel').classList.contains('open')) closeDetail();
+    else if (document.getElementById('confirm-backdrop').classList.contains('open')) closeConfirm();
+    return;
+  }
+  if ((e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey) {
+    if (!document.getElementById('modal-backdrop').classList.contains('open') &&
+        !document.getElementById('detail-panel').classList.contains('open')) {
+      openModal();
+    }
+    return;
+  }
+  if (e.key === '/') {
+    e.preventDefault();
+    document.getElementById('search-input').focus();
+  }
+});
+
+/* ─── Init ───────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  load();
+
+  // Restore darkroom preference
+  if (localStorage.getItem(DARKROOM_KEY)) {
+    document.body.classList.add('darkroom');
+    updateDarkroomBtn(true);
+  }
+
+  renderCards();
+});
+</script>
+</body>
+</html>

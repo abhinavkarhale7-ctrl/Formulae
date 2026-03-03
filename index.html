@@ -1479,7 +1479,8 @@ function printAll() {
   const url = URL.createObjectURL(blob);
   const win = window.open(url, '_blank');
   if (!win) { toast('Allow pop-ups to use PDF export', 'error'); URL.revokeObjectURL(url); return; }
-  win.onload = function() { URL.revokeObjectURL(url); };
+  win.addEventListener('load', function() { URL.revokeObjectURL(url); });
+  setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
 }
 
 /* ─── Modal ──────────────────────────────────────────────────── */

@@ -32,22 +32,22 @@
 
     /* ── Darkroom mode ───────────────────────────────────────────── */
     body.darkroom {
-      --bg:           #1a0000;
-      --surface:      #200000;
-      --border:       #4a0000;
-      --text:         #ff5555;
-      --muted:        #993333;
-      --accent:       #ff2222;
-      --accent-hover: #cc1111;
-      --danger:       #ff6666;
-      --danger-hover: #ff3333;
-      --green:        #ff4444;
-      --orange:       #ff4444;
-      --purple:       #ff5555;
+      --bg:           #000000;
+      --surface:      #0a0a0a;
+      --border:       #330000;
+      --text:         #ff0000;
+      --muted:        #aa0000;
+      --accent:       #ff0000;
+      --accent-hover: #cc0000;
+      --danger:       #ff3333;
+      --danger-hover: #cc0000;
+      --green:        #ff0000;
+      --orange:       #ff0000;
+      --purple:       #ff0000;
       --shadow:       0 1px 3px rgba(255,0,0,.15);
       --shadow-md:    0 4px 6px -1px rgba(255,0,0,.12);
-      --header-bg:    linear-gradient(135deg, #2a0000 0%, #1a0000 100%);
-      --header-text:  #ff5555;
+      --header-bg:    linear-gradient(135deg, #1a0000 0%, #000000 100%);
+      --header-text:  #ff0000;
     }
 
     /* Darkroom scanline overlay */
@@ -107,7 +107,7 @@
     body.darkroom input:focus,
     body.darkroom select:focus,
     body.darkroom textarea:focus {
-      box-shadow: 0 0 0 3px rgba(255,34,34,.2);
+      box-shadow: 0 0 0 3px rgba(255,0,0,.2);
     }
     textarea { resize: vertical; min-height: 5rem; }
     label { font-size: .875rem; font-weight: 600; display: block; margin-bottom: .3rem; color: var(--text); }
@@ -332,10 +332,12 @@
     .card[data-process="C-41"]     { --card-accent: #ea580c; }
     .card[data-process="ECN-2"]    { --card-accent: #9333ea; }
     .card[data-process="E-6"]      { --card-accent: #2563eb; }
-    .card[data-process="Wet Plate"]{ --card-accent: #92400e; }
+    .card[data-process="Ambrotype"]{ --card-accent: #92400e; }
+    .card[data-process="Tintype"]  { --card-accent: #78350f; }
+    .card[data-process="Dryplate"] { --card-accent: #854d0e; }
     .card[data-process="Fixer"]    { --card-accent: #475569; }
     .card[data-process="Other"]    { --card-accent: #6b7280; }
-    body.darkroom .card { --card-accent: #660000 !important; }
+    body.darkroom .card { --card-accent: #cc0000 !important; }
 
     .card-header {
       display: flex;
@@ -388,12 +390,14 @@
     .badge-c41       { background: #ea580c; }
     .badge-ecn2      { background: #9333ea; }
     .badge-e6        { background: #2563eb; }
-    .badge-wetplate  { background: #92400e; }
+    .badge-ambrotype { background: #92400e; }
+    .badge-tintype   { background: #78350f; }
+    .badge-dryplate  { background: #854d0e; }
     .badge-fixer     { background: #475569; }
     .badge-other     { background: #6b7280; }
 
-    body.darkroom .badge { color: #1a0000 !important; background: #ff4444 !important;
-      box-shadow: 0 0 6px rgba(255,68,68,.4); }
+    body.darkroom .badge { color: #000000 !important; background: #ff0000 !important;
+      box-shadow: 0 0 6px rgba(255,0,0,.4); }
 
     .status-badge {
       display: inline-block;
@@ -409,7 +413,7 @@
     .status-archived     { background: #f3f4f6; color: #6b7280; }
     body.darkroom .status-tested,
     body.darkroom .status-experimental,
-    body.darkroom .status-archived { background: #2a0000; color: #ff6666; }
+    body.darkroom .status-archived { background: #1a0000; color: #ff0000; }
 
     .card-desc {
       font-size: .875rem;
@@ -624,7 +628,7 @@
     }
     .toast.success { background: #166534; }
     .toast.error   { background: #991b1b; }
-    body.darkroom .toast { background: #2a0000; color: #ff8888; }
+    body.darkroom .toast { background: #1a0000; color: #ff0000; }
 
     @keyframes slideIn {
       from { opacity: 0; transform: translateX(1rem); }
@@ -826,7 +830,9 @@
       <option value="C-41">C-41</option>
       <option value="ECN-2">ECN-2</option>
       <option value="E-6">E-6</option>
-      <option value="Wet Plate">Wet Plate</option>
+      <option value="Ambrotype">Ambrotype</option>
+      <option value="Tintype">Tintype</option>
+      <option value="Dryplate">Dryplate</option>
       <option value="Fixer">Fixer</option>
       <option value="Other">Other</option>
     </select>
@@ -837,6 +843,10 @@
       <option value="Fixer">Fixer</option>
       <option value="Bleach">Bleach</option>
       <option value="Stabilizer">Stabilizer</option>
+      <option value="Collodion">Collodion</option>
+      <option value="Silver nitrate bath">Silver nitrate bath</option>
+      <option value="Varnish">Varnish</option>
+      <option value="Toners">Toners</option>
       <option value="Other">Other</option>
     </select>
     <select id="filter-status" onchange="renderCards()" aria-label="Filter by status">
@@ -899,7 +909,9 @@
             <option>C-41</option>
             <option>ECN-2</option>
             <option>E-6</option>
-            <option>Wet Plate</option>
+            <option>Ambrotype</option>
+            <option>Tintype</option>
+            <option>Dryplate</option>
             <option>Fixer</option>
             <option>Other</option>
           </select>
@@ -913,6 +925,10 @@
             <option>Fixer</option>
             <option>Bleach</option>
             <option>Stabilizer</option>
+            <option>Collodion</option>
+            <option>Silver nitrate bath</option>
+            <option>Varnish</option>
+            <option>Toners</option>
             <option>Other</option>
           </select>
         </div>
@@ -1015,7 +1031,7 @@ function esc(str) {
 function processClass(p) {
   const map = {
     'B&W':'bw','C-41':'c41','ECN-2':'ecn2',
-    'E-6':'e6','Wet Plate':'wetplate','Fixer':'fixer'
+    'E-6':'e6','Ambrotype':'ambrotype','Tintype':'tintype','Dryplate':'dryplate','Fixer':'fixer'
   };
   return 'badge-' + (map[p] || 'other');
 }
@@ -1095,9 +1111,9 @@ function makeSeed() {
       updatedAt: Date.now() - 86400000 * 10,
     },
     {
-      id: uid(), name: "Wet Plate Collodion Developer",
-      process: "Wet Plate", category: "Developer", status: "Tested", version: "3.1",
-      desc: "Pyrogallic acid developer for wet plate collodion ambrotypes and tintypes.",
+      id: uid(), name: "Ambrotype Collodion Developer",
+      process: "Ambrotype", category: "Developer", status: "Tested", version: "3.1",
+      desc: "Pyrogallic acid developer for collodion ambrotypes and tintypes.",
       ingredients: [
         { name: "Distilled Water", qty: "1000", unit: "ml" },
         { name: "Pyrogallic Acid", qty: "1", unit: "g" },

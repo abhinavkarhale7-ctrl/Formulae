@@ -496,7 +496,20 @@ function renderFormulaCanvas(f) {
   estH += lineH; // meta line (process / category / version / status)
   if (f.desc) estH += 12 * scale + wrapText(f.desc, contentW, 13 * scale).length * lineH;
   if (f.temp || f.time) estH += 28 * scale + lineH + (f.temp && f.time ? lineH : 0);
-  if (ings.length) estH += 28 * scale + lineH + ings.length * lineH + 8 * scale;
+  if (ings.length) {
+    const hasPartsEst = ings.some(i => i.part === 'A' || i.part === 'B');
+    const partAEst = ings.filter(i => i.part === 'A');
+    const partBEst = ings.filter(i => i.part === 'B');
+    const noPartEst = ings.filter(i => !i.part || (i.part !== 'A' && i.part !== 'B'));
+    let groupCount = 0;
+    if (hasPartsEst) {
+      if (noPartEst.length) groupCount++;
+      if (partAEst.length) groupCount++;
+      if (partBEst.length) groupCount++;
+    }
+    estH += 28 * scale + lineH + ings.length * lineH + 8 * scale;
+    if (hasPartsEst) estH += groupCount * (lineH + lineH); // group headers + extra table headers
+  }
   if (f.notes) estH += 28 * scale + wrapText(f.notes, contentW, 13 * scale).length * lineH + 12 * scale;
   estH += 24 * scale; // timestamp
   estH += pad; // bottom margin
@@ -611,42 +624,78 @@ function renderFormulaCanvas(f) {
   if (ings.length) {
     sectionTitle('Ingredients (' + ings.length + ')');
 
-    // Table header
     const colNum = left;
     const colName = left + 36 * scale;
     const colQty = right - 140 * scale;
     const colUnit = right - 60 * scale;
 
-    ctx.fillStyle = '#f1f5f9';
-    ctx.fillRect(left, y - 12 * scale, contentW, lineH);
-    ctx.fillStyle = '#64748b';
-    ctx.font = `bold ${12 * scale}px Inter, sans-serif`;
-    ctx.fillText('#', colNum, y);
-    ctx.fillText('Chemical', colName, y);
-    ctx.fillText('Qty', colQty, y);
-    ctx.fillText('Unit', colUnit, y);
-    y += lineH;
+    const partA = ings.filter(i => i.part === 'A');
+    const partB = ings.filter(i => i.part === 'B');
+    const noPart = ings.filter(i => !i.part || (i.part !== 'A' && i.part !== 'B'));
+    const hasParts = partA.length > 0 || partB.length > 0;
 
-    // Rows
-    ings.forEach(function(ing, idx) {
-      if (idx % 2 === 1) {
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(left, y - 12 * scale, contentW, lineH);
-      }
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = `${12 * scale}px Inter, sans-serif`;
-      ctx.fillText(String(idx + 1), colNum, y);
-      ctx.fillStyle = '#0f172a';
-      ctx.font = `${13 * scale}px Inter, sans-serif`;
-      ctx.fillText(ing.name || '', colName, y);
-      ctx.fillStyle = '#0f172a';
-      ctx.font = `bold ${13 * scale}px Inter, sans-serif`;
-      ctx.fillText(ing.qty || '', colQty, y);
+    function drawTableHeader() {
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fillRect(left, y - 12 * scale, contentW, lineH);
       ctx.fillStyle = '#64748b';
-      ctx.font = `${12 * scale}px Inter, sans-serif`;
-      ctx.fillText(ing.unit || '', colUnit, y);
+      ctx.font = `bold ${12 * scale}px Inter, sans-serif`;
+      ctx.fillText('#', colNum, y);
+      ctx.fillText('Chemical', colName, y);
+      ctx.fillText('Qty', colQty, y);
+      ctx.fillText('Unit', colUnit, y);
       y += lineH;
-    });
+    }
+
+    function drawRows(items) {
+      items.forEach(function(ing, localIdx) {
+        var idx = ings.indexOf(ing);
+        if (localIdx % 2 === 1) {
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(left, y - 12 * scale, contentW, lineH);
+        }
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = `${12 * scale}px Inter, sans-serif`;
+        ctx.fillText(String(idx + 1), colNum, y);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = `${13 * scale}px Inter, sans-serif`;
+        ctx.fillText(ing.name || '', colName, y);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = `bold ${13 * scale}px Inter, sans-serif`;
+        ctx.fillText(ing.qty || '', colQty, y);
+        ctx.fillStyle = '#64748b';
+        ctx.font = `${12 * scale}px Inter, sans-serif`;
+        ctx.fillText(ing.unit || '', colUnit, y);
+        y += lineH;
+      });
+    }
+
+    function drawGroupLabel(label) {
+      y += 6 * scale;
+      ctx.fillStyle = '#2563eb';
+      ctx.font = `bold ${13 * scale}px Inter, sans-serif`;
+      ctx.fillText(label, left, y);
+      y += lineH;
+    }
+
+    if (!hasParts) {
+      drawTableHeader();
+      drawRows(ings);
+    } else {
+      if (noPart.length) {
+        drawTableHeader();
+        drawRows(noPart);
+      }
+      if (partA.length) {
+        drawGroupLabel('PART A');
+        drawTableHeader();
+        drawRows(partA);
+      }
+      if (partB.length) {
+        drawGroupLabel('PART B');
+        drawTableHeader();
+        drawRows(partB);
+      }
+    }
   }
 
   // Notes

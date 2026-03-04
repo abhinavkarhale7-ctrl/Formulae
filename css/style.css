@@ -164,8 +164,8 @@
       gap: .75rem;
       flex-wrap: wrap;
       box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 8px 32px rgba(0,0,0,.10);
-      backdrop-filter: blur(16px) saturate(1.4);
-      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
       transition: background var(--transition-base), box-shadow var(--transition-base);
     }
 
@@ -548,8 +548,8 @@
       position: fixed;
       inset: 0;
       background: rgba(15,23,42,.45);
-      backdrop-filter: blur(8px) saturate(1.2);
-      -webkit-backdrop-filter: blur(8px) saturate(1.2);
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
       z-index: 200;
       align-items: flex-start;
       justify-content: center;
@@ -570,8 +570,8 @@
       width: 100%;
       max-width: 640px;
       box-shadow: 0 24px 80px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.08);
-      backdrop-filter: blur(20px) saturate(1.3);
-      -webkit-backdrop-filter: blur(20px) saturate(1.3);
+      backdrop-filter: blur(20px) saturate(130%);
+      -webkit-backdrop-filter: blur(20px) saturate(130%);
       display: flex;
       flex-direction: column;
       margin-bottom: 2rem;
@@ -656,8 +656,8 @@
       position: fixed;
       inset: 0;
       background: rgba(15,23,42,.45);
-      backdrop-filter: blur(8px) saturate(1.2);
-      -webkit-backdrop-filter: blur(8px) saturate(1.2);
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
       z-index: 300;
       align-items: center;
       justify-content: center;
@@ -673,8 +673,8 @@
       width: 100%;
       text-align: center;
       box-shadow: 0 24px 80px rgba(0,0,0,.15), 0 8px 24px rgba(0,0,0,.08);
-      backdrop-filter: blur(20px) saturate(1.3);
-      -webkit-backdrop-filter: blur(20px) saturate(1.3);
+      backdrop-filter: blur(20px) saturate(130%);
+      -webkit-backdrop-filter: blur(20px) saturate(130%);
       animation: slideUp .25s cubic-bezier(.4,0,.2,1);
     }
     .confirm-box h3 { font-size: 1.0625rem; font-weight: 700; margin-bottom: .5rem; letter-spacing: -.01em; }
@@ -700,8 +700,8 @@
       font-size: .8125rem;
       font-weight: 500;
       box-shadow: 0 8px 32px rgba(0,0,0,.18);
-      backdrop-filter: blur(12px) saturate(1.2);
-      -webkit-backdrop-filter: blur(12px) saturate(1.2);
+      backdrop-filter: blur(12px) saturate(120%);
+      -webkit-backdrop-filter: blur(12px) saturate(120%);
       border: 1px solid rgba(255,255,255,.08);
       animation: slideIn .25s cubic-bezier(.4,0,.2,1);
       pointer-events: auto;

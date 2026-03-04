@@ -31,7 +31,7 @@
     body.darkroom {
       --bg:           #000000;
       --surface:      #0a0a0a;
-      --surface-elevated: #0f0000;
+      --surface-elevated: #1a0000;
       --border:       #330000;
       --border-subtle:#220000;
       --text:         #ff0000;
@@ -482,9 +482,9 @@
       padding: .2rem 0;
       gap: .5rem;
     }
-    .ing-name { color: var(--text); font-size: .8rem; }
-    .ing-qty  { white-space: nowrap; color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
-    .ing-more { color: var(--accent); font-size: .725rem; margin-top: .25rem; font-weight: 500; }
+    .ing-name { color: var(--text); font-size: .8125rem; }
+    .ing-qty  { white-space: nowrap; color: var(--muted); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+    .ing-more { color: var(--accent); font-size: .75rem; margin-top: .25rem; font-weight: 500; }
 
     /* Notes */
     .card-notes {

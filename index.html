@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Formulae — Film Lab Chemical Database</title>
   <meta name="description" content="Store, manage, search, and version-control your photographic chemical formulas — built for the darkroom." />
+  <meta name="theme-color" content="#1e3a8a" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.0/dist/jspdf.umd.min.js"></script>
@@ -1551,18 +1555,220 @@ function downloadDetailPDF() {
 function downloadDetailJPEG() {
   const f = db.find(x => x.id === currentDetailId);
   if (!f) { toast('No formula selected', 'error'); return; }
-  const el = document.getElementById('detail-content');
-  html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(function(canvas) {
-    const link = document.createElement('a');
-    const safeName = f.name.replace(/[^a-zA-Z0-9_-]/g, '_');
-    link.download = safeName + '.jpeg';
-    link.href = canvas.toDataURL('image/jpeg', 0.95);
-    link.click();
-    toast('JPEG downloaded ✓', 'success');
-  }).catch(function(err) {
-    console.error('JPEG generation error:', err);
-    toast('JPEG generation failed', 'error');
-  });
+
+  const ings = f.ingredients || [];
+  const scale = 2;
+  const W = 800 * scale;
+  const pad = 48 * scale;
+  const lineH = 22 * scale;
+
+  // Pre-calculate height
+  let estH = pad; // top margin
+  estH += 36 * scale; // title
+  estH += 12 * scale; // gap after title
+  estH += lineH; // meta line (process / category / version / status)
+  if (f.desc) estH += 12 * scale + Math.ceil(f.desc.length / 70) * lineH;
+  if (f.temp || f.time) estH += 28 * scale + lineH + (f.temp && f.time ? lineH : 0);
+  if (ings.length) estH += 28 * scale + lineH + ings.length * lineH + 8 * scale;
+  if (f.notes) estH += 28 * scale + Math.ceil(f.notes.length / 70) * lineH + 12 * scale;
+  estH += 24 * scale; // timestamp
+  estH += pad; // bottom margin
+  const H = Math.max(estH, 500 * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#f8f9fc';
+  ctx.fillRect(0, 0, W, H);
+
+  // Card area with white background and subtle border
+  const cardX = 24 * scale, cardY = 24 * scale;
+  const cardW = W - 48 * scale, cardH = H - 48 * scale;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  const r = 12 * scale;
+  ctx.moveTo(cardX + r, cardY);
+  ctx.arcTo(cardX + cardW, cardY, cardX + cardW, cardY + cardH, r);
+  ctx.arcTo(cardX + cardW, cardY + cardH, cardX, cardY + cardH, r);
+  ctx.arcTo(cardX, cardY + cardH, cardX, cardY, r);
+  ctx.arcTo(cardX, cardY, cardX + cardW, cardY, r);
+  ctx.fill();
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1 * scale;
+  ctx.stroke();
+
+  let y = pad + 16 * scale;
+  const left = pad + 8 * scale;
+  const right = W - pad - 8 * scale;
+  const contentW = right - left;
+
+  // Helper: draw section heading
+  function sectionTitle(text) {
+    y += 18 * scale;
+    ctx.fillStyle = '#2563eb';
+    ctx.font = `bold ${13 * scale}px Inter, sans-serif`;
+    ctx.fillText(text.toUpperCase(), left, y);
+    y += 6 * scale;
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1 * scale;
+    ctx.beginPath();
+    ctx.moveTo(left, y);
+    ctx.lineTo(right, y);
+    ctx.stroke();
+    y += 14 * scale;
+  }
+
+  // Helper: wrap text
+  function wrapText(text, maxW, fontSize) {
+    ctx.font = `${fontSize}px Inter, sans-serif`;
+    const words = text.split(' ');
+    let line = '';
+    const lines = [];
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w;
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  // Title
+  ctx.fillStyle = '#0f172a';
+  ctx.font = `bold ${28 * scale}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(f.name, W / 2, y);
+  ctx.textAlign = 'left';
+  y += 10 * scale;
+
+  // Accent underline below title
+  const titleUnderW = Math.min(ctx.measureText(f.name).width + 24 * scale, contentW);
+  ctx.strokeStyle = '#2563eb';
+  ctx.lineWidth = 3 * scale;
+  ctx.beginPath();
+  ctx.moveTo((W - titleUnderW) / 2, y);
+  ctx.lineTo((W + titleUnderW) / 2, y);
+  ctx.stroke();
+  y += 16 * scale;
+
+  // Meta line: process · category · version · status
+  ctx.font = `${13 * scale}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#64748b';
+  const meta = [f.process, f.category, 'v' + (f.version || '1.0'), f.status].filter(Boolean).join('  ·  ');
+  ctx.fillText(meta, W / 2, y);
+  ctx.textAlign = 'left';
+  y += 8 * scale;
+
+  // Description
+  if (f.desc) {
+    y += 10 * scale;
+    ctx.fillStyle = '#334155';
+    const descLines = wrapText(f.desc, contentW, 13 * scale);
+    for (const ln of descLines) {
+      ctx.font = `italic ${13 * scale}px Inter, sans-serif`;
+      ctx.fillText(ln, left, y);
+      y += lineH;
+    }
+  }
+
+  // Process Parameters
+  if (f.temp || f.time) {
+    sectionTitle('Process Parameters');
+    ctx.fillStyle = '#0f172a';
+    ctx.font = `${14 * scale}px Inter, sans-serif`;
+    if (f.temp) {
+      ctx.font = `bold ${14 * scale}px Inter, sans-serif`;
+      ctx.fillText('Temperature:', left, y);
+      ctx.font = `${14 * scale}px Inter, sans-serif`;
+      ctx.fillText(f.temp, left + ctx.measureText('Temperature:  ').width, y);
+      y += lineH;
+    }
+    if (f.time) {
+      ctx.font = `bold ${14 * scale}px Inter, sans-serif`;
+      ctx.fillText('Time:', left, y);
+      ctx.font = `${14 * scale}px Inter, sans-serif`;
+      ctx.fillText(f.time, left + ctx.measureText('Time:  ').width, y);
+      y += lineH;
+    }
+  }
+
+  // Ingredients
+  if (ings.length) {
+    sectionTitle('Ingredients (' + ings.length + ')');
+
+    // Table header
+    const colNum = left;
+    const colName = left + 36 * scale;
+    const colQty = right - 140 * scale;
+    const colUnit = right - 60 * scale;
+
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillRect(left, y - 12 * scale, contentW, lineH);
+    ctx.fillStyle = '#64748b';
+    ctx.font = `bold ${12 * scale}px Inter, sans-serif`;
+    ctx.fillText('#', colNum, y);
+    ctx.fillText('Chemical', colName, y);
+    ctx.fillText('Qty', colQty, y);
+    ctx.fillText('Unit', colUnit, y);
+    y += lineH;
+
+    // Rows
+    ings.forEach(function(ing, idx) {
+      if (idx % 2 === 1) {
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(left, y - 12 * scale, contentW, lineH);
+      }
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = `${12 * scale}px Inter, sans-serif`;
+      ctx.fillText(String(idx + 1), colNum, y);
+      ctx.fillStyle = '#0f172a';
+      ctx.font = `${13 * scale}px Inter, sans-serif`;
+      ctx.fillText(ing.name || '', colName, y);
+      ctx.fillStyle = '#0f172a';
+      ctx.font = `bold ${13 * scale}px Inter, sans-serif`;
+      ctx.fillText(ing.qty || '', colQty, y);
+      ctx.fillStyle = '#64748b';
+      ctx.font = `${12 * scale}px Inter, sans-serif`;
+      ctx.fillText(ing.unit || '', colUnit, y);
+      y += lineH;
+    });
+  }
+
+  // Notes
+  if (f.notes) {
+    sectionTitle('Notes');
+    ctx.fillStyle = '#334155';
+    const noteLines = wrapText(f.notes, contentW, 13 * scale);
+    for (const ln of noteLines) {
+      ctx.font = `${13 * scale}px Inter, sans-serif`;
+      ctx.fillText(ln, left, y);
+      y += lineH;
+    }
+  }
+
+  // Timestamp
+  y += 12 * scale;
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = `${11 * scale}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Last updated: ' + new Date(f.updatedAt || Date.now()).toLocaleString(), W / 2, y);
+  ctx.textAlign = 'left';
+
+  // Download
+  const link = document.createElement('a');
+  const safeName = f.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+  link.download = safeName + '.jpeg';
+  link.href = canvas.toDataURL('image/jpeg', 0.95);
+  link.click();
+  toast('JPEG downloaded ✓', 'success');
 }
 
 function printDetail() {
@@ -2001,6 +2207,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Check backup reminder after render
   checkBackupReminder();
+
+  // Register service worker for PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
 });
 </script>
 </body>

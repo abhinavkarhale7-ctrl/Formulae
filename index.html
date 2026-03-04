@@ -742,7 +742,7 @@
     }
     body.darkroom .local-warning-banner {
       background: #1a0000;
-      color: #ff0000;
+      color: #ff6b6b;
       border-bottom-color: #330000;
     }
 
@@ -1497,7 +1497,7 @@ function scaleRecipe() {
 function clearScale() {
   document.querySelectorAll('.scaled-col').forEach(el => {
     el.style.display = 'none';
-    if (!el.tagName.match(/^TH$/i)) el.textContent = '—';
+    if (el.tagName !== 'TH') el.textContent = '—';
   });
   const inp = document.getElementById('scale-volume');
   if (inp) inp.value = '';

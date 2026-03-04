@@ -547,7 +547,7 @@
     .ing-editor { display: flex; flex-direction: column; gap: .4rem; }
     .ing-editor-header {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
       gap: .5rem;
       font-size: .75rem;
       font-weight: 600;
@@ -558,7 +558,7 @@
     }
     .ing-editor-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
       gap: .5rem;
       align-items: center;
     }
@@ -730,6 +730,29 @@
     .scale-row label { margin: 0; white-space: nowrap; font-weight: 500; }
     .scale-row input { width: 130px; }
 
+    /* ── Warning banner ─────────────────────────────────────────── */
+    .local-warning-banner {
+      background: #fef9c3;
+      color: #854d0e;
+      text-align: center;
+      padding: .5rem 1rem;
+      font-size: .8125rem;
+      font-weight: 500;
+      border-bottom: 1px solid #fde68a;
+    }
+    body.darkroom .local-warning-banner {
+      background: #1a0000;
+      color: #ff6b6b;
+      border-bottom-color: #330000;
+    }
+
+    /* ── Last backup indicator ──────────────────────────────────── */
+    .last-backup {
+      font-size: .75rem;
+      color: rgba(255,255,255,.7);
+      white-space: nowrap;
+    }
+
     /* ── Footer ──────────────────────────────────────────────────── */
     footer {
       text-align: center;
@@ -773,7 +796,7 @@
       .toolbar { flex-direction: column; align-items: stretch; }
       .search-wrapper { max-width: 100%; }
       .ing-editor-header,
-      .ing-editor-row { grid-template-columns: 1fr 1fr auto auto; }
+      .ing-editor-row { grid-template-columns: 1fr 1fr auto auto auto; }
       .ing-editor-header span:nth-child(3),
       .ing-editor-row input:nth-child(3) { display: none; }
       .header-right .btn-sm { font-size: .75rem; padding: .3rem .6rem; }
@@ -806,8 +829,12 @@
       ↑ Import <input type="file" accept=".json" style="display:none" onchange="importData(event)" />
     </label>
     <button class="btn btn-primary btn-sm" onclick="openModal()" title="New formula (press N)">+ New Formula</button>
+    <span class="last-backup" id="last-backup">Last Backup: Never</span>
   </div>
 </header>
+
+<!-- ── LOCAL DATA WARNING BANNER ───────────────────────────────── -->
+<div class="local-warning-banner">⚠ Your formulas are stored locally in this browser. Export regularly to avoid data loss.</div>
 
 <!-- ── MAIN ────────────────────────────────────────────────────── -->
 <main class="page" id="main-page">
@@ -874,7 +901,7 @@
 </main>
 
 <!-- ── FOOTER ──────────────────────────────────────────────────── -->
-<footer>© 2026 Formulae · Film Lab Chemical Database</footer>
+<footer>&copy; 2026 Formulae &middot; Film Lab Chemical Database &middot; v1.1-dev</footer>
 
 <!-- ── DETAIL PANEL ─────────────────────────────────────────────── -->
 <div class="detail-panel" id="detail-panel">
@@ -953,6 +980,11 @@
       </div>
 
       <div>
+        <label for="f-color">Formula Color</label>
+        <input id="f-color" type="color" value="#2563eb" style="width:60px;height:2rem;padding:2px;cursor:pointer" />
+      </div>
+
+      <div>
         <label for="f-desc">Description</label>
         <textarea id="f-desc" placeholder="Short description…"></textarea>
       </div>
@@ -1003,6 +1035,13 @@
 <!-- ── TOAST CONTAINER ──────────────────────────────────────────── -->
 <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
+<!-- ── UNIT SUGGESTIONS DATALIST ────────────────────────────────── -->
+<datalist id="unit-suggestions">
+  <option value="g">
+  <option value="ml">
+  <option value="mg">
+</datalist>
+
 <!-- ── SCRIPT ───────────────────────────────────────────────────── -->
 <script>
 'use strict';
@@ -1010,12 +1049,15 @@
 /* ─── State ───────────────────────────────────────────────────── */
 const STORAGE_KEY  = 'formulae_v1';
 const DARKROOM_KEY = 'formulae_darkroom';
+const LAST_EXPORT_KEY = 'formulae_last_export';
+const LAST_REMINDER_KEY = 'formulae_last_reminder';
 let db            = [];
 let editingId     = null;
 let confirmCallback = null;
 let dragSrcIdx    = null;
 let viewMode      = 'grid';
 let currentDetailId = null;
+let backupReminderShown = false;
 
 /* ─── Utilities ──────────────────────────────────────────────── */
 function uid() {
@@ -1169,7 +1211,7 @@ function renderStats() {
   const tested    = db.filter(f => f.status === 'Tested').length;
   const processes = [...new Set(db.map(f => f.process))].length;
   document.getElementById('stats-bar').innerHTML =
-    `<div class="stat-card"><span class="stat-icon">🎞</span><span class="stat-num">${total}</span><span class="stat-label">Formula${total !== 1 ? 's' : ''}</span></div>` +
+    `<div class="stat-card" title="Total formulas stored locally in this browser."><span class="stat-icon">🎞</span><span class="stat-num">${total}</span><span class="stat-label">Formula${total !== 1 ? 's' : ''}</span></div>` +
     `<div class="stat-card"><span class="stat-icon">✅</span><span class="stat-num">${tested}</span><span class="stat-label">Tested</span></div>` +
     `<div class="stat-card"><span class="stat-icon">🧪</span><span class="stat-num">${processes}</span><span class="stat-label">Process${processes !== 1 ? 'es' : ''}</span></div>`;
 }
@@ -1257,7 +1299,8 @@ function cardHTML(f) {
          ${more > 0 ? `<div class="ing-more">+ ${more} more ingredient${more > 1 ? 's' : ''}</div>` : ''}
        </div>` : '';
 
-  return `<div class="card" data-process="${esc(f.process)}" id="card-${esc(f.id)}">
+  const colorStyle = f.color ? ` style="--card-accent: ${esc(f.color)}"` : '';
+  return `<div class="card" data-process="${esc(f.process)}" id="card-${esc(f.id)}"${colorStyle}>
     <div class="card-header">
       <div>
         <div class="card-title">${esc(f.name)}</div>
@@ -1280,6 +1323,62 @@ function cardHTML(f) {
     ${ingHTML}
     ${f.notes ? `<div class="card-notes">${esc(f.notes)}</div>` : ''}
   </div>`;
+}
+
+/* ─── Build ingredient tables grouped by part ────────────────── */
+function buildIngredientTables(ings) {
+  const partA = ings.filter(i => i.part === 'A');
+  const partB = ings.filter(i => i.part === 'B');
+  const noPart = ings.filter(i => !i.part || (i.part !== 'A' && i.part !== 'B'));
+  const hasParts = partA.length > 0 || partB.length > 0;
+
+  let html = '';
+  if (!hasParts) {
+    html += `<table class="ing-table" id="ing-table-main">
+      <thead><tr>
+        <th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th><th class="scaled-col" id="scaled-header" style="display:none">Scaled</th>
+      </tr></thead>
+      <tbody id="ing-tbody">
+        ${ings.map((i, idx) => `<tr>
+          <td style="color:var(--muted)">${idx + 1}</td>
+          <td>${esc(i.name)}</td>
+          <td id="qty-${idx}">${esc(i.qty)}</td>
+          <td style="color:var(--muted)">${esc(i.unit)}</td>
+          <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  } else {
+    // We use the original index in the ings array for scaling
+    function tableByOrigIndex(items) {
+      return items.map(i => {
+        const idx = ings.indexOf(i);
+        return `<tr>
+          <td style="color:var(--muted)">${idx + 1}</td>
+          <td>${esc(i.name)}</td>
+          <td id="qty-${idx}">${esc(i.qty)}</td>
+          <td style="color:var(--muted)">${esc(i.unit)}</td>
+          <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
+        </tr>`;
+      }).join('');
+    }
+    const thRow = `<thead><tr>
+      <th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th><th class="scaled-col" id="scaled-header" style="display:none">Scaled</th>
+    </tr></thead>`;
+
+    if (noPart.length) {
+      html += `<table class="ing-table" id="ing-table-main">${thRow}<tbody id="ing-tbody">${tableByOrigIndex(noPart)}</tbody></table>`;
+    }
+    if (partA.length) {
+      html += `<div class="detail-section-title" style="margin-top:1rem">PART A</div>
+        <table class="ing-table"${!noPart.length ? ' id="ing-table-main"' : ''}>${!noPart.length ? thRow : `<thead><tr><th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th><th class="scaled-col" style="display:none">Scaled</th></tr></thead>`}<tbody>${tableByOrigIndex(partA)}</tbody></table>`;
+    }
+    if (partB.length) {
+      html += `<div class="detail-section-title" style="margin-top:1rem">PART B</div>
+        <table class="ing-table"><thead><tr><th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th><th class="scaled-col" style="display:none">Scaled</th></tr></thead><tbody>${tableByOrigIndex(partB)}</tbody></table>`;
+    }
+  }
+  return html;
 }
 
 /* ─── Detail panel ───────────────────────────────────────────── */
@@ -1314,21 +1413,7 @@ function openDetail(id) {
     ${ings.length ? `
     <div class="detail-section">
       <div class="detail-section-title">Ingredients (${ings.length})</div>
-      <table class="ing-table" id="ing-table-main">
-        <thead><tr>
-          <th>#</th><th>Chemical</th><th>Quantity</th><th>Unit</th><th class="scaled-col" id="scaled-header" style="display:none">Scaled</th>
-        </tr></thead>
-        <tbody id="ing-tbody">
-          ${ings.map((i,idx) => `
-            <tr>
-              <td style="color:var(--muted)">${idx+1}</td>
-              <td>${esc(i.name)}</td>
-              <td id="qty-${idx}">${esc(i.qty)}</td>
-              <td style="color:var(--muted)">${esc(i.unit)}</td>
-              <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
+      ${buildIngredientTables(ings)}
     </div>
 
     <div class="detail-section" id="scale-section">
@@ -1391,8 +1476,8 @@ function scaleRecipe() {
 
   const factor = targetVol / baseMl;
 
-  // Show scaled column
-  scaledHeader.style.display = '';
+  // Show all scaled columns (across all ingredient tables)
+  document.querySelectorAll('.scaled-col').forEach(el => el.style.display = '');
 
   ings.forEach((i, idx) => {
     const cell = document.getElementById('scaled-' + idx);
@@ -1410,11 +1495,9 @@ function scaleRecipe() {
 }
 
 function clearScale() {
-  const scaledHeader = document.getElementById('scaled-header');
-  if (scaledHeader) scaledHeader.style.display = 'none';
-  document.querySelectorAll('[id^="scaled-"]').forEach(el => {
+  document.querySelectorAll('.scaled-col').forEach(el => {
     el.style.display = 'none';
-    el.textContent = '—';
+    if (el.tagName !== 'TH') el.textContent = '—';
   });
   const inp = document.getElementById('scale-volume');
   if (inp) inp.value = '';
@@ -1565,6 +1648,7 @@ function openModal(id) {
     document.getElementById('f-category').value = f.category|| '';
     document.getElementById('f-status').value   = f.status  || 'Experimental';
     document.getElementById('f-version').value  = f.version || '1.0';
+    document.getElementById('f-color').value    = f.color   || '#2563eb';
     document.getElementById('f-desc').value     = f.desc    || '';
     document.getElementById('f-temp').value     = f.temp    || '';
     document.getElementById('f-time').value     = f.time    || '';
@@ -1578,6 +1662,7 @@ function openModal(id) {
     document.getElementById('f-category').value = '';
     document.getElementById('f-status').value   = 'Experimental';
     document.getElementById('f-version').value  = '1.0';
+    document.getElementById('f-color').value    = '#2563eb';
     document.getElementById('f-desc').value     = '';
     document.getElementById('f-temp').value     = '';
     document.getElementById('f-time').value     = '';
@@ -1607,7 +1692,14 @@ function saveFormula() {
   if (!process)  { toast('Please select a process', 'error'); return; }
   if (!category) { toast('Please select a category', 'error'); return; }
 
+  // Duplicate name warning
+  const dupExists = db.some(f => f.name.toLowerCase() === name.toLowerCase() && f.id !== editingId);
+  if (dupExists) {
+    toast('A formula with this name already exists.');
+  }
+
   const ingredients = readIngredients();
+  const color = document.getElementById('f-color').value || '';
   const now = Date.now();
 
   if (editingId) {
@@ -1615,7 +1707,7 @@ function saveFormula() {
     if (idx === -1) return;
     db[idx] = {
       ...db[idx],
-      name, process, category,
+      name, process, category, color,
       status:  document.getElementById('f-status').value,
       version: document.getElementById('f-version').value.trim() || '1.0',
       desc:    document.getElementById('f-desc').value.trim(),
@@ -1627,7 +1719,7 @@ function saveFormula() {
     toast('Formula updated ✓', 'success');
   } else {
     db.unshift({
-      id: uid(), name, process, category,
+      id: uid(), name, process, category, color,
       status:  document.getElementById('f-status').value,
       version: document.getElementById('f-version').value.trim() || '1.0',
       desc:    document.getElementById('f-desc').value.trim(),
@@ -1650,7 +1742,7 @@ function clearIngEditor() {
   editor.innerHTML = '';
   const h = document.createElement('div');
   h.className = 'ing-editor-header';
-  h.innerHTML = '<span>Chemical name</span><span>Quantity</span><span>Unit</span><span></span>';
+  h.innerHTML = '<span>Chemical name</span><span>Quantity</span><span>Unit</span><span>Part</span><span></span>';
   editor.appendChild(h);
 }
 
@@ -1659,10 +1751,16 @@ function addIngRow(ing) {
   const row = document.createElement('div');
   row.className = 'ing-editor-row';
   row.draggable = true;
+  const partVal = ing?.part || '';
   row.innerHTML = `
     <input type="text" placeholder="e.g. Sodium Sulfite" value="${esc(ing?.name||'')}" />
     <input type="text" placeholder="e.g. 100" value="${esc(ing?.qty||'')}" />
-    <input type="text" placeholder="g / ml / oz" value="${esc(ing?.unit||'g')}" />
+    <input type="text" placeholder="g / ml / oz" value="${esc(ing?.unit||'g')}" list="unit-suggestions" />
+    <select>
+      <option value=""${partVal === '' ? ' selected' : ''}>—</option>
+      <option value="A"${partVal === 'A' ? ' selected' : ''}>A</option>
+      <option value="B"${partVal === 'B' ? ' selected' : ''}>B</option>
+    </select>
     <button class="btn btn-ghost btn-sm drag-handle" title="Remove" onclick="removeIngRow(this)">✕</button>
   `;
 
@@ -1699,16 +1797,23 @@ function rowIndex(row) {
 function removeIngRow(btn) {
   const row = btn.closest('.ing-editor-row');
   if (document.querySelectorAll('.ing-editor-row').length > 1) row.remove();
-  else row.querySelectorAll('input').forEach(i => i.value = '');
+  else {
+    row.querySelectorAll('input').forEach(i => i.value = '');
+    const sel = row.querySelector('select');
+    if (sel) sel.value = '';
+  }
 }
 
 function readIngredients() {
   return [...document.querySelectorAll('.ing-editor-row')].map(row => {
     const inputs = row.querySelectorAll('input');
+    const select = row.querySelector('select');
+    const part = select ? select.value : '';
     return {
       name: inputs[0].value.trim(),
       qty:  inputs[1].value.trim(),
       unit: inputs[2].value.trim(),
+      part: part || undefined,
     };
   }).filter(i => i.name);
 }
@@ -1773,9 +1878,12 @@ function exportData() {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
-  a.download = 'formulae-export-' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'formulae-backup-' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
+  const now = Date.now();
+  localStorage.setItem(LAST_EXPORT_KEY, String(now));
+  updateLastBackup(now);
   toast('Exported ✓', 'success');
 }
 
@@ -1806,6 +1914,29 @@ function importData(e) {
   e.target.value = '';
 }
 
+/* ─── Last Backup indicator ───────────────────────────────────── */
+function updateLastBackup(ts) {
+  const el = document.getElementById('last-backup');
+  if (!el) return;
+  if (ts) {
+    el.textContent = 'Last Backup: ' + new Date(Number(ts)).toLocaleDateString();
+  } else {
+    el.textContent = 'Last Backup: Never';
+  }
+}
+
+/* ─── Backup reminder ────────────────────────────────────────── */
+function checkBackupReminder() {
+  if (backupReminderShown) return;
+  if (db.length <= 5) return;
+  const lastExport = localStorage.getItem(LAST_EXPORT_KEY);
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+  if (lastExport && (Date.now() - Number(lastExport)) < sevenDays) return;
+  backupReminderShown = true;
+  localStorage.setItem(LAST_REMINDER_KEY, String(Date.now()));
+  toast('Remember to export your formulas as a backup.');
+}
+
 /* ─── Toast ──────────────────────────────────────────────────── */
 function toast(msg, type) {
   const c = document.getElementById('toast-container');
@@ -1823,6 +1954,15 @@ function toast(msg, type) {
 /* ─── Keyboard shortcuts ─────────────────────────────────────── */
 document.addEventListener('keydown', e => {
   const tag = document.activeElement && document.activeElement.tagName;
+
+  // Escape in search input clears search
+  if (e.key === 'Escape' && document.activeElement === document.getElementById('search-input')) {
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-input').blur();
+    renderCards();
+    return;
+  }
+
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
   if (e.key === 'Escape') {
@@ -1854,7 +1994,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDarkroomBtn(true);
   }
 
+  // Initialize last backup indicator
+  updateLastBackup(localStorage.getItem(LAST_EXPORT_KEY));
+
   renderCards();
+
+  // Check backup reminder after render
+  checkBackupReminder();
 });
 </script>
 </body>

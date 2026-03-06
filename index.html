@@ -1,260 +1,1887 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Formulae — Film Lab Chemical Database</title>
-  <meta name="description" content="Store, manage, search, and version-control your photographic chemical formulas — built for the darkroom." />
-  <meta name="theme-color" content="#1e3a8a" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png" />
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.0/dist/jspdf.umd.min.js"></script>
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formulae — Film Lab Chemical Database</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0905;
+    --surface: #100f0a;
+    --surface2: #171510;
+    --border: rgba(200,170,100,0.12);
+    --border-bright: rgba(200,170,100,0.3);
+    --gold: #c8aa64;
+    --gold-dim: rgba(200,170,100,0.5);
+    --amber: #e8a030;
+    --red: #c43030;
+    --red-glow: rgba(196,48,48,0.15);
+    --text: #e8e0cc;
+    --text-dim: rgba(232,224,204,0.5);
+    --text-faint: rgba(232,224,204,0.25);
+    --white: #f5f0e8;
+    --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  }
 
-<!-- ── HEADER ──────────────────────────────────────────────────── -->
+  .darkroom-mode {
+    --bg: #0d0000;
+    --surface: #120000;
+    --surface2: #1a0000;
+    --border: rgba(180,30,30,0.2);
+    --border-bright: rgba(220,60,60,0.4);
+    --gold: #cc3333;
+    --gold-dim: rgba(200,50,50,0.5);
+    --amber: #ff4444;
+    --text: #cc4444;
+    --text-dim: rgba(180,40,40,0.6);
+    --text-faint: rgba(150,30,30,0.3);
+    --white: #dd3333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: var(--grain);
+    background-size: 256px;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  /* Ambient light */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -40%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80vw;
+    height: 60vh;
+    background: radial-gradient(ellipse, rgba(200,170,100,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    transition: all 0.8s ease;
+  }
+
+  .darkroom-mode body::after {
+    background: radial-gradient(ellipse, rgba(196,48,48,0.06) 0%, transparent 70%);
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 64px;
+    background: rgba(10,9,5,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .logo-mark::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse-dot 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.6); }
+  }
+
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-top: 2px;
+    display: block;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    text-decoration: none;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover {
+    color: var(--text);
+    border-color: var(--border-bright);
+    background: rgba(200,170,100,0.05);
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #0a0905;
+    font-weight: 500;
+  }
+
+  .btn-primary:hover {
+    background: var(--amber);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(200,170,100,0.3);
+  }
+
+  .btn-darkroom {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid rgba(196,48,48,0.3);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+  }
+
+  .btn-darkroom:hover, .btn-darkroom.active {
+    background: var(--red-glow);
+    border-color: var(--red);
+    box-shadow: 0 0 20px rgba(196,48,48,0.2), inset 0 0 10px rgba(196,48,48,0.05);
+  }
+
+  .btn-darkroom.active {
+    color: #ff5555;
+  }
+
+  /* ─── HERO BAR ─── */
+  .hero-bar {
+    padding: 48px 40px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bar::before {
+    content: 'FORMULAE';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Playfair Display', serif;
+    font-size: 140px;
+    font-weight: 900;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(200,170,100,0.06);
+    pointer-events: none;
+    letter-spacing: -0.04em;
+    user-select: none;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.35em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .hero-count {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--white);
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .hero-count span {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .hero-line {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    margin-top: 20px;
+  }
+
+  /* ─── FILTER BAR ─── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 40px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .filter-bar::-webkit-scrollbar { display: none; }
+
+  .filter-section {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 12px 0;
+    border-right: 1px solid var(--border);
+    padding-right: 20px;
+    margin-right: 20px;
+    flex-shrink: 0;
+  }
+
+  .filter-section:last-of-type {
+    border-right: none;
+  }
+
+  .filter-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    margin-right: 8px;
+    white-space: nowrap;
+  }
+
+  .filter-chip {
+    padding: 4px 12px;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    background: transparent;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .filter-chip:hover {
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  .filter-chip.active {
+    color: var(--gold);
+    border-color: var(--border-bright);
+    background: rgba(200,170,100,0.06);
+  }
+
+  .search-wrap {
+    margin-left: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+  }
+
+  .search-input {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 5px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    width: 180px;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .search-input::placeholder { color: var(--text-faint); }
+
+  .search-input:focus {
+    border-color: var(--border-bright);
+    background: rgba(200,170,100,0.03);
+    box-shadow: 0 0 0 3px rgba(200,170,100,0.05);
+  }
+
+  /* ─── GRID ─── */
+  .grid-container {
+    padding: 32px 40px 80px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1px;
+    background: var(--border);
+  }
+
+  /* ─── FORMULA CARD ─── */
+  .formula-card {
+    background: var(--surface);
+    padding: 28px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s ease;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: card-in 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
+
+  .formula-card:nth-child(1)  { animation-delay: 0.05s; }
+  .formula-card:nth-child(2)  { animation-delay: 0.10s; }
+  .formula-card:nth-child(3)  { animation-delay: 0.15s; }
+  .formula-card:nth-child(4)  { animation-delay: 0.20s; }
+  .formula-card:nth-child(5)  { animation-delay: 0.25s; }
+  .formula-card:nth-child(6)  { animation-delay: 0.30s; }
+  .formula-card:nth-child(7)  { animation-delay: 0.35s; }
+  .formula-card:nth-child(8)  { animation-delay: 0.40s; }
+
+  @keyframes card-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .formula-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(200,170,100,0.04) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .formula-card:hover {
+    background: var(--surface2);
+  }
+
+  .formula-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Colored accent bar from formula color */
+  .card-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .card-process {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .card-status {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    padding: 3px 8px;
+    border-radius: 1px;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .status-tested {
+    color: #6ab04c;
+    border: 1px solid rgba(106,176,76,0.3);
+    background: rgba(106,176,76,0.06);
+  }
+
+  .status-experimental {
+    color: var(--amber);
+    border: 1px solid rgba(232,160,48,0.3);
+    background: rgba(232,160,48,0.06);
+  }
+
+  .status-archived {
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    background: transparent;
+  }
+
+  .card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .card-category {
+    font-size: 10px;
+    color: var(--gold-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .card-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .card-ingredients {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .ingredient-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    color: var(--text-faint);
+    letter-spacing: 0.05em;
+    transition: all 0.15s ease;
+  }
+
+  .formula-card:hover .ingredient-tag {
+    border-color: rgba(200,170,100,0.15);
+    color: var(--text-dim);
+  }
+
+  .ingredient-tag.more {
+    color: var(--gold-dim);
+    border-color: rgba(200,170,100,0.15);
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-meta {
+    display: flex;
+    gap: 16px;
+  }
+
+  .card-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-label {
+    font-size: 8px;
+    letter-spacing: 0.25em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+  }
+
+  .meta-value {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .card-version {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 40px;
+    text-align: center;
+    gap: 16px;
+    background: var(--surface);
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    opacity: 0.3;
+    margin-bottom: 8px;
+  }
+
+  .empty-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--text-dim);
+  }
+
+  .empty-sub {
+    font-size: 12px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5,4,2,0.9);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    transform: translateY(20px) scale(0.98);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+  }
+
+  .modal-overlay.open .modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-header {
+    padding: 32px 32px 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 10;
+  }
+
+  .modal-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s ease;
+  }
+
+  .modal-close:hover {
+    border-color: var(--border-bright);
+    color: var(--text);
+  }
+
+  .modal-body {
+    padding: 28px 32px 32px;
+  }
+
+  .detail-section {
+    margin-bottom: 28px;
+  }
+
+  .detail-section-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .detail-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .ingredient-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .ingredient-table tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s ease;
+  }
+
+  .ingredient-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .ingredient-table tr:hover {
+    background: rgba(200,170,100,0.03);
+  }
+
+  .ingredient-table td {
+    padding: 10px 0;
+    font-size: 12px;
+  }
+
+  .ingredient-table td:first-child {
+    color: var(--text);
+    letter-spacing: 0.03em;
+  }
+
+  .ingredient-table td:last-child {
+    text-align: right;
+    color: var(--gold-dim);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+  }
+
+  .detail-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .detail-box {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(200,170,100,0.02);
+  }
+
+  .detail-box-label {
+    font-size: 8px;
+    letter-spacing: 0.25em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .detail-box-value {
+    font-size: 15px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  /* ─── DARKROOM SAFELIGHT OVERLAY ─── */
+  .safelight-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(120,0,0,0.08);
+    pointer-events: none;
+    z-index: 900;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    mix-blend-mode: multiply;
+  }
+
+  .darkroom-mode .safelight-overlay {
+    opacity: 1;
+  }
+
+  /* Vignette */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  /* ─── STATUS BAR ─── */
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    background: rgba(10,9,5,0.96);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    gap: 24px;
+    z-index: 200;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #6ab04c;
+    animation: pulse-status 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse-status {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .status-bar-right {
+    margin-left: auto;
+    display: flex;
+    gap: 24px;
+  }
+
+  /* ─── TRANSITIONS ─── */
+  .page-transition {
+    animation: page-in 0.6s cubic-bezier(0.4,0,0.2,1) both;
+  }
+
+  @keyframes page-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ─── CHEMICAL AUTOCOMPLETE ─── */
+  .ac-dropdown {
+    position: absolute;
+    top: calc(100% + 3px);
+    left: 0; right: 0;
+    background: #1a1812;
+    border: 1px solid var(--border-bright);
+    border-radius: 3px;
+    z-index: 9000;
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    display: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  .ac-dropdown.open { display: block; }
+  .ac-item {
+    padding: 8px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s ease;
+    line-height: 1.4;
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.focused {
+    background: rgba(200,170,100,0.08);
+    color: var(--white);
+  }
+  .ac-item mark {
+    background: transparent;
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .ac-new {
+    color: var(--text-faint);
+    font-style: italic;
+    font-size: 10px;
+  }
+  .ac-new mark { color: var(--gold-dim); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    bottom: 52px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 10px 20px;
+    border-radius: 3px;
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    header { padding: 0 20px; }
+    .hero-bar { padding: 32px 20px 24px; }
+    .hero-count { font-size: 48px; }
+    .filter-bar { padding: 0 20px; }
+    .grid-container { padding: 20px; gap: 1px; }
+    .hero-bar::before { font-size: 80px; }
+    .status-bar { padding: 0 20px; }
+  }
+</style>
+</head>
+<body class="page-transition" id="app">
+
+<div class="vignette"></div>
+<div class="safelight-overlay"></div>
+
+<!-- ─── HEADER ─── -->
 <header>
-  <div class="logo">
-    <span class="logo-icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="2" y="7" width="20" height="13" rx="2"/>
-        <path d="M2 11h2m16 0h2M2 15h2m16 0h2"/>
-        <circle cx="12" cy="13" r="2"/>
-        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-      </svg>
-    </span>
-    Formulae<span class="logo-dot">.</span>
+  <div>
+    <div class="logo">
+      <div class="logo-mark"></div>
+      <div>
+        Formulae
+        <span class="logo-sub">Film Lab Chemical Database</span>
+      </div>
+    </div>
   </div>
-  <div class="header-right">
-    <button class="btn btn-sm" onclick="toggleDarkroom()" id="dr-btn" title="Toggle darkroom mode">
-      <span id="dr-icon">🔴</span>
-      <span id="dr-label">Darkroom</span>
-    </button>
-    <button class="btn btn-sm" onclick="exportData()" title="Export all formulas as JSON">↓ Export</button>
-    <button class="btn btn-sm" onclick="printAll()" title="Print / save PDF of all visible formulas">↓ PDF</button>
-    <label class="btn btn-sm" style="margin:0;cursor:pointer;" title="Import from JSON">
-      ↑ Import <input type="file" accept=".json" style="display:none" onchange="importData(event)" />
-    </label>
-    <button class="btn btn-primary btn-sm" onclick="openModal()" title="New formula (press N)">+ New Formula</button>
-    <span class="last-backup" id="last-backup">Last Backup: Never</span>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="triggerImport()">↑ Import</button>
+    <button class="btn btn-ghost" onclick="exportJSON()">↓ Export</button>
+    <button class="btn btn-darkroom" id="darkroom-btn" onclick="toggleDarkroom()">⬤ Darkroom</button>
+    <button class="btn btn-primary" onclick="openNewFormula()">+ New Formula</button>
   </div>
+  <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importJSON(event)">
 </header>
 
-<!-- ── LOCAL DATA WARNING BANNER ───────────────────────────────── -->
-<div class="local-warning-banner">⚠ Your formulas are stored locally in this browser. Export regularly to avoid data loss.</div>
-
-<!-- ── MAIN ────────────────────────────────────────────────────── -->
-<main class="page" id="main-page">
-  <!-- Stats -->
-  <div class="stats-bar" id="stats-bar"></div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-wrapper">
-      <span class="search-icon">🔍</span>
-      <input
-        type="search"
-        id="search-input"
-        placeholder="Search name, ingredient, notes… (/)"
-        oninput="renderCards()"
-        aria-label="Search formulas"
-      />
-    </div>
-    <select id="filter-process" onchange="renderCards()" aria-label="Filter by process">
-      <option value="">All processes</option>
-      <option value="B&W">B&amp;W</option>
-      <option value="C-41">C-41</option>
-      <option value="ECN-2">ECN-2</option>
-      <option value="E-6">E-6</option>
-      <option value="Ambrotype">Ambrotype</option>
-      <option value="Tintype">Tintype</option>
-      <option value="Dryplate">Dryplate</option>
-      <option value="Fixer">Fixer</option>
-      <option value="Other">Other</option>
-    </select>
-    <select id="filter-category" onchange="renderCards()" aria-label="Filter by category">
-      <option value="">All categories</option>
-      <option value="Developer">Developer</option>
-      <option value="Stop Bath">Stop Bath</option>
-      <option value="Fixer">Fixer</option>
-      <option value="Bleach">Bleach</option>
-      <option value="Stabilizer">Stabilizer</option>
-      <option value="Collodion">Collodion</option>
-      <option value="Silver nitrate bath">Silver nitrate bath</option>
-      <option value="Varnish">Varnish</option>
-      <option value="Toners">Toners</option>
-      <option value="Other">Other</option>
-    </select>
-    <select id="filter-status" onchange="renderCards()" aria-label="Filter by status">
-      <option value="">All statuses</option>
-      <option value="Tested">Tested</option>
-      <option value="Experimental">Experimental</option>
-      <option value="Archived">Archived</option>
-    </select>
-    <select id="sort-select" onchange="renderCards()" aria-label="Sort by">
-      <option value="updated">Recently updated</option>
-      <option value="name">Name A–Z</option>
-      <option value="process">Process</option>
-      <option value="version">Version ↓</option>
-    </select>
-    <button class="btn btn-ghost btn-sm" onclick="clearFilters()" title="Clear all filters">✕ Clear</button>
-    <button class="btn btn-ghost btn-sm" id="view-toggle-btn" onclick="toggleView()" title="Toggle grid/list view">⊞ Grid</button>
-    <div id="results-count" class="results-count"></div>
+<!-- ─── HERO ─── -->
+<div class="hero-bar">
+  <div class="hero-title">Chemical Formulas</div>
+  <div class="hero-count" id="hero-count">
+    0 <span>formulas stored</span>
   </div>
+  <div class="hero-line"></div>
+</div>
 
-  <!-- Cards grid -->
-  <div class="cards-grid" id="cards-grid"></div>
-  <div id="empty-state" class="empty" style="display:none"></div>
-</main>
-
-<!-- ── FOOTER ──────────────────────────────────────────────────── -->
-<footer>&copy; 2026 Formulae &middot; Film Lab Chemical Database &middot; v1.1-dev</footer>
-
-<!-- ── DETAIL PANEL ─────────────────────────────────────────────── -->
-<div class="detail-panel" id="detail-panel">
-  <div class="detail-inner">
-    <div class="detail-back">
-      <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← Back</button>
-      <button class="btn btn-secondary btn-sm" onclick="downloadDetailPDF()" title="Download as PDF">⬇ PDF</button>
-      <button class="btn btn-secondary btn-sm" onclick="downloadDetailJPEG()" title="Download as JPEG">⬇ JPEG</button>
-    </div>
-    <div id="detail-content"></div>
+<!-- ─── FILTER BAR ─── -->
+<div class="filter-bar">
+  <div class="filter-section">
+    <span class="filter-label">Process</span>
+    <button class="filter-chip active" onclick="setFilter('process','all',this)">All</button>
+    <button class="filter-chip" onclick="setFilter('process','B&W',this)">B&W</button>
+    <button class="filter-chip" onclick="setFilter('process','C-41',this)">C-41</button>
+    <button class="filter-chip" onclick="setFilter('process','ECN-2',this)">ECN-2</button>
+    <button class="filter-chip" onclick="setFilter('process','E-6',this)">E-6</button>
+    <button class="filter-chip" onclick="setFilter('process','Ambrotype',this)">Ambrotype</button>
+    <button class="filter-chip" onclick="setFilter('process','Tintype',this)">Tintype</button>
+    <button class="filter-chip" onclick="setFilter('process','Other',this)">Other</button>
+  </div>
+  <div class="filter-section">
+    <span class="filter-label">Type</span>
+    <button class="filter-chip active" onclick="setFilter('category','all',this)">All</button>
+    <button class="filter-chip" onclick="setFilter('category','Developer',this)">Developer</button>
+    <button class="filter-chip" onclick="setFilter('category','Fixer',this)">Fixer</button>
+    <button class="filter-chip" onclick="setFilter('category','Bleach',this)">Bleach</button>
+  </div>
+  <div class="filter-section">
+    <span class="filter-label">Status</span>
+    <button class="filter-chip active" onclick="setFilter('status','all',this)">All</button>
+    <button class="filter-chip" onclick="setFilter('status','Tested',this)">Tested</button>
+    <button class="filter-chip" onclick="setFilter('status','Experimental',this)">Experimental</button>
+    <button class="filter-chip" onclick="setFilter('status','Archived',this)">Archived</button>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" id="search" placeholder="Search formulas…" oninput="renderGrid()">
   </div>
 </div>
 
-<!-- ── FORMULA MODAL ────────────────────────────────────────────── -->
-<div class="modal-backdrop" id="modal-backdrop" onclick="backdropClose(event)">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<!-- ─── GRID ─── -->
+<div class="grid-container" id="grid"></div>
+
+<!-- ─── STATUS BAR ─── -->
+<div class="status-bar">
+  <div class="status-item"><span class="status-dot"></span> Local storage</div>
+  <div class="status-item" id="backup-status">Last backup: never</div>
+  <div class="status-bar-right">
+    <div class="status-item" id="filter-status">Showing all</div>
+    <div class="status-item">v1.1-dev</div>
+  </div>
+</div>
+
+<!-- ─── MODAL: VIEW FORMULA ─── -->
+<div class="modal-overlay" id="view-modal" onclick="closeViewModal(event)">
+  <div class="modal" id="view-modal-content">
     <div class="modal-header">
-      <span class="modal-title" id="modal-title">New Formula</span>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal()" aria-label="Close">✕</button>
+      <div class="modal-eyebrow" id="vm-eyebrow"></div>
+      <div class="modal-title" id="vm-title"></div>
+      <button class="modal-close" onclick="closeViewModal()">✕</button>
     </div>
-    <div class="modal-body" id="modal-body">
-      <input type="hidden" id="edit-id" />
+    <div class="modal-body" id="vm-body"></div>
+  </div>
+</div>
 
-      <div>
-        <label for="f-name">Formula Name *</label>
-        <input id="f-name" type="text" placeholder="e.g. HC-110 Dilution B" required />
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label for="f-process">Process *</label>
-          <select id="f-process" required>
-            <option value="">— select —</option>
-            <option>B&W</option>
-            <option>C-41</option>
-            <option>ECN-2</option>
-            <option>E-6</option>
-            <option>Ambrotype</option>
-            <option>Tintype</option>
-            <option>Dryplate</option>
-            <option>Fixer</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div>
-          <label for="f-category">Category *</label>
-          <select id="f-category" required>
-            <option value="">— select —</option>
-            <option>Developer</option>
-            <option>Stop Bath</option>
-            <option>Fixer</option>
-            <option>Bleach</option>
-            <option>Stabilizer</option>
-            <option>Collodion</option>
-            <option>Silver nitrate bath</option>
-            <option>Varnish</option>
-            <option>Toners</option>
-            <option>Other</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div>
-          <label for="f-status">Status</label>
-          <select id="f-status">
-            <option>Experimental</option>
-            <option>Tested</option>
-            <option>Archived</option>
-          </select>
-        </div>
-        <div>
-          <label for="f-version">Version</label>
-          <input id="f-version" type="text" placeholder="e.g. 1.0" value="1.0" />
-        </div>
-      </div>
-
-      <div>
-        <label for="f-color">Formula Color</label>
-        <input id="f-color" type="color" value="#2563eb" style="width:60px;height:2rem;padding:2px;cursor:pointer" />
-      </div>
-
-      <div>
-        <label for="f-desc">Description</label>
-        <textarea id="f-desc" placeholder="Short description…"></textarea>
-      </div>
-
-      <!-- Ingredient editor -->
-      <div>
-        <label>Ingredients</label>
-        <div class="ing-editor" id="ing-editor">
-          <!-- header rebuilt by clearIngEditor() -->
-        </div>
-        <button class="add-ing-btn" onclick="addIngRow()">+ Add ingredient</button>
-      </div>
-
-      <div>
-        <label for="f-temp">Temperature / Conditions</label>
-        <input id="f-temp" type="text" placeholder="e.g. 38°C / 100°F" />
-      </div>
-
-      <div>
-        <label for="f-time">Development Time</label>
-        <input id="f-time" type="text" placeholder="e.g. 3:30 min at 1:1" />
-      </div>
-
-      <div>
-        <label for="f-notes">Notes</label>
-        <textarea id="f-notes" placeholder="Any special notes, warnings, tips…"></textarea>
-      </div>
+<!-- ─── MODAL: NEW FORMULA ─── -->
+<div class="modal-overlay" id="new-modal" onclick="closeNewModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-eyebrow">New Entry</div>
+      <div class="modal-title">Add Formula</div>
+      <button class="modal-close" onclick="closeNewModal()">✕</button>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveFormula()" id="save-btn">Save formula</button>
+    <div class="modal-body">
+      <div class="detail-section">
+        <div class="detail-section-label">Identification</div>
+        <div style="display:grid;gap:10px;">
+          <input id="nf-name" class="search-input" style="width:100%;padding:10px 14px;font-size:13px;" placeholder="Formula name *">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <select id="nf-process" class="search-input" style="width:100%;">
+              <option value="">Process *</option>
+              <option>B&W</option><option>C-41</option><option>ECN-2</option><option>E-6</option>
+              <option>Ambrotype</option><option>Tintype</option><option>Dryplate</option><option>Fixer</option><option>Other</option>
+            </select>
+            <select id="nf-category" class="search-input" style="width:100%;">
+              <option value="">Category *</option>
+              <option>Developer</option><option>Stop Bath</option><option>Fixer</option>
+              <option>Bleach</option><option>Stabilizer</option><option>Collodion</option>
+              <option>Silver nitrate bath</option><option>Varnish</option><option>Toners</option><option>Other</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <select id="nf-status" class="search-input" style="width:100%;">
+              <option>Experimental</option><option>Tested</option><option>Archived</option>
+            </select>
+            <input id="nf-version" class="search-input" style="width:100%;" placeholder="Version (e.g. 1.0)">
+          </div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-label">Description</div>
+        <textarea id="nf-desc" class="search-input" style="width:100%;height:80px;resize:vertical;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;line-height:1.6;" placeholder="Brief description of this formula…"></textarea>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-label">Ingredients</div>
+        <div id="nf-ingredients" style="display:grid;gap:5px;margin-bottom:10px;"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" style="flex:1;justify-content:center;font-size:10px;" onclick="addIngredientRow()">+ Ingredient</button>
+          <button class="btn btn-ghost" style="font-size:10px;color:var(--gold-dim);" onclick="addIngredientRow('Part A')" title="Add a Part A ingredient">+ Part A</button>
+          <button class="btn btn-ghost" style="font-size:10px;color:#4a9eff;" onclick="addIngredientRow('Part B')" title="Add a Part B ingredient">+ Part B</button>
+          <button class="btn btn-ghost" style="font-size:10px;color:#6ab04c;" onclick="addIngredientRow('Part C')" title="Add a Part C ingredient">+ Part C</button>
+        </div>
+        <div style="margin-top:8px;font-size:9px;letter-spacing:0.1em;color:var(--text-faint);line-height:1.6;">
+          Multi-part formulas (e.g. Divided D-23, Pyrocat, C-41 kits) keep unstable agents separate until use.
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-label">Conditions</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <input id="nf-temp" class="search-input" style="width:100%;" placeholder="Temperature (e.g. 20°C)">
+          <input id="nf-time" class="search-input" style="width:100%;" placeholder="Dev time (e.g. 8 min)">
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-label">Notes</div>
+        <textarea id="nf-notes" class="search-input" style="width:100%;height:70px;resize:vertical;line-height:1.6;" placeholder="Additional notes…"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;">
+        <button class="btn btn-ghost" onclick="closeNewModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveFormula()">Save Formula</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ── CONFIRM DIALOG ───────────────────────────────────────────── -->
-<div class="confirm-backdrop" id="confirm-backdrop">
-  <div class="confirm-box">
-    <h3 id="confirm-title">Delete formula?</h3>
-    <p id="confirm-msg">This action cannot be undone.</p>
-    <div class="confirm-btns">
-      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
-      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───
+let formulas = JSON.parse(localStorage.getItem('formulae_data') || '[]');
+let filters = { process: 'all', category: 'all', status: 'all' };
+let darkroom = false;
+
+// Sample data if empty
+if (formulas.length === 0) {
+  formulas = [
+    {
+      id: 1, name: "D-76 Stock", process: "B&W", category: "Developer",
+      status: "Tested", version: "2.0",
+      desc: "Classic Kodak film developer. Universal formula, moderate sharpness, fine tonality. Single stock solution — dissolve in order.",
+      ingredients: [
+        { name: "Metol (Elon)",             amount: "2",   unit: "g",      part: "Stock" },
+        { name: "Sodium Sulfite (anhydrous)",amount: "100", unit: "g",      part: "Stock" },
+        { name: "Hydroquinone",              amount: "5",   unit: "g",      part: "Stock" },
+        { name: "Borax (Sodium Tetraborate)",amount: "2",   unit: "g",      part: "Stock" },
+        { name: "Distilled Water",           amount: "1",   unit: "L",      part: "Stock" },
+      ],
+      temp: "20°C", time: "8 min @ EI 400", notes: "1:1 dilution gives finer grain. 1:3 for pushing. Dissolve Metol first in a small amount of water before adding sulfite.",
+      color: "#c8aa64", updated: "2026-03-01"
+    },
+    {
+      id: 2, name: "Divided D-23", process: "B&W", category: "Developer",
+      status: "Tested", version: "1.0",
+      desc: "Two-bath compensating developer. Film soaks in Part A (developer), then Part B (alkali activator). Self-masking — highlights cannot overdevelop. Ideal for high-contrast scenes.",
+      ingredients: [
+        { name: "Metol (Elon)",              amount: "7.5", unit: "g",  part: "Part A" },
+        { name: "Sodium Sulfite (anhydrous)", amount: "100", unit: "g",  part: "Part A" },
+        { name: "Distilled Water to make",   amount: "1",   unit: "L",  part: "Part A" },
+        { name: "Kodalk (Sodium Metaborate)", amount: "10",  unit: "g",  part: "Part B" },
+        { name: "Distilled Water to make",   amount: "1",   unit: "L",  part: "Part B" },
+      ],
+      temp: "20°C", time: "3 min Part A → 3 min Part B", notes: "Do NOT rinse between baths. The film carries developer solution from Part A into Part B where activation occurs. One-shot — dump both baths after use.",
+      color: "#e8a030", updated: "2026-02-28"
+    },
+    {
+      id: 3, name: "Pyrocat-HD", process: "B&W", category: "Developer",
+      status: "Experimental", version: "3.1",
+      desc: "Two-solution staining developer by Sandy King. Pyrocatechol-based. Produces a UV-blocking stain ideal for alternative printing processes (platinum, palladium, carbon). Exceptional acutance.",
+      ingredients: [
+        { name: "Catechol (Pyrocatechol)",   amount: "10",  unit: "g",  part: "Part A" },
+        { name: "Phenidone",                 amount: "0.1", unit: "g",  part: "Part A" },
+        { name: "Sodium Metabisulfite",      amount: "1",   unit: "g",  part: "Part A" },
+        { name: "Propylene Glycol",          amount: "100", unit: "ml", part: "Part A" },
+        { name: "Potassium Carbonate",       amount: "75",  unit: "g",  part: "Part B" },
+        { name: "Distilled Water to make",   amount: "500", unit: "ml", part: "Part B" },
+      ],
+      temp: "21°C", time: "12 min (1:1:100 dilution)", notes: "Mix 1 part A + 1 part B + 100 parts water. Catechol is a skin sensitiser — wear nitrile gloves and work in ventilated space. Stain intensity increases with development time.",
+      color: "#a06030", updated: "2026-02-20"
+    },
+    {
+      id: 4, name: "TF-4 Archival Fixer", process: "B&W", category: "Fixer",
+      status: "Tested", version: "1.0",
+      desc: "Alkaline, non-hardening fixer by Photographers' Formulary. Archival permanence. Shorter wash times than acid fixers. Safe for fibre and RC papers.",
+      ingredients: [
+        { name: "Ammonium Thiosulfate (60%)", amount: "800", unit: "ml", part: "Stock" },
+        { name: "Sodium Sulfite",             amount: "60",  unit: "g",  part: "Stock" },
+        { name: "Sodium Hydroxide",           amount: "8.4", unit: "g",  part: "Stock" },
+        { name: "Ammonia (28%)",              amount: "9",   unit: "ml", part: "Stock" },
+      ],
+      temp: "20°C", time: "3–4 min film / 1–2 min RC paper", notes: "Alkaline pH (~8.5). Fix until clear plus equal time. Capacity ~24 rolls/L. Can be replenished at 25ml/roll.",
+      color: "#4488aa", updated: "2026-01-15"
+    },
+    {
+      id: 5, name: "C-41 RA Developer", process: "C-41", category: "Developer",
+      status: "Tested", version: "2.2",
+      desc: "Rapid access colour negative developer. Three-part concentrate system. Part A holds the CD-4 developing agent; Part B the preservative and carbonate; Part C the anti-calcium and restrainer.",
+      ingredients: [
+        { name: "CD-4 (Color Developer 4)",  amount: "4.7",  unit: "g",  part: "Part A" },
+        { name: "Hydroxylamine Sulfate",     amount: "1.75", unit: "g",  part: "Part A" },
+        { name: "Diethylene Glycol",         amount: "10",   unit: "ml", part: "Part A" },
+        { name: "Sodium Sulfite (anhydrous)",amount: "0.15", unit: "g",  part: "Part B" },
+        { name: "Potassium Carbonate",       amount: "37.5", unit: "g",  part: "Part B" },
+        { name: "Potassium Bromide",         amount: "1.3",  unit: "g",  part: "Part B" },
+        { name: "Potassium Iodide (1% sol)", amount: "1.5",  unit: "ml", part: "Part C" },
+        { name: "Citric Acid",               amount: "1",    unit: "g",  part: "Part C" },
+        { name: "Distilled Water to make",   amount: "1",    unit: "L",  part: "Part C" },
+      ],
+      temp: "38°C ± 0.15°C", time: "3 min 15 sec", notes: "Temperature control is critical — ±0.15°C. Mix A into water, then B, then C. CD-4 oxidises in air; always cap concentrates immediately. Replenish at 11ml/roll.",
+      color: "#cc4488", updated: "2026-01-10"
+    },
+    {
+      id: 6, name: "Silver Nitrate Bath", process: "Tintype", category: "Silver nitrate bath",
+      status: "Tested", version: "1.0",
+      desc: "Sensitising bath for tintypes and ambrotypes. Standard 9% solution. Coat fresh collodion, then immerse in this bath to form light-sensitive silver halides in situ.",
+      ingredients: [
+        { name: "Silver Nitrate",     amount: "90",  unit: "g", part: "Stock" },
+        { name: "Distilled Water",    amount: "1",   unit: "L", part: "Stock" },
+      ],
+      temp: "Ambient", time: "3–5 min immersion",
+      notes: "Silver nitrate is caustic and stains skin/clothing permanently (irreversible black marks). Use in subdued tungsten light only — avoid fluorescent or daylight. Maintain pH 4–5; add a few drops of silver nitrate solution if pH rises.",
+      color: "#888888", updated: "2025-12-20"
+    },
+  ];
+  localStorage.setItem('formulae_data', JSON.stringify(formulas));
+}
+
+// ─── RENDER ───
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  const search = document.getElementById('search').value.toLowerCase();
+  let filtered = formulas.filter(f => {
+    const matchProcess  = filters.process  === 'all' || f.process  === filters.process;
+    const matchCategory = filters.category === 'all' || f.category === filters.category;
+    const matchStatus   = filters.status   === 'all' || f.status   === filters.status;
+    const matchSearch   = !search || f.name.toLowerCase().includes(search)
+                        || (f.desc||'').toLowerCase().includes(search)
+                        || f.ingredients.some(i => i.name.toLowerCase().includes(search));
+    return matchProcess && matchCategory && matchStatus && matchSearch;
+  });
+
+  document.getElementById('hero-count').innerHTML =
+    `${formulas.length} <span>${formulas.length === 1 ? 'formula' : 'formulas'} stored</span>`;
+
+  document.getElementById('filter-status').textContent =
+    filtered.length === formulas.length ? 'Showing all' : `Showing ${filtered.length} of ${formulas.length}`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⊘</div>
+        <div class="empty-title">No formulas found</div>
+        <div class="empty-sub">Try adjusting your filters or add a new formula</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((f, i) => {
+    const statusClass = `status-${f.status.toLowerCase()}`;
+    const ingredients = f.ingredients.slice(0, 3).map(ing =>
+      `<span class="ingredient-tag">${ing.name}</span>`
+    ).join('');
+    const more = f.ingredients.length > 3
+      ? `<span class="ingredient-tag more">+${f.ingredients.length - 3} more</span>` : '';
+    return `
+    <div class="formula-card" onclick="openFormula(${f.id})" style="animation-delay:${i * 0.05}s">
+      <div class="card-accent" style="background:${f.color || '#c8aa64'};opacity:0.7;"></div>
+      <div class="card-header">
+        <div class="card-process">${f.process}</div>
+        <div class="card-status ${statusClass}">${f.status}</div>
+      </div>
+      <div class="card-name">${f.name}</div>
+      <div class="card-category">${f.category}</div>
+      ${f.desc ? `<div class="card-desc">${f.desc}</div>` : ''}
+      <div class="card-ingredients">${ingredients}${more}</div>
+      <div class="card-footer">
+        <div class="card-meta">
+          ${f.temp ? `<div class="card-meta-item"><div class="meta-label">Temp</div><div class="meta-value">${f.temp}</div></div>` : ''}
+          ${f.time ? `<div class="card-meta-item"><div class="meta-label">Time</div><div class="meta-value">${f.time.split(' ')[0]} ${f.time.split(' ')[1] || ''}</div></div>` : ''}
+        </div>
+        <div class="card-version">v${f.version || '1.0'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── FILTERS ───
+function setFilter(type, value, btn) {
+  filters[type] = value;
+  btn.closest('.filter-section').querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+// ─── DARKROOM ───
+function toggleDarkroom() {
+  darkroom = !darkroom;
+  document.getElementById('app').classList.toggle('darkroom-mode', darkroom);
+  const btn = document.getElementById('darkroom-btn');
+  btn.classList.toggle('active', darkroom);
+  btn.textContent = darkroom ? '⬤ Exit Darkroom' : '⬤ Darkroom';
+}
+
+// ─── PART COLOURS (shared) ───
+const PART_PALETTE = {
+  'Stock':   { color:'#c8aa64', bg:'rgba(200,170,100,0.08)' },
+  'Part A':  { color:'#4a9eff', bg:'rgba(74,158,255,0.08)'  },
+  'Part B':  { color:'#e8a030', bg:'rgba(232,160,48,0.08)'  },
+  'Part C':  { color:'#6ab04c', bg:'rgba(106,176,76,0.08)'  },
+  'Part D':  { color:'#cc88ff', bg:'rgba(204,136,255,0.08)' },
+  'Replen.': { color:'#ff8844', bg:'rgba(255,136,68,0.08)'  },
+  'Bleach':  { color:'#ffdd44', bg:'rgba(255,221,68,0.08)'  },
+  'Fix':     { color:'#88cccc', bg:'rgba(136,204,204,0.08)' },
+  'Wash':    { color:'#aaaaaa', bg:'rgba(170,170,170,0.08)' },
+};
+
+function renderIngredientsByPart(ingredients) {
+  // Group by part, preserving order of first appearance
+  const groups = {};
+  const order  = [];
+  ingredients.forEach(ing => {
+    const p = ing.part || 'Stock';
+    if (!groups[p]) { groups[p] = []; order.push(p); }
+    groups[p].push(ing);
+  });
+
+  // If only one part (Stock), render flat — no group header clutter
+  if (order.length === 1 && order[0] === 'Stock') {
+    return `<table class="ingredient-table">
+      ${ingredients.map(ing => `
+        <tr>
+          <td>${ing.name}</td>
+          <td style="text-align:right;color:var(--gold-dim);">${ing.amount}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}</td>
+        </tr>`).join('')}
+    </table>`;
+  }
+
+  // Multi-part: render with labelled group headers
+  return order.map(part => {
+    const palette = PART_PALETTE[part] || { color:'#c8aa64', bg:'rgba(200,170,100,0.08)' };
+    const rows = groups[part].map(ing => `
+      <tr>
+        <td style="padding-left:12px;">${ing.name}</td>
+        <td style="text-align:right;color:${palette.color};opacity:0.8;font-variant-numeric:tabular-nums;">
+          ${ing.amount}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}
+        </td>
+      </tr>`).join('');
+    return `
+      <div style="margin-bottom:4px;">
+        <div style="
+          font-size:9px;letter-spacing:0.25em;text-transform:uppercase;
+          color:${palette.color};background:${palette.bg};
+          border-left:2px solid ${palette.color};
+          padding:5px 10px;margin-bottom:0;font-family:'DM Mono',monospace;">
+          ${part}
+        </div>
+        <table class="ingredient-table" style="margin-bottom:8px;">${rows}</table>
+      </div>`;
+  }).join('');
+}
+
+// ─── VIEW MODAL ───
+function openFormula(id) {
+  const f = formulas.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('vm-eyebrow').textContent = `${f.process} · ${f.category} · v${f.version||'1.0'}`;
+  document.getElementById('vm-title').textContent = f.name;
+  document.getElementById('vm-body').innerHTML = `
+    ${f.desc ? `
+    <div class="detail-section">
+      <div class="detail-section-label">Description</div>
+      <div class="detail-text">${f.desc}</div>
+    </div>` : ''}
+    <div class="detail-section">
+      <div class="detail-section-label">Ingredients (${f.ingredients.length})</div>
+      ${renderIngredientsByPart(f.ingredients)}
     </div>
-  </div>
-</div>
+    ${(f.temp || f.time) ? `
+    <div class="detail-section">
+      <div class="detail-section-label">Conditions</div>
+      <div class="detail-grid">
+        ${f.temp ? `<div class="detail-box"><div class="detail-box-label">Temperature</div><div class="detail-box-value">${f.temp}</div></div>` : ''}
+        ${f.time ? `<div class="detail-box"><div class="detail-box-label">Development Time</div><div class="detail-box-value">${f.time}</div></div>` : ''}
+      </div>
+    </div>` : ''}
+    ${f.notes ? `
+    <div class="detail-section">
+      <div class="detail-section-label">Notes</div>
+      <div class="detail-text">${f.notes}</div>
+    </div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;">
+      <button class="btn btn-ghost" onclick="deleteFormula(${f.id})" style="color:#cc4444;border-color:rgba(196,48,48,0.3);">Delete</button>
+      <button class="btn btn-ghost" onclick="exportFormulaJPEG(${f.id})">↓ JPEG</button>
+      <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
+    </div>
+  `;
+  document.getElementById('view-modal').classList.add('open');
+}
 
-<!-- ── TOAST CONTAINER ──────────────────────────────────────────── -->
-<div class="toast-container" id="toast-container" aria-live="polite"></div>
+function closeViewModal(e) {
+  if (!e || e.target === document.getElementById('view-modal')) {
+    document.getElementById('view-modal').classList.remove('open');
+  }
+}
 
-<!-- ── UNIT SUGGESTIONS DATALIST ────────────────────────────────── -->
-<datalist id="unit-suggestions">
-  <option value="g">
-  <option value="ml">
-  <option value="mg">
-</datalist>
+// ─── NEW FORMULA MODAL ───
+let ingredientRows = [];
 
+function openNewFormula() {
+  ingredientRows = [];
+  document.getElementById('nf-name').value = '';
+  document.getElementById('nf-process').value = '';
+  document.getElementById('nf-category').value = '';
+  document.getElementById('nf-status').value = 'Experimental';
+  document.getElementById('nf-version').value = '';
+  document.getElementById('nf-desc').value = '';
+  document.getElementById('nf-temp').value = '';
+  document.getElementById('nf-time').value = '';
+  document.getElementById('nf-notes').value = '';
+  document.getElementById('nf-ingredients').innerHTML = '';
+  addIngredientRow();
+  document.getElementById('new-modal').classList.add('open');
+}
 
-<!-- ── SCRIPT ───────────────────────────────────────────────────── -->
-<script src="js/app.js"></script>
+function addIngredientRow(defaultPart) {
+  const id = Date.now() + Math.floor(Math.random()*1000);
+  ingredientRows.push(id);
+
+  const usedParts = [...new Set(ingredientRows
+    .map(rid => document.getElementById(`ing-part-${rid}`)?.value)
+    .filter(Boolean)
+  )];
+  const part = defaultPart || usedParts[usedParts.length - 1] || 'Stock';
+
+  const row = document.createElement('div');
+  row.id = `ing-row-${id}`;
+  row.style.cssText = 'display:grid;grid-template-columns:90px 1fr 90px 70px 32px;gap:6px;align-items:center;position:relative;';
+  row.innerHTML = `
+    <select class="search-input" id="ing-part-${id}" title="Solution part" style="width:100%;font-size:10px;letter-spacing:0.04em;" onchange="onPartChange()">
+      <option value="Stock"   ${part==='Stock'   ?'selected':''}>Stock</option>
+      <option value="Part A"  ${part==='Part A'  ?'selected':''}>Part A</option>
+      <option value="Part B"  ${part==='Part B'  ?'selected':''}>Part B</option>
+      <option value="Part C"  ${part==='Part C'  ?'selected':''}>Part C</option>
+      <option value="Part D"  ${part==='Part D'  ?'selected':''}>Part D</option>
+      <option value="Replen." ${part==='Replen.' ?'selected':''}>Replen.</option>
+      <option value="Bleach"  ${part==='Bleach'  ?'selected':''}>Bleach</option>
+      <option value="Fix"     ${part==='Fix'     ?'selected':''}>Fix</option>
+      <option value="Wash"    ${part==='Wash'    ?'selected':''}>Wash</option>
+    </select>
+    <div style="position:relative;">
+      <input class="search-input" id="ing-name-${id}" placeholder="Chemical name…" style="width:100%;"
+        autocomplete="off"
+        oninput="chemAutocomplete(this, ${id})"
+        onkeydown="chemKeydown(event, ${id})"
+        onblur="setTimeout(()=>hideAC(${id}), 150)">
+      <div class="ac-dropdown" id="ac-${id}"></div>
+    </div>
+    <input class="search-input" id="ing-amt-${id}"  placeholder="Qty" style="width:100%;text-align:right;">
+    <select class="search-input" id="ing-unit-${id}" title="Unit" style="width:100%;font-size:10px;">
+      <option value="g">g</option>
+      <option value="ml">ml</option>
+      <option value="L">L</option>
+      <option value="mg">mg</option>
+      <option value="oz">oz</option>
+      <option value="fl oz">fl oz</option>
+      <option value="tsp">tsp</option>
+      <option value="tbsp">tbsp</option>
+      <option value="parts">parts</option>
+      <option value="drops">drops</option>
+      <option value="% sol">% sol</option>
+      <option value="to make">to make</option>
+    </select>
+    <button class="btn btn-ghost" onclick="removeIngredientRow(${id})" style="padding:5px;justify-content:center;color:#cc4444;" title="Remove">✕</button>
+  `;
+  document.getElementById('nf-ingredients').appendChild(row);
+  updatePartHeaders();
+}
+
+// Re-colour part header labels whenever part dropdown changes
+function onPartChange() {
+  updatePartHeaders();
+}
+
+const PART_COLORS = {
+  'Stock':   '#c8aa64',
+  'Part A':  '#4a9eff',
+  'Part B':  '#e8a030',
+  'Part C':  '#6ab04c',
+  'Part D':  '#cc88ff',
+  'Replen.': '#ff8844',
+  'Bleach':  '#ffdd44',
+  'Fix':     '#88cccc',
+  'Wash':    '#aaaaaa',
+};
+
+function updatePartHeaders() {
+  // Inject subtle part-group colour cues on each row
+  ingredientRows.forEach(id => {
+    const sel = document.getElementById(`ing-part-${id}`);
+    const row = document.getElementById(`ing-row-${id}`);
+    if (sel && row) {
+      const col = PART_COLORS[sel.value] || '#c8aa64';
+      sel.style.color = col;
+      sel.style.borderColor = col + '55';
+      row.style.borderLeft = `2px solid ${col}33`;
+      row.style.paddingLeft = '6px';
+    }
+  });
+}
+
+function removeIngredientRow(id) {
+  document.getElementById(`ing-row-${id}`)?.remove();
+  ingredientRows = ingredientRows.filter(x => x !== id);
+}
+
+function saveFormula() {
+  const name = document.getElementById('nf-name').value.trim();
+  const process = document.getElementById('nf-process').value;
+  const category = document.getElementById('nf-category').value;
+  if (!name || !process || !category) {
+    alert('Please fill in Name, Process, and Category.');
+    return;
+  }
+  const ings = ingredientRows.map(id => ({
+    name:   document.getElementById(`ing-name-${id}`)?.value.trim() || '',
+    amount: document.getElementById(`ing-amt-${id}`)?.value.trim()  || '',
+    unit:   document.getElementById(`ing-unit-${id}`)?.value        || 'g',
+    part:   document.getElementById(`ing-part-${id}`)?.value        || 'Stock',
+  })).filter(i => i.name);
+
+  const colors = ['#c8aa64','#e8a030','#a06030','#4488aa','#8844aa','#44aa88','#888888'];
+  const formula = {
+    id: Date.now(),
+    name,
+    process,
+    category,
+    status: document.getElementById('nf-status').value,
+    version: document.getElementById('nf-version').value || '1.0',
+    desc: document.getElementById('nf-desc').value.trim(),
+    ingredients: ings,
+    temp: document.getElementById('nf-temp').value.trim(),
+    time: document.getElementById('nf-time').value.trim(),
+    notes: document.getElementById('nf-notes').value.trim(),
+    color: colors[formulas.length % colors.length],
+    updated: new Date().toISOString().split('T')[0]
+  };
+  formulas.unshift(formula);
+  learnChemicals(formula.ingredients);
+  localStorage.setItem('formulae_data', JSON.stringify(formulas));
+  updateBackupStatus();
+  closeNewModal();
+  renderGrid();
+}
+
+function closeNewModal(e) {
+  if (!e || e.target === document.getElementById('new-modal')) {
+    document.getElementById('new-modal').classList.remove('open');
+  }
+}
+
+// ─── DELETE ───
+function deleteFormula(id) {
+  if (!confirm('Delete this formula? This cannot be undone.')) return;
+  formulas = formulas.filter(f => f.id !== id);
+  localStorage.setItem('formulae_data', JSON.stringify(formulas));
+  closeViewModal();
+  renderGrid();
+}
+
+// ─── EXPORT ───
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(formulas, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `formulae-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  localStorage.setItem('formulae_lastbackup', new Date().toISOString());
+  updateBackupStatus();
+}
+
+// ─── IMPORT ───
+function triggerImport() {
+  document.getElementById('import-file-input').value = '';
+  document.getElementById('import-file-input').click();
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('Invalid format');
+      const valid = data.filter(f => f.name && f.process && f.category);
+      if (valid.length === 0) throw new Error('No valid formulas found');
+
+      const existing = formulas.map(f => f.name.toLowerCase());
+      const newOnes  = valid.filter(f => !existing.includes(f.name.toLowerCase()));
+      const dupes    = valid.length - newOnes.length;
+
+      const msg = dupes > 0
+        ? `Import ${newOnes.length} new formula(s)? (${dupes} duplicate(s) skipped)`
+        : `Import ${newOnes.length} formula(s)?`;
+
+      if (!confirm(msg)) return;
+
+      // Reassign IDs to avoid collisions
+      newOnes.forEach(f => { f.id = Date.now() + Math.random(); });
+      formulas = [...newOnes, ...formulas];
+      newOnes.forEach(f => learnChemicals(f.ingredients || []));
+      localStorage.setItem('formulae_data', JSON.stringify(formulas));
+      localStorage.setItem('formulae_lastbackup', new Date().toISOString());
+      updateBackupStatus();
+      renderGrid();
+      showToast(`✓ Imported ${newOnes.length} formula${newOnes.length !== 1 ? 's' : ''}`);
+    } catch (err) {
+      alert('Could not read file. Make sure it is a valid Formulae JSON backup.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ─── JPEG EXPORT (single formula card) ───
+async function exportFormulaJPEG(id) {
+  const f = formulas.find(x => x.id === id);
+  if (!f) return;
+
+  // Build an off-screen render card
+  const card = document.createElement('div');
+  card.style.cssText = `
+    position:fixed; left:-9999px; top:0;
+    width:600px; padding:40px;
+    background:#100f0a;
+    font-family:'DM Mono',monospace;
+    color:#e8e0cc;
+    border: 1px solid rgba(200,170,100,0.3);
+  `;
+  card.innerHTML = `
+    <div style="border-left:3px solid ${f.color||'#c8aa64'};padding-left:20px;margin-bottom:28px;">
+      <div style="font-size:10px;letter-spacing:0.3em;color:rgba(200,170,100,0.5);text-transform:uppercase;margin-bottom:8px;">${f.process} · ${f.category}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:#f5f0e8;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;">${f.name}</div>
+      <div style="font-size:10px;letter-spacing:0.1em;color:rgba(200,170,100,0.4);">v${f.version||'1.0'} · ${f.status}</div>
+    </div>
+    ${f.desc ? `<div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(232,224,204,0.6);line-height:1.7;margin-bottom:28px;">${f.desc}</div>` : ''}
+    <div style="margin-bottom:8px;font-size:9px;letter-spacing:0.3em;color:rgba(200,170,100,0.5);text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid rgba(200,170,100,0.12);">Ingredients</div>
+    ${(() => {
+      const groups = {};
+      const order  = [];
+      f.ingredients.forEach(ing => {
+        const p = ing.part || 'Stock';
+        if (!groups[p]) { groups[p] = []; order.push(p); }
+        groups[p].push(ing);
+      });
+      const palette = {
+        'Stock':'#c8aa64','Part A':'#4a9eff','Part B':'#e8a030',
+        'Part C':'#6ab04c','Part D':'#cc88ff','Replen.':'#ff8844',
+        'Bleach':'#ffdd44','Fix':'#88cccc','Wash':'#aaaaaa'
+      };
+      if (order.length === 1 && order[0] === 'Stock') {
+        return f.ingredients.map(ing => `
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(200,170,100,0.07);">
+            <span style="color:#e8e0cc;">${ing.name}</span>
+            <span style="color:rgba(200,170,100,0.6);">${ing.amount}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+          </div>`).join('');
+      }
+      return order.map(part => {
+        const col = palette[part] || '#c8aa64';
+        return `
+          <div style="font-size:8px;letter-spacing:0.25em;text-transform:uppercase;color:${col};border-left:2px solid ${col};padding:4px 8px;margin:10px 0 4px;background:${col}15;">${part}</div>
+          ${groups[part].map(ing => `
+            <div style="display:flex;justify-content:space-between;padding:7px 0 7px 10px;border-bottom:1px solid rgba(200,170,100,0.06);">
+              <span style="color:#e8e0cc;">${ing.name}</span>
+              <span style="color:${col};opacity:0.8;">${ing.amount}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+            </div>`).join('')}`;
+      }).join('');
+    })()}
+    ${(f.temp || f.time) ? `
+    <div style="display:flex;gap:16px;margin-top:24px;">
+      ${f.temp ? `<div style="flex:1;padding:12px 16px;border:1px solid rgba(200,170,100,0.12);"><div style="font-size:8px;letter-spacing:0.25em;color:rgba(232,224,204,0.25);text-transform:uppercase;margin-bottom:4px;">Temperature</div><div style="font-size:15px;color:#e8e0cc;">${f.temp}</div></div>` : ''}
+      ${f.time ? `<div style="flex:1;padding:12px 16px;border:1px solid rgba(200,170,100,0.12);"><div style="font-size:8px;letter-spacing:0.25em;color:rgba(232,224,204,0.25);text-transform:uppercase;margin-bottom:4px;">Dev Time</div><div style="font-size:15px;color:#e8e0cc;">${f.time}</div></div>` : ''}
+    </div>` : ''}
+    ${f.notes ? `<div style="margin-top:20px;padding:14px 16px;border-left:2px solid rgba(200,170,100,0.2);background:rgba(200,170,100,0.03);font-size:12px;color:rgba(232,224,204,0.5);line-height:1.6;">${f.notes}</div>` : ''}
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid rgba(200,170,100,0.1);font-size:9px;letter-spacing:0.2em;color:rgba(200,170,100,0.3);text-transform:uppercase;">Formulae · Film Lab Chemical Database</div>
+  `;
+  document.body.appendChild(card);
+
+  try {
+    const canvas = await html2canvas(card, {
+      backgroundColor: '#100f0a',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+    const a = document.createElement('a');
+    a.download = `${f.name.replace(/\s+/g,'-').toLowerCase()}-formula.jpg`;
+    a.href = canvas.toDataURL('image/jpeg', 0.92);
+    a.click();
+    showToast(`✓ Exported ${f.name} as JPEG`);
+  } catch(err) {
+    alert('JPEG export failed. Try again.');
+  } finally {
+    document.body.removeChild(card);
+  }
+}
+
+function updateBackupStatus() {
+  const last = localStorage.getItem('formulae_lastbackup');
+  const el = document.getElementById('backup-status');
+  if (last) {
+    const d = new Date(last);
+    el.textContent = `Last backup: ${d.toLocaleDateString()}`;
+  }
+}
+
+// ─── TOAST ───
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── CHEMICAL AUTOCOMPLETE ENGINE ───
+
+// Seed list — curated darkroom chemicals that bootstrap the experience
+// Users' own typed chemicals get added on top of this and persist
+const SEED_CHEMICALS = [
+  // Developing agents
+  "Metol","Hydroquinone","Phenidone","Dimezone S","Pyrocatechol","Pyrogallol",
+  "PMK Pyrogallol","p-Aminophenol","Ascorbic Acid","Sodium Ascorbate","Glycin",
+  "Amidol","CD-2","CD-3","CD-4","CD-6","Phenidone-A","Isoascorbic Acid",
+  // Preservatives
+  "Sodium Sulfite","Potassium Sulfite","Sodium Metabisulfite","Potassium Metabisulfite",
+  "Sodium Bisulfite","Hydroxylamine Sulfate","Hydroxylamine Hydrochloride",
+  "Propylene Glycol","Diethylene Glycol",
+  // Accelerators / alkalis
+  "Sodium Carbonate","Potassium Carbonate","Borax","Boric Acid","Kodalk",
+  "Sodium Metaborate","Sodium Hydroxide","Potassium Hydroxide","Lithium Hydroxide",
+  "Trisodium Phosphate","Disodium Phosphate","Triethanolamine","Diethanolamine",
+  "Sodium Silicate","Ammonia","Potassium Bicarbonate","Sodium Bicarbonate",
+  // Restrainers
+  "Potassium Bromide","Sodium Bromide","Ammonium Bromide",
+  "Potassium Iodide","Sodium Iodide",
+  "Benzotriazole","6-Nitrobenzimidazole","5-Methylbenzotriazole",
+  "1-Phenyl-5-mercaptotetrazole","Sodium Thiocyanate","Potassium Thiocyanate",
+  "Pinakryptol Yellow","Pinakryptol Green",
+  // Fixers & hardeners
+  "Sodium Thiosulfate","Ammonium Thiosulfate","Sodium Sulfate",
+  "Ammonium Chloride","Ammonium Acetate",
+  "Acetic Acid","Potassium Alum","Chrome Alum","Aluminum Chloride",
+  "Formaldehyde","Glutaraldehyde","Sodium Acetate",
+  // Bleaches & re-halogenating
+  "Potassium Ferricyanide","Potassium Ferrocyanide","Potassium Dichromate",
+  "Sodium Dichromate","Potassium Permanganate","Sodium Persulfate",
+  "Ammonium Persulfate","Potassium Persulfate","Copper Sulfate",
+  "Cupric Chloride","Ferric Chloride","Ferric Nitrate","Ferric EDTA",
+  "Ammonium Iron(III) EDTA","PDTA","Hydrochloric Acid","Sulfuric Acid","Nitric Acid",
+  // Chelating agents
+  "EDTA","Disodium EDTA","Tetrasodium EDTA","Sodium Gluconate","DTPA","NTA",
+  "Sodium Hexametaphosphate","Sodium Tripolyphosphate",
+  // Stabilisers
+  "Hexamethylenetetramine","Photo-Flo 200","Polyethylene Glycol 400",
+  "Benzyl Alcohol","Potassium Fluoride","Ammonium Fluoride","Citric Acid","Sulfamic Acid",
+  // Toners
+  "Sodium Sulfide","Ammonium Polysulfide","Selenium",
+  "Gold Chloride","Gold Sodium Thiosulfate","Thiourea","Thiocarbamide",
+  "Palladium Chloride","Platinum Chloride","Ferric Oxalate","Ammonium Iron(III) Oxalate",
+  "Potassium Oxalate","Ammonium Dichromate","Vanadium Chloride",
+  // Intensifiers & reducers
+  "Mercury(II) Chloride","Quinone","Oxalic Acid",
+  // Wet plate
+  "USP Collodion","Diethyl Ether","Ethanol","Isopropyl Alcohol",
+  "Cadmium Bromide","Cadmium Iodide","Lithium Bromide","Lithium Iodide",
+  "Ammonium Iodide","Silver Nitrate","Sandarac Varnish","Dammar Varnish",
+  "Bitumen of Judea","Pyroxylin","Lavender Oil",
+  // Dry plate / gelatin emulsion
+  "Gelatin","Saponin","Formalin",
+  // Cyanotype
+  "Ferric Ammonium Citrate","Hydrogen Peroxide","Tannic Acid","Gallic Acid","Tannin",
+  // Gum / carbon / bromoil
+  "Gum Arabic","Potassium Chrome Alum","Linseed Oil","Lithographic Ink",
+  // Solvents
+  "Distilled Water","Deionised Water","Water to make","Methanol","Acetone",
+  "Glycerin","Dimethyl Sulfoxide",
+  // Wetting agents
+  "Agepon","Tween 20","Triton X-100","Sodium Dodecyl Sulfate",
+  // Misc
+  "Magnesium Sulfate","Calcium Chloride","Potassium Chloride","Sodium Chloride",
+  "Potassium Nitrate","Sodium Nitrate","Tartaric Acid","Malic Acid","Succinic Acid",
+  "Phosphoric Acid","Zinc Sulfate","Ferrous Sulfate","Manganese Sulfate",
+  "Sodium Tetraborate","Lactic Acid",
+];
+
+// Returns merged unique sorted list: learned (used most) first, then seeds
+function getChemicalLibrary() {
+  const learned = JSON.parse(localStorage.getItem('formulae_chemicals') || '[]');
+  const learnedSet = new Set(learned.map(s => s.toLowerCase()));
+  const seeds = SEED_CHEMICALS.filter(s => !learnedSet.has(s.toLowerCase()));
+  return [...learned, ...seeds];
+}
+
+// Called when a formula is saved — extracts & persists new chemical names
+function learnChemicals(ingredients) {
+  const existing = JSON.parse(localStorage.getItem('formulae_chemicals') || '[]');
+  const existingLower = new Set(existing.map(s => s.toLowerCase()));
+  const newOnes = ingredients
+    .map(i => i.name.trim())
+    .filter(n => n.length > 1 && !existingLower.has(n.toLowerCase()));
+  if (newOnes.length) {
+    localStorage.setItem('formulae_chemicals', JSON.stringify([...newOnes, ...existing]));
+  }
+}
+
+// Also learn from formulas already in storage on boot
+function learnFromExistingFormulas() {
+  formulas.forEach(f => learnChemicals(f.ingredients || []));
+}
+
+// Active autocomplete state
+let acFocus = {}; // { rowId: index }
+
+function chemAutocomplete(input, rowId) {
+  const query = input.value.trim();
+  const dd = document.getElementById(`ac-${rowId}`);
+  if (!query || query.length < 2) { hideAC(rowId); return; }
+
+  const q = query.toLowerCase();
+  const lib = getChemicalLibrary();
+  const matches = lib.filter(c => c.toLowerCase().includes(q)).slice(0, 12);
+
+  if (!matches.length) { hideAC(rowId); return; }
+
+  acFocus[rowId] = -1;
+  dd.innerHTML = matches.map((c, i) => {
+    // Highlight matching substring
+    const idx = c.toLowerCase().indexOf(q);
+    const hi = idx >= 0
+      ? c.slice(0,idx) + '<mark>' + c.slice(idx, idx+q.length) + '</mark>' + c.slice(idx+q.length)
+      : c;
+    return `<div class="ac-item" data-val="${c.replace(/"/g,'&quot;')}" data-i="${i}"
+      onmousedown="pickAC(event,'${rowId}')">${hi}</div>`;
+  }).join('');
+
+  dd.classList.add('open');
+}
+
+function chemKeydown(e, rowId) {
+  const dd = document.getElementById(`ac-${rowId}`);
+  if (!dd.classList.contains('open')) return;
+  const items = dd.querySelectorAll('.ac-item');
+  if (!items.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    acFocus[rowId] = Math.min((acFocus[rowId] ?? -1) + 1, items.length - 1);
+    items.forEach((el,i) => el.classList.toggle('focused', i === acFocus[rowId]));
+    items[acFocus[rowId]]?.scrollIntoView({ block:'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    acFocus[rowId] = Math.max((acFocus[rowId] ?? 0) - 1, 0);
+    items.forEach((el,i) => el.classList.toggle('focused', i === acFocus[rowId]));
+    items[acFocus[rowId]]?.scrollIntoView({ block:'nearest' });
+  } else if (e.key === 'Enter' || e.key === 'Tab') {
+    const focused = dd.querySelector('.ac-item.focused') || items[0];
+    if (focused) {
+      e.preventDefault();
+      const input = document.getElementById(`ing-name-${rowId}`);
+      input.value = focused.dataset.val;
+      hideAC(rowId);
+      // Move focus to amount field
+      document.getElementById(`ing-amt-${rowId}`)?.focus();
+    }
+  } else if (e.key === 'Escape') {
+    hideAC(rowId);
+  }
+}
+
+function pickAC(e, rowId) {
+  e.preventDefault();
+  const val = e.currentTarget.dataset.val;
+  document.getElementById(`ing-name-${rowId}`).value = val;
+  hideAC(rowId);
+  document.getElementById(`ing-amt-${rowId}`)?.focus();
+}
+
+function hideAC(rowId) {
+  document.getElementById(`ac-${rowId}`)?.classList.remove('open');
+}
+
+// ─── INIT ───
+renderGrid();
+updateBackupStatus();
+learnFromExistingFormulas();
+
+// Keyboard shortcut: N for new, Escape to close
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('view-modal').classList.remove('open');
+    document.getElementById('new-modal').classList.remove('open');
+  }
+  if (e.key === 'n' && !e.target.matches('input,textarea,select')) {
+    openNewFormula();
+  }
+});
+</script>
 </body>
 </html>

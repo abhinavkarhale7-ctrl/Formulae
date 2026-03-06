@@ -390,6 +390,26 @@
     box-shadow: 0 0 0 3px rgba(200,170,100,0.05);
   }
 
+  /* ─── VIEW TOGGLE ─── */
+  .view-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .view-toggle-btn:hover {
+    color: var(--text);
+    border-color: var(--border-bright);
+    background: rgba(200,170,100,0.05);
+  }
+
   /* ─── GRID ─── */
   .grid-container {
     padding: 32px 40px 80px;
@@ -397,6 +417,57 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1px;
     background: var(--border);
+  }
+
+  /* ─── LIST VIEW ─── */
+  .grid-container.list-view {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .grid-container.list-view .formula-card {
+    padding: 14px 28px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+  }
+  .grid-container.list-view .card-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px !important;
+    height: 100% !important;
+    border-radius: 0;
+  }
+  .grid-container.list-view .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    min-width: 100px;
+  }
+  .grid-container.list-view .card-name {
+    font-size: 14px;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+  }
+  .grid-container.list-view .card-category,
+  .grid-container.list-view .card-desc,
+  .grid-container.list-view .card-ingredients,
+  .grid-container.list-view .formula-card::before {
+    display: none;
+  }
+  .grid-container.list-view .card-footer {
+    border-top: none;
+    padding-top: 0;
+    flex-shrink: 0;
+  }
+  .grid-container.list-view .card-status {
+    font-size: 8px;
   }
 
   /* ─── FORMULA CARD ─── */
@@ -1030,6 +1101,7 @@
   </div>
   <div class="search-wrap">
     <input class="search-input" id="search" placeholder="Search formulas…" oninput="renderGrid()">
+    <button class="view-toggle-btn" id="view-toggle" onclick="toggleViewMode()" title="Toggle grid/list view">⊞ Grid</button>
   </div>
 </div>
 
@@ -1136,6 +1208,29 @@
 let formulas = JSON.parse(localStorage.getItem('formulae_data') || '[]');
 let filters = { process: 'all', category: 'all', status: 'all' };
 let darkroom = false;
+let viewMode = localStorage.getItem('formulae_view_mode') || 'grid';
+
+// ─── VIEW TOGGLE ───
+function toggleViewMode() {
+  viewMode = viewMode === 'grid' ? 'list' : 'grid';
+  localStorage.setItem('formulae_view_mode', viewMode);
+  const btn = document.getElementById('view-toggle');
+  btn.textContent = viewMode === 'grid' ? '⊞ Grid' : '☰ List';
+  applyViewMode();
+}
+function applyViewMode() {
+  const grid = document.getElementById('grid');
+  if (viewMode === 'list') {
+    grid.classList.add('list-view');
+  } else {
+    grid.classList.remove('list-view');
+  }
+}
+
+// ─── INGREDIENT COMPAT: handle both 'amount' and 'qty' fields ───
+function ingAmount(ing) {
+  return ing.amount !== undefined ? ing.amount : (ing.qty !== undefined ? ing.qty : '');
+}
 
 // Sample data if empty
 if (formulas.length === 0) {
@@ -1289,6 +1384,7 @@ function renderGrid() {
       </div>
     </div>`;
   }).join('');
+  applyViewMode();
 }
 
 // ─── FILTERS ───
@@ -1368,7 +1464,7 @@ function openEditFormula(id) {
     const part   = ing.part   || 'Stock';
     const unit   = ing.unit   || 'g';
     const name   = typeof ing === 'string' ? ing : (ing.name   || '');
-    const amount = typeof ing === 'string' ? ''  : (ing.amount || '');
+    const amount = typeof ing === 'string' ? ''  : ingAmount(ing);
     const partOptions = ['Stock','Part A','Part B','Part C','Part D','Replen.','Bleach','Fix','Wash']
       .map(p => `<option value="${p}" ${part===p?'selected':''}>${p}</option>`).join('');
     const unitOptions = ['g','ml','L','mg','oz','fl oz','tsp','tbsp','parts','drops','% sol','to make']
@@ -1438,7 +1534,7 @@ function renderIngredientsByPart(ingredients) {
       ${ingredients.map(ing => `
         <tr>
           <td>${ing.name}</td>
-          <td style="text-align:right;color:var(--gold-dim);">${ing.amount}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}</td>
+          <td style="text-align:right;color:var(--gold-dim);">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}</td>
         </tr>`).join('')}
     </table>`;
   }
@@ -1450,7 +1546,7 @@ function renderIngredientsByPart(ingredients) {
       <tr>
         <td style="padding-left:12px;">${ing.name}</td>
         <td style="text-align:right;color:${palette.color};opacity:0.8;font-variant-numeric:tabular-nums;">
-          ${ing.amount}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}
+          ${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}
         </td>
       </tr>`).join('');
     return `
@@ -1794,7 +1890,7 @@ async function exportFormulaJPEG(id) {
         return f.ingredients.map(ing => `
           <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(200,170,100,0.07);">
             <span style="color:#e8e0cc;">${ing.name}</span>
-            <span style="color:rgba(200,170,100,0.6);">${ing.amount}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+            <span style="color:rgba(200,170,100,0.6);">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
           </div>`).join('');
       }
       return order.map(part => {
@@ -1804,7 +1900,7 @@ async function exportFormulaJPEG(id) {
           ${groups[part].map(ing => `
             <div style="display:flex;justify-content:space-between;padding:7px 0 7px 10px;border-bottom:1px solid rgba(200,170,100,0.06);">
               <span style="color:#e8e0cc;">${ing.name}</span>
-              <span style="color:${col};opacity:0.8;">${ing.amount}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+              <span style="color:${col};opacity:0.8;">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
             </div>`).join('')}`;
       }).join('');
     })()}
@@ -2029,6 +2125,12 @@ updateBackupStatus();
 learnFromExistingFormulas();
 applyTheme(currentTheme);
 
+// Restore view toggle button text
+(function() {
+  const btn = document.getElementById('view-toggle');
+  if (btn) btn.textContent = viewMode === 'grid' ? '⊞ Grid' : '☰ List';
+})();
+
 // Keyboard shortcut: N for new, Escape to close
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
@@ -2039,6 +2141,7 @@ document.addEventListener('keydown', e => {
     openNewFormula();
   }
 });
+</script>
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});

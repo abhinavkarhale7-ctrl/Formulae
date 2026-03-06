@@ -40,6 +40,27 @@
     --white: #dd3333;
   }
 
+  .light-mode {
+    --bg: #f4f0e8;
+    --surface: #faf8f4;
+    --surface2: #ede9df;
+    --border: rgba(80,60,20,0.12);
+    --border-bright: rgba(80,60,20,0.28);
+    --gold: #8a6a20;
+    --gold-dim: rgba(120,90,30,0.55);
+    --amber: #b06010;
+    --red: #a02020;
+    --red-glow: rgba(160,32,32,0.1);
+    --text: #2a2218;
+    --text-dim: rgba(42,34,24,0.6);
+    --text-faint: rgba(42,34,24,0.35);
+    --white: #1a1410;
+  }
+
+  .light-mode body::after {
+    background: radial-gradient(ellipse, rgba(180,140,60,0.06) 0%, transparent 70%);
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html { scroll-behavior: smooth; }
@@ -956,6 +977,7 @@
     </div>
   </div>
   <div class="header-actions">
+    <button class="btn btn-ghost" id="theme-btn" onclick="cycleTheme()" title="Switch theme">◑ Theme</button>
     <button class="btn btn-ghost" onclick="triggerImport()">↑ Import</button>
     <button class="btn btn-ghost" onclick="exportJSON()">↓ Export</button>
     <button class="btn btn-darkroom" id="darkroom-btn" onclick="toggleDarkroom()">⬤ Darkroom</button>
@@ -1233,12 +1255,14 @@ function renderGrid() {
   }
 
   grid.innerHTML = filtered.map((f, i) => {
-    const statusClass = `status-${f.status.toLowerCase()}`;
-    const ingredients = f.ingredients.slice(0, 3).map(ing =>
-      `<span class="ingredient-tag">${ing.name}</span>`
-    ).join('');
-    const more = f.ingredients.length > 3
-      ? `<span class="ingredient-tag more">+${f.ingredients.length - 3} more</span>` : '';
+    const statusClass = `status-${(f.status||'experimental').toLowerCase()}`;
+    const ings = (f.ingredients || []).filter(ing => ing && (ing.name || ing));
+    const ingredients = ings.slice(0, 3).map(ing => {
+      const name = typeof ing === 'string' ? ing : (ing.name || '');
+      return name ? `<span class="ingredient-tag">${name}</span>` : '';
+    }).join('');
+    const more = ings.length > 3
+      ? `<span class="ingredient-tag more">+${ings.length - 3} more</span>` : '';
     return `
     <div class="formula-card" onclick="openFormula(${f.id})" style="animation-delay:${i * 0.05}s">
       <div class="card-accent" style="background:${f.color || '#c8aa64'};opacity:0.7;"></div>
@@ -1269,13 +1293,114 @@ function setFilter(type, value, btn) {
   renderGrid();
 }
 
-// ─── DARKROOM ───
-function toggleDarkroom() {
-  darkroom = !darkroom;
-  document.getElementById('app').classList.toggle('darkroom-mode', darkroom);
+// ─── THEMES ───
+// Themes: dark (default) → light → darkroom → dark...
+let currentTheme = localStorage.getItem('formulae_theme') || 'dark';
+
+function applyTheme(theme) {
+  const app = document.getElementById('app');
+  app.classList.remove('light-mode','darkroom-mode');
   const btn = document.getElementById('darkroom-btn');
-  btn.classList.toggle('active', darkroom);
-  btn.textContent = darkroom ? '⬤ Exit Darkroom' : '⬤ Darkroom';
+  const themeBtn = document.getElementById('theme-btn');
+  if (theme === 'light') {
+    app.classList.add('light-mode');
+    btn.classList.remove('active');
+    btn.textContent = '⬤ Darkroom';
+    themeBtn.textContent = '◑ Light';
+  } else if (theme === 'darkroom') {
+    app.classList.add('darkroom-mode');
+    btn.classList.add('active');
+    btn.textContent = '⬤ Exit Darkroom';
+    themeBtn.textContent = '◑ Dark';
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '⬤ Darkroom';
+    themeBtn.textContent = '◑ Dark';
+  }
+  currentTheme = theme;
+  localStorage.setItem('formulae_theme', theme);
+}
+
+function cycleTheme() {
+  const order = ['dark','light','darkroom'];
+  const next = order[(order.indexOf(currentTheme) + 1) % order.length];
+  applyTheme(next);
+}
+
+function toggleDarkroom() {
+  applyTheme(currentTheme === 'darkroom' ? 'dark' : 'darkroom');
+}
+
+// ─── EDIT FORMULA ───
+let editingId = null;
+
+function openEditFormula(id) {
+  const f = formulas.find(x => x.id === id);
+  if (!f) return;
+  editingId = id;
+
+  // Reuse new formula modal but prefill it
+  ingredientRows = [];
+  document.getElementById('nf-name').value    = f.name    || '';
+  document.getElementById('nf-process').value = f.process || '';
+  document.getElementById('nf-category').value= f.category|| '';
+  document.getElementById('nf-status').value  = f.status  || 'Experimental';
+  document.getElementById('nf-version').value = f.version || '';
+  document.getElementById('nf-desc').value    = f.desc    || '';
+  document.getElementById('nf-temp').value    = f.temp    || '';
+  document.getElementById('nf-time').value    = f.time    || '';
+  document.getElementById('nf-notes').value   = f.notes   || '';
+  document.getElementById('nf-ingredients').innerHTML = '';
+
+  // Prefill ingredient rows
+  (f.ingredients || []).forEach(ing => {
+    const rowId = Date.now() + Math.floor(Math.random()*10000);
+    ingredientRows.push(rowId);
+    const row = document.createElement('div');
+    row.id = `ing-row-${rowId}`;
+    row.style.cssText = 'display:grid;grid-template-columns:90px 1fr 90px 70px 32px;gap:6px;align-items:center;position:relative;';
+    const part   = ing.part   || 'Stock';
+    const unit   = ing.unit   || 'g';
+    const name   = typeof ing === 'string' ? ing : (ing.name   || '');
+    const amount = typeof ing === 'string' ? ''  : (ing.amount || '');
+    const partOptions = ['Stock','Part A','Part B','Part C','Part D','Replen.','Bleach','Fix','Wash']
+      .map(p => `<option value="${p}" ${part===p?'selected':''}>${p}</option>`).join('');
+    const unitOptions = ['g','ml','L','mg','oz','fl oz','tsp','tbsp','parts','drops','% sol','to make']
+      .map(u => `<option value="${u}" ${unit===u?'selected':''}>${u}</option>`).join('');
+    row.innerHTML = `
+      <select class="search-input" id="ing-part-${rowId}" style="width:100%;font-size:10px;" onchange="onPartChange()">${partOptions}</select>
+      <div style="position:relative;">
+        <input class="search-input" id="ing-name-${rowId}" value="${name.replace(/"/g,'&quot;')}" placeholder="Chemical name…" style="width:100%;"
+          autocomplete="off" oninput="chemAutocomplete(this,${rowId})" onkeydown="chemKeydown(event,${rowId})" onblur="setTimeout(()=>hideAC(${rowId}),150)">
+        <div class="ac-dropdown" id="ac-${rowId}"></div>
+      </div>
+      <input class="search-input" id="ing-amt-${rowId}"  value="${amount}" placeholder="Qty" style="width:100%;text-align:right;">
+      <select class="search-input" id="ing-unit-${rowId}" style="width:100%;font-size:10px;">${unitOptions}</select>
+      <button class="btn btn-ghost" onclick="removeIngredientRow(${rowId})" style="padding:5px;justify-content:center;color:#cc4444;">✕</button>
+    `;
+    document.getElementById('nf-ingredients').appendChild(row);
+  });
+
+  updatePartHeaders();
+
+  // Change modal title and save button to indicate edit mode
+  document.querySelector('#new-modal .modal-eyebrow').textContent = 'Editing Formula';
+  document.querySelector('#new-modal .modal-title').textContent   = 'Edit Formula';
+  document.querySelector('#new-modal .btn-primary').textContent   = 'Save Changes';
+
+  closeViewModal();
+  document.getElementById('new-modal').classList.add('open');
+}
+
+function closeNewModal(e) {
+  if (!e || e.target === document.getElementById('new-modal')) {
+    document.getElementById('new-modal').classList.remove('open');
+    // Reset modal title back to "Add Formula" for next new entry
+    editingId = null;
+    document.querySelector('#new-modal .modal-eyebrow').textContent = 'New Entry';
+    document.querySelector('#new-modal .modal-title').textContent   = 'Add Formula';
+    document.querySelector('#new-modal .btn-primary').textContent   = 'Save Formula';
+  }
 }
 
 // ─── PART COLOURS (shared) ───
@@ -1368,6 +1493,7 @@ function openFormula(id) {
     <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;">
       <button class="btn btn-ghost" onclick="deleteFormula(${f.id})" style="color:#cc4444;border-color:rgba(196,48,48,0.3);">Delete</button>
       <button class="btn btn-ghost" onclick="exportFormulaJPEG(${f.id})">↓ JPEG</button>
+      <button class="btn btn-ghost" onclick="openEditFormula(${f.id})">✎ Edit</button>
       <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
     </div>
   `;
@@ -1504,6 +1630,30 @@ function saveFormula() {
     unit:   document.getElementById(`ing-unit-${id}`)?.value        || 'g',
     part:   document.getElementById(`ing-part-${id}`)?.value        || 'Stock',
   })).filter(i => i.name);
+
+  if (editingId) {
+    // Update existing formula
+    const idx = formulas.findIndex(x => x.id === editingId);
+    if (idx !== -1) {
+      formulas[idx] = { ...formulas[idx], name, process, category,
+        status: document.getElementById('nf-status').value,
+        version: document.getElementById('nf-version').value || '1.0',
+        desc: document.getElementById('nf-desc').value.trim(),
+        ingredients: ings,
+        temp: document.getElementById('nf-temp').value.trim(),
+        time: document.getElementById('nf-time').value.trim(),
+        notes: document.getElementById('nf-notes').value.trim(),
+        updated: new Date().toISOString().split('T')[0]
+      };
+    }
+    learnChemicals(ings);
+    localStorage.setItem('formulae_data', JSON.stringify(formulas));
+    editingId = null;
+    closeNewModal();
+    renderGrid();
+    showToast('✓ Formula updated');
+    return;
+  }
 
   const colors = ['#c8aa64','#e8a030','#a06030','#4488aa','#8844aa','#44aa88','#888888'];
   const formula = {
@@ -1871,6 +2021,7 @@ function hideAC(rowId) {
 renderGrid();
 updateBackupStatus();
 learnFromExistingFormulas();
+applyTheme(currentTheme);
 
 // Keyboard shortcut: N for new, Escape to close
 document.addEventListener('keydown', e => {

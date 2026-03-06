@@ -1578,9 +1578,7 @@ function renderIngredientsByPart(ingredients) {
 
   // Multi-part: render with labelled group headers
   let globalIdx = 0;
-  return `<table class="ingredient-table" id="ing-table-view" style="display:none;">
-    <thead><tr><th></th><th></th><th class="scaled-col" id="scaled-header" style="display:none"></th></tr></thead>
-  </table>` + order.map(part => {
+  return order.map(part => {
     const palette = PART_PALETTE[part] || { color:'#c8aa64', bg:'rgba(200,170,100,0.08)' };
     const rows = groups[part].map(ing => {
       const idx = globalIdx++;
@@ -2022,7 +2020,9 @@ function scaleRecipe() {
     const n = parseFloat(ingAmount(i));
     if (!isNaN(n)) {
       const scaled = n * factor;
-      cell.textContent = parseFloat(scaled.toPrecision(4)) + ' ' + (i.unit || '');
+      // Format: up to 4 decimal places, strip trailing zeros
+      const formatted = scaled < 0.01 ? scaled.toExponential(2) : Number(scaled.toFixed(4));
+      cell.textContent = formatted + ' ' + (i.unit || '');
     } else {
       cell.textContent = ingAmount(i);
     }
@@ -2129,7 +2129,7 @@ async function exportFormulaPDF(id) {
       pdf.addImage(imgData, 'PNG', margin, margin, imgW * scale, availH);
     }
 
-    pdf.save(`${f.name.replace(/\s+/g,'-').toLowerCase()}-formula.pdf`);
+    pdf.save(`${f.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}-formula.pdf`);
     showToast(`✓ Exported ${f.name} as PDF`);
   } catch(err) {
     alert('PDF export failed. Try again.');

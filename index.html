@@ -68,6 +68,10 @@
     background: radial-gradient(ellipse, rgba(180,140,60,0.06) 0%, transparent 70%);
   }
 
+  .light-mode body::before {
+    opacity: 0.15;
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html { scroll-behavior: smooth; }
@@ -417,13 +421,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1px;
-    background: var(--border);
+    background: var(--border-bright);
   }
 
   /* ─── LIST VIEW ─── */
   .grid-container.list-view {
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 1px;
   }
   .grid-container.list-view .formula-card {
     padding: 14px 28px;
@@ -926,6 +930,9 @@
     background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
     pointer-events: none;
     z-index: 50;
+  }
+  .light-mode .vignette {
+    background: none;
   }
 
   /* ─── STATUS BAR ─── */
@@ -1997,15 +2004,43 @@ function scaleRecipe() {
     return;
   }
 
-  // Calculate base volume: sum of all ml quantities
-  let baseMl = ings.reduce((sum, i) => {
-    if ((i.unit || '').toLowerCase() === 'ml') {
-      const n = parseFloat(ingAmount(i));
-      if (!isNaN(n)) sum += n;
+  // Convert an ingredient's amount to ml (handles both ml and L units)
+  function toMl(i) {
+    const unit = (i.unit || '').toLowerCase();
+    const n = parseFloat(ingAmount(i));
+    if (isNaN(n)) return 0;
+    if (unit === 'ml') return n;
+    if (unit === 'l') return n * 1000;
+    return 0;
+  }
+
+  // In chemistry, "Water to make X" means total volume = X.
+  // Other liquid ingredients are already accounted for within that total.
+  // Group ingredients by part and use water/solvent entries to define each part's volume.
+  function isWater(i) {
+    return (i.name || '').toLowerCase().includes('water');
+  }
+
+  const parts = {};
+  ings.forEach(i => {
+    const part = i.part || '_default';
+    if (!parts[part]) parts[part] = { water: 0, liquid: 0 };
+    const ml = toMl(i);
+    if (ml > 0) {
+      if (isWater(i)) {
+        parts[part].water += ml;
+      } else {
+        parts[part].liquid += ml;
+      }
     }
-    return sum;
-  }, 0);
-  // Fall back to 1000ml if no ml-based ingredients
+  });
+
+  let baseMl = 0;
+  for (const p of Object.values(parts)) {
+    // If a part has a water entry, it defines that part's total volume
+    baseMl += p.water > 0 ? p.water : p.liquid;
+  }
+  // Fall back to 1000ml if no volumetric ingredients found
   if (baseMl <= 0) baseMl = 1000;
 
   const factor = targetVol / baseMl;

@@ -2017,8 +2017,9 @@ function scaleRecipe() {
   // In chemistry, "Water to make X" means total volume = X.
   // Other liquid ingredients are already accounted for within that total.
   // Group ingredients by part and use water/solvent entries to define each part's volume.
-  function isWater(i) {
-    return (i.name || '').toLowerCase().includes('water');
+  function isSolvent(i) {
+    const name = (i.name || '').toLowerCase();
+    return name.includes('water') || name.includes('deionised') || name.includes('deionized');
   }
 
   const parts = {};
@@ -2027,7 +2028,7 @@ function scaleRecipe() {
     if (!parts[part]) parts[part] = { water: 0, liquid: 0 };
     const ml = toMl(i);
     if (ml > 0) {
-      if (isWater(i)) {
+      if (isSolvent(i)) {
         parts[part].water += ml;
       } else {
         parts[part].liquid += ml;

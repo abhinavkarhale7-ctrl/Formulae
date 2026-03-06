@@ -12,21 +12,22 @@
 <link rel="apple-touch-icon" href="icons/icon-512x512.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <style>
   :root {
     --bg: #0a0905;
     --surface: #100f0a;
     --surface2: #171510;
-    --border: rgba(200,170,100,0.12);
-    --border-bright: rgba(200,170,100,0.3);
-    --gold: #c8aa64;
-    --gold-dim: rgba(200,170,100,0.5);
-    --amber: #e8a030;
+    --border: rgba(200,170,100,0.15);
+    --border-bright: rgba(200,170,100,0.35);
+    --gold: #d4b46e;
+    --gold-dim: rgba(212,180,110,0.7);
+    --amber: #eeaa38;
     --red: #c43030;
     --red-glow: rgba(196,48,48,0.15);
-    --text: #e8e0cc;
-    --text-dim: rgba(232,224,204,0.5);
-    --text-faint: rgba(232,224,204,0.25);
+    --text: #ede6d4;
+    --text-dim: rgba(237,230,212,0.7);
+    --text-faint: rgba(237,230,212,0.45);
     --white: #f5f0e8;
     --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
   }
@@ -35,31 +36,31 @@
     --bg: #0d0000;
     --surface: #120000;
     --surface2: #1a0000;
-    --border: rgba(180,30,30,0.2);
-    --border-bright: rgba(220,60,60,0.4);
-    --gold: #cc3333;
-    --gold-dim: rgba(200,50,50,0.5);
-    --amber: #ff4444;
-    --text: #cc4444;
-    --text-dim: rgba(180,40,40,0.6);
-    --text-faint: rgba(150,30,30,0.3);
-    --white: #dd3333;
+    --border: rgba(180,30,30,0.25);
+    --border-bright: rgba(220,60,60,0.45);
+    --gold: #dd4444;
+    --gold-dim: rgba(220,60,60,0.7);
+    --amber: #ff5555;
+    --text: #dd5555;
+    --text-dim: rgba(200,55,55,0.75);
+    --text-faint: rgba(180,45,45,0.5);
+    --white: #ee4444;
   }
 
   .light-mode {
     --bg: #f4f0e8;
     --surface: #faf8f4;
     --surface2: #ede9df;
-    --border: rgba(80,60,20,0.12);
-    --border-bright: rgba(80,60,20,0.28);
-    --gold: #8a6a20;
-    --gold-dim: rgba(120,90,30,0.55);
-    --amber: #b06010;
+    --border: rgba(80,60,20,0.15);
+    --border-bright: rgba(80,60,20,0.32);
+    --gold: #7a5a10;
+    --gold-dim: rgba(100,75,20,0.7);
+    --amber: #a05508;
     --red: #a02020;
     --red-glow: rgba(160,32,32,0.1);
-    --text: #2a2218;
-    --text-dim: rgba(42,34,24,0.6);
-    --text-faint: rgba(42,34,24,0.35);
+    --text: #22190f;
+    --text-dim: rgba(34,25,15,0.72);
+    --text-faint: rgba(34,25,15,0.48);
     --white: #1a1410;
   }
 
@@ -836,6 +837,36 @@
     letter-spacing: 0.05em;
   }
 
+  .ingredient-table .scaled-col {
+    color: var(--amber);
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── SCALE ROW ─── */
+  .scale-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .scale-row label {
+    margin: 0;
+    white-space: nowrap;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .scale-row input {
+    width: 120px;
+  }
+  .scale-row .scale-hint {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
   .detail-text {
     font-family: 'Cormorant Garamond', serif;
     font-size: 15px;
@@ -1530,25 +1561,36 @@ function renderIngredientsByPart(ingredients) {
 
   // If only one part (Stock), render flat — no group header clutter
   if (order.length === 1 && order[0] === 'Stock') {
-    return `<table class="ingredient-table">
-      ${ingredients.map(ing => `
+    return `<table class="ingredient-table" id="ing-table-view">
+      <thead><tr>
+        <th style="text-align:left;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-faint);padding:6px 0;">Chemical</th>
+        <th style="text-align:right;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-faint);padding:6px 0;">Quantity</th>
+        <th class="scaled-col" id="scaled-header" style="display:none;padding:6px 0;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">Scaled</th>
+      </tr></thead>
+      ${ingredients.map((ing, idx) => `
         <tr>
           <td>${ing.name}</td>
           <td style="text-align:right;color:var(--gold-dim);">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}</td>
+          <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
         </tr>`).join('')}
     </table>`;
   }
 
   // Multi-part: render with labelled group headers
+  let globalIdx = 0;
   return order.map(part => {
     const palette = PART_PALETTE[part] || { color:'#c8aa64', bg:'rgba(200,170,100,0.08)' };
-    const rows = groups[part].map(ing => `
+    const rows = groups[part].map(ing => {
+      const idx = globalIdx++;
+      return `
       <tr>
         <td style="padding-left:12px;">${ing.name}</td>
         <td style="text-align:right;color:${palette.color};opacity:0.8;font-variant-numeric:tabular-nums;">
           ${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}
         </td>
-      </tr>`).join('');
+        <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
+      </tr>`;
+    }).join('');
     return `
       <div style="margin-bottom:4px;">
         <div style="
@@ -1564,9 +1606,12 @@ function renderIngredientsByPart(ingredients) {
 }
 
 // ─── VIEW MODAL ───
+let currentViewId = null;
+
 function openFormula(id) {
   const f = formulas.find(x => x.id === id);
   if (!f) return;
+  currentViewId = id;
   document.getElementById('vm-eyebrow').textContent = `${f.process} · ${f.category} · v${f.version||'1.0'}`;
   document.getElementById('vm-title').textContent = f.name;
   document.getElementById('vm-body').innerHTML = `
@@ -1579,6 +1624,17 @@ function openFormula(id) {
       <div class="detail-section-label">Ingredients (${f.ingredients.length})</div>
       ${renderIngredientsByPart(f.ingredients)}
     </div>
+    ${f.ingredients.length ? `
+    <div class="detail-section" id="scale-section">
+      <div class="detail-section-label">Scale Recipe</div>
+      <div class="scale-row">
+        <label for="scale-volume">Scale to</label>
+        <input id="scale-volume" class="search-input" type="number" min="1" placeholder="e.g. 500"
+          oninput="scaleRecipe()" style="width:120px;text-align:right;" />
+        <span class="scale-hint">ml total volume</span>
+        <button class="btn btn-ghost" onclick="clearScale()" title="Clear scaling" style="padding:4px 10px;font-size:10px;">✕ Reset</button>
+      </div>
+    </div>` : ''}
     ${(f.temp || f.time) ? `
     <div class="detail-section">
       <div class="detail-section-label">Conditions</div>
@@ -1592,8 +1648,9 @@ function openFormula(id) {
       <div class="detail-section-label">Notes</div>
       <div class="detail-text">${f.notes}</div>
     </div>` : ''}
-    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;">
+    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;flex-wrap:wrap;">
       <button class="btn btn-ghost" onclick="deleteFormula(${f.id})" style="color:#cc4444;border-color:rgba(196,48,48,0.3);">Delete</button>
+      <button class="btn btn-ghost" onclick="exportFormulaPDF(${f.id})">↓ PDF</button>
       <button class="btn btn-ghost" onclick="exportFormulaJPEG(${f.id})">↓ JPEG</button>
       <button class="btn btn-ghost" onclick="openEditFormula(${f.id})">✎ Edit</button>
       <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
@@ -1781,12 +1838,6 @@ function saveFormula() {
   renderGrid();
 }
 
-function closeNewModal(e) {
-  if (!e || e.target === document.getElementById('new-modal')) {
-    document.getElementById('new-modal').classList.remove('open');
-  }
-}
-
 // ─── DELETE ───
 function deleteFormula(id) {
   if (!confirm('Delete this formula? This cannot be undone.')) return;
@@ -1928,6 +1979,160 @@ async function exportFormulaJPEG(id) {
     showToast(`✓ Exported ${f.name} as JPEG`);
   } catch(err) {
     alert('JPEG export failed. Try again.');
+  } finally {
+    document.body.removeChild(card);
+  }
+}
+
+// ─── SCALE RECIPE ───
+function scaleRecipe() {
+  const targetVol = parseFloat(document.getElementById('scale-volume').value);
+  const f = currentViewId ? formulas.find(x => x.id === currentViewId) : null;
+  if (!f) return;
+
+  const ings = f.ingredients || [];
+
+  if (!targetVol || targetVol <= 0) {
+    clearScale();
+    return;
+  }
+
+  // Calculate base volume: sum of all ml quantities
+  let baseMl = ings.reduce((sum, i) => {
+    if ((i.unit || '').toLowerCase() === 'ml') {
+      const n = parseFloat(ingAmount(i));
+      if (!isNaN(n)) sum += n;
+    }
+    return sum;
+  }, 0);
+  // Fall back to 1000ml if no ml-based ingredients
+  if (baseMl <= 0) baseMl = 1000;
+
+  const factor = targetVol / baseMl;
+
+  // Show all scaled columns
+  document.querySelectorAll('.scaled-col').forEach(el => el.style.display = '');
+
+  ings.forEach((i, idx) => {
+    const cell = document.getElementById('scaled-' + idx);
+    if (!cell) return;
+    cell.style.display = '';
+    const n = parseFloat(ingAmount(i));
+    if (!isNaN(n)) {
+      const scaled = n * factor;
+      // Format: up to 4 decimal places, strip trailing zeros
+      const formatted = scaled < 0.01 ? scaled.toExponential(2) : Number(scaled.toFixed(4));
+      cell.textContent = formatted + ' ' + (i.unit || '');
+    } else {
+      cell.textContent = ingAmount(i);
+    }
+  });
+}
+
+function clearScale() {
+  document.querySelectorAll('.scaled-col').forEach(el => {
+    el.style.display = 'none';
+    if (el.tagName !== 'TH') el.textContent = '—';
+  });
+  const inp = document.getElementById('scale-volume');
+  if (inp) inp.value = '';
+}
+
+// ─── PDF EXPORT ───
+async function exportFormulaPDF(id) {
+  const f = formulas.find(x => x.id === id);
+  if (!f) return;
+
+  // Build off-screen card (same as JPEG but white background for PDF)
+  const card = document.createElement('div');
+  card.style.cssText = `
+    position:fixed; left:-9999px; top:0;
+    width:600px; padding:40px;
+    background:#ffffff;
+    font-family:'DM Mono',monospace;
+    color:#1a1410;
+  `;
+  card.innerHTML = `
+    <div style="border-left:3px solid ${f.color||'#8a6a20'};padding-left:20px;margin-bottom:28px;">
+      <div style="font-size:10px;letter-spacing:0.3em;color:#8a6a20;text-transform:uppercase;margin-bottom:8px;">${f.process} · ${f.category}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:#1a1410;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;">${f.name}</div>
+      <div style="font-size:10px;letter-spacing:0.1em;color:#8a8070;">v${f.version||'1.0'} · ${f.status}</div>
+    </div>
+    ${f.desc ? `<div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#555;line-height:1.7;margin-bottom:28px;">${f.desc}</div>` : ''}
+    <div style="margin-bottom:8px;font-size:9px;letter-spacing:0.3em;color:#8a8070;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid #ddd;">Ingredients</div>
+    ${(() => {
+      const groups = {};
+      const order  = [];
+      f.ingredients.forEach(ing => {
+        const p = ing.part || 'Stock';
+        if (!groups[p]) { groups[p] = []; order.push(p); }
+        groups[p].push(ing);
+      });
+      const palette = {
+        'Stock':'#8a6a20','Part A':'#2a6eb8','Part B':'#c08020',
+        'Part C':'#4a8a34','Part D':'#9060cc','Replen.':'#cc6622',
+        'Bleach':'#b8a020','Fix':'#508888','Wash':'#666666'
+      };
+      if (order.length === 1 && order[0] === 'Stock') {
+        return f.ingredients.map(ing => `
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
+            <span style="color:#1a1410;">${ing.name}</span>
+            <span style="color:#8a6a20;">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+          </div>`).join('');
+      }
+      return order.map(part => {
+        const col = palette[part] || '#8a6a20';
+        return `
+          <div style="font-size:8px;letter-spacing:0.25em;text-transform:uppercase;color:${col};border-left:2px solid ${col};padding:4px 8px;margin:10px 0 4px;background:${col}15;">${part}</div>
+          ${groups[part].map(ing => `
+            <div style="display:flex;justify-content:space-between;padding:7px 0 7px 10px;border-bottom:1px solid #eee;">
+              <span style="color:#1a1410;">${ing.name}</span>
+              <span style="color:${col};">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+            </div>`).join('')}`;
+      }).join('');
+    })()}
+    ${(f.temp || f.time) ? `
+    <div style="display:flex;gap:16px;margin-top:24px;">
+      ${f.temp ? `<div style="flex:1;padding:12px 16px;border:1px solid #ddd;"><div style="font-size:8px;letter-spacing:0.25em;color:#8a8070;text-transform:uppercase;margin-bottom:4px;">Temperature</div><div style="font-size:15px;color:#1a1410;">${f.temp}</div></div>` : ''}
+      ${f.time ? `<div style="flex:1;padding:12px 16px;border:1px solid #ddd;"><div style="font-size:8px;letter-spacing:0.25em;color:#8a8070;text-transform:uppercase;margin-bottom:4px;">Dev Time</div><div style="font-size:15px;color:#1a1410;">${f.time}</div></div>` : ''}
+    </div>` : ''}
+    ${f.notes ? `<div style="margin-top:20px;padding:14px 16px;border-left:2px solid #ddd;background:#fafaf6;font-size:12px;color:#666;line-height:1.6;">${f.notes}</div>` : ''}
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #ddd;font-size:9px;letter-spacing:0.2em;color:#bbb;text-transform:uppercase;">Formulae · Film Lab Chemical Database</div>
+  `;
+  document.body.appendChild(card);
+
+  try {
+    const canvas = await html2canvas(card, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    const usable = pageW - margin * 2;
+
+    const imgData = canvas.toDataURL('image/png');
+    const ratio = canvas.height / canvas.width;
+    const imgW = usable;
+    const imgH = imgW * ratio;
+    const availH = pageH - margin * 2;
+
+    if (imgH <= availH) {
+      pdf.addImage(imgData, 'PNG', margin, margin, imgW, imgH);
+    } else {
+      const scale = availH / imgH;
+      pdf.addImage(imgData, 'PNG', margin, margin, imgW * scale, availH);
+    }
+
+    pdf.save(`${f.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}-formula.pdf`);
+    showToast(`✓ Exported ${f.name} as PDF`);
+  } catch(err) {
+    alert('PDF export failed. Try again.');
   } finally {
     document.body.removeChild(card);
   }

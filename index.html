@@ -125,27 +125,28 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 40px;
-    height: 64px;
-    background: rgba(10,9,5,0.92);
-    backdrop-filter: blur(20px);
+    padding: 0 48px;
+    height: 72px;
+    background: rgba(10,9,5,0.94);
+    backdrop-filter: blur(24px);
     border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 24px rgba(0,0,0,0.3);
   }
 
   .logo {
     font-family: 'Playfair Display', serif;
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 900;
     letter-spacing: -0.02em;
     color: var(--white);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
   }
 
   .logo-mark {
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
     border: 1.5px solid var(--gold);
     border-radius: 50%;
     display: flex;
@@ -156,8 +157,8 @@
 
   .logo-mark::after {
     content: '';
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     background: var(--gold);
     border-radius: 50%;
     animation: pulse-dot 3s ease-in-out infinite;
@@ -170,27 +171,27 @@
 
   .logo-sub {
     font-family: 'DM Mono', monospace;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 300;
     letter-spacing: 0.3em;
     color: var(--gold-dim);
     text-transform: uppercase;
-    margin-top: 2px;
+    margin-top: 3px;
     display: block;
   }
 
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
 
   .btn {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    padding: 8px 16px;
-    border-radius: 3px;
+    padding: 9px 18px;
+    border-radius: 6px;
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     letter-spacing: 0.08em;
@@ -535,7 +536,7 @@
   }
 
   .card-process {
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: 0.3em;
     color: var(--text-faint);
     text-transform: uppercase;
@@ -543,7 +544,7 @@
   }
 
   .card-status {
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: 0.12em;
     padding: 3px 8px;
     border-radius: 1px;
@@ -571,7 +572,7 @@
 
   .card-name {
     font-family: 'Playfair Display', serif;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--white);
     line-height: 1.2;
@@ -580,7 +581,7 @@
   }
 
   .card-category {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--gold-dim);
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -589,7 +590,7 @@
 
   .card-desc {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 14px;
+    font-size: 15px;
     font-style: italic;
     color: var(--text-dim);
     line-height: 1.6;
@@ -604,7 +605,7 @@
   }
 
   .ingredient-tag {
-    font-size: 10px;
+    font-size: 11px;
     padding: 3px 8px;
     border: 1px solid var(--border);
     border-radius: 1px;
@@ -643,20 +644,20 @@
   }
 
   .meta-label {
-    font-size: 8px;
+    font-size: 9px;
     letter-spacing: 0.25em;
     color: var(--text-faint);
     text-transform: uppercase;
   }
 
   .meta-value {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-dim);
     font-family: 'DM Mono', monospace;
   }
 
   .card-version {
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-faint);
     letter-spacing: 0.1em;
   }
@@ -716,10 +717,10 @@
   .modal {
     background: var(--surface);
     border: 1px solid var(--border-bright);
-    border-radius: 4px;
+    border-radius: 8px;
     width: 100%;
-    max-width: 560px;
-    max-height: 85vh;
+    max-width: 700px;
+    max-height: 88vh;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -742,7 +743,7 @@
   }
 
   .modal-eyebrow {
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 0.3em;
     color: var(--gold-dim);
     text-transform: uppercase;
@@ -751,7 +752,7 @@
 
   .modal-title {
     font-family: 'Playfair Display', serif;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
     color: var(--white);
     letter-spacing: -0.02em;
@@ -789,7 +790,7 @@
   }
 
   .detail-section-label {
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 0.3em;
     color: var(--gold-dim);
     text-transform: uppercase;
@@ -826,7 +827,7 @@
 
   .ingredient-table td {
     padding: 10px 0;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .ingredient-table td:first-child {
@@ -860,20 +861,20 @@
     margin: 0;
     white-space: nowrap;
     font-weight: 500;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text);
   }
   .scale-row input {
     width: 120px;
   }
   .scale-row .scale-hint {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-dim);
   }
 
   .detail-text {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
+    font-size: 17px;
     font-style: italic;
     color: var(--text-dim);
     line-height: 1.7;
@@ -893,7 +894,7 @@
   }
 
   .detail-box-label {
-    font-size: 8px;
+    font-size: 9px;
     letter-spacing: 0.25em;
     color: var(--text-faint);
     text-transform: uppercase;
@@ -901,7 +902,7 @@
   }
 
   .detail-box-value {
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text);
     font-family: 'DM Mono', monospace;
     letter-spacing: 0.03em;
@@ -1065,7 +1066,8 @@
 
   /* ─── RESPONSIVE ─── */
   @media (max-width: 768px) {
-    header { padding: 0 20px; }
+    header { padding: 0 20px; height: 64px; }
+    .logo { font-size: 22px; }
     .hero-bar { padding: 32px 20px 24px; }
     .hero-count { font-size: 48px; }
     .filter-bar { padding: 0 20px; }
@@ -1657,6 +1659,7 @@ function openFormula(id) {
     </div>` : ''}
     <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;flex-wrap:wrap;">
       <button class="btn btn-ghost" onclick="deleteFormula(${f.id})" style="color:#cc4444;border-color:rgba(196,48,48,0.3);">Delete</button>
+      <button class="btn btn-ghost" onclick="copyFormulaToClipboard(${f.id})">⎘ Copy</button>
       <button class="btn btn-ghost" onclick="exportFormulaPDF(${f.id})">↓ PDF</button>
       <button class="btn btn-ghost" onclick="exportFormulaJPEG(${f.id})">↓ JPEG</button>
       <button class="btn btn-ghost" onclick="openEditFormula(${f.id})">✎ Edit</button>
@@ -1852,6 +1855,31 @@ function deleteFormula(id) {
   localStorage.setItem('formulae_data', JSON.stringify(formulas));
   closeViewModal();
   renderGrid();
+}
+
+// ─── COPY FORMULA TO CLIPBOARD ───
+function copyFormulaToClipboard(id) {
+  const f = formulas.find(x => x.id === id);
+  if (!f) return;
+  const ings = f.ingredients || [];
+  let text = f.name + '\n';
+  text += f.process + ' · ' + f.category + ' · v' + (f.version || '1.0') + '\n';
+  if (f.desc) text += '\n' + f.desc + '\n';
+  if (ings.length) {
+    text += '\nIngredients:\n';
+    ings.forEach(ing => {
+      const part = ing.part && ing.part !== 'Stock' ? ' [' + ing.part + ']' : '';
+      text += '  ' + ing.name + ' — ' + ingAmount(ing) + (ing.unit ? ' ' + ing.unit : '') + part + '\n';
+    });
+  }
+  if (f.temp) text += '\nTemperature: ' + f.temp;
+  if (f.time) text += '\nTime: ' + f.time;
+  if (f.notes) text += '\n\nNotes: ' + f.notes;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✓ Formula copied to clipboard');
+  }).catch(() => {
+    showToast('⚠ Could not copy — try again');
+  });
 }
 
 // ─── EXPORT ───

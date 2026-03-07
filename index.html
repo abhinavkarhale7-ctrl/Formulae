@@ -1064,16 +1064,171 @@
     transform: translateX(-50%) translateY(0);
   }
 
+  /* ─── MOBILE MENU BUTTON ─── */
+  .mobile-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-menu-btn:hover {
+    border-color: var(--border-bright);
+    color: var(--text);
+  }
+
+  /* ─── MOBILE FAB (New Formula) ─── */
+  .mobile-fab {
+    display: none;
+    position: fixed;
+    bottom: 48px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: #0a0905;
+    border: none;
+    font-size: 24px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 300;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-fab:active {
+    transform: scale(0.92);
+  }
+
   /* ─── RESPONSIVE ─── */
   @media (max-width: 768px) {
-    header { padding: 0 20px; height: 64px; }
-    .logo { font-size: 22px; }
-    .hero-bar { padding: 32px 20px 24px; }
-    .hero-count { font-size: 48px; }
-    .filter-bar { padding: 0 20px; }
-    .grid-container { padding: 20px; gap: 1px; }
-    .hero-bar::before { font-size: 80px; }
-    .status-bar { padding: 0 20px; }
+    header {
+      padding: 0 16px;
+      height: auto;
+      min-height: 56px;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+    header > div:first-child {
+      display: flex;
+      align-items: center;
+      height: 56px;
+      flex: 1;
+      min-width: 0;
+    }
+    .logo { font-size: 20px; gap: 10px; }
+    .logo-mark { width: 28px; height: 28px; }
+    .logo-mark::after { width: 8px; height: 8px; }
+    .logo-sub { font-size: 8px; letter-spacing: 0.2em; }
+    .mobile-menu-btn { display: flex; }
+    .header-actions {
+      display: none;
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 0 0 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    .header-actions.mobile-open { display: flex; }
+    .header-actions .btn {
+      flex: 1 1 auto;
+      justify-content: center;
+      min-height: 40px;
+      font-size: 10px;
+    }
+    .header-actions .btn-primary { display: none; }
+
+    .mobile-fab { display: flex; }
+
+    .hero-bar { padding: 24px 16px 20px; }
+    .hero-count { font-size: 40px; gap: 8px; }
+    .hero-count span { font-size: 11px; }
+    .hero-title { font-size: 11px; margin-bottom: 8px; }
+    .hero-line { margin-top: 14px; }
+    .hero-bar::before { font-size: 60px; opacity: 0.5; }
+
+    .filter-bar {
+      padding: 0 16px;
+      flex-wrap: wrap;
+    }
+    .filter-section {
+      padding: 8px 0;
+      padding-right: 14px;
+      margin-right: 14px;
+    }
+    .filter-chip {
+      padding: 6px 10px;
+      font-size: 10px;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .filter-label { font-size: 8px; margin-right: 4px; }
+    .search-wrap {
+      width: 100%;
+      margin-left: 0;
+      padding: 8px 0 10px;
+      border-top: 1px solid var(--border);
+    }
+    .search-input { width: 100%; flex: 1; min-height: 36px; font-size: 12px; }
+
+    .grid-container {
+      padding: 12px;
+      gap: 1px;
+      grid-template-columns: 1fr;
+    }
+
+    .formula-card { padding: 20px 16px; }
+    .card-name { font-size: 18px; }
+    .card-desc { font-size: 14px; margin-bottom: 14px; }
+    .card-ingredients { margin-bottom: 14px; }
+
+    .modal-overlay { padding: 8px; }
+    .modal { max-height: 94vh; border-radius: 6px; }
+    .modal-header { padding: 20px 16px 16px; }
+    .modal-title { font-size: 24px; }
+    .modal-close { top: 16px; right: 16px; width: 36px; height: 36px; font-size: 16px; }
+    .modal-body { padding: 16px; }
+    .detail-section { margin-bottom: 20px; }
+    .detail-grid { grid-template-columns: 1fr; gap: 10px; }
+    .scale-row { gap: 8px; }
+    .scale-row input { width: 90px; }
+
+    .status-bar { padding: 0 16px; height: 28px; gap: 12px; }
+    .status-item { font-size: 9px; letter-spacing: 0.05em; }
+    .status-bar-right { gap: 12px; }
+
+    .toast { bottom: 44px; font-size: 10px; padding: 8px 16px; }
+  }
+
+  @media (max-width: 480px) {
+    .hero-count { font-size: 32px; }
+    .hero-bar::before { display: none; }
+    .filter-section {
+      border-right: none;
+      padding-right: 0;
+      margin-right: 0;
+      width: 100%;
+      flex-wrap: wrap;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .filter-section:last-of-type { border-bottom: none; }
+    .modal-overlay { padding: 0; }
+    .modal { max-height: 100vh; border-radius: 0; max-width: 100%; }
   }
 </style>
 </head>
@@ -1093,6 +1248,7 @@
       </div>
     </div>
   </div>
+  <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu" aria-expanded="false">☰</button>
   <div class="header-actions">
     <button class="btn btn-ghost" id="theme-btn" onclick="cycleTheme()" title="Switch theme">◑ Theme</button>
     <button class="btn btn-ghost" onclick="triggerImport()">↑ Import</button>
@@ -1241,6 +1397,8 @@
   </div>
 </div>
 
+<button class="mobile-fab" onclick="openNewFormula()" aria-label="New Formula">+</button>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1249,6 +1407,16 @@ let formulas = JSON.parse(localStorage.getItem('formulae_data') || '[]');
 let filters = { process: 'all', category: 'all', status: 'all' };
 let darkroom = false;
 let viewMode = localStorage.getItem('formulae_view_mode') || 'grid';
+
+// ─── MOBILE MENU ───
+function toggleMobileMenu() {
+  const actions = document.querySelector('.header-actions');
+  actions.classList.toggle('mobile-open');
+  const btn = document.getElementById('mobile-menu-btn');
+  const isOpen = actions.classList.contains('mobile-open');
+  btn.textContent = isOpen ? '✕' : '☰';
+  btn.setAttribute('aria-expanded', isOpen);
+}
 
 // ─── VIEW TOGGLE ───
 function toggleViewMode() {

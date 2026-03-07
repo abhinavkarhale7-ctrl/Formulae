@@ -1248,7 +1248,7 @@
       </div>
     </div>
   </div>
-  <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
+  <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu" aria-expanded="false">☰</button>
   <div class="header-actions">
     <button class="btn btn-ghost" id="theme-btn" onclick="cycleTheme()" title="Switch theme">◑ Theme</button>
     <button class="btn btn-ghost" onclick="triggerImport()">↑ Import</button>
@@ -1413,7 +1413,9 @@ function toggleMobileMenu() {
   const actions = document.querySelector('.header-actions');
   actions.classList.toggle('mobile-open');
   const btn = document.getElementById('mobile-menu-btn');
-  btn.textContent = actions.classList.contains('mobile-open') ? '✕' : '☰';
+  const isOpen = actions.classList.contains('mobile-open');
+  btn.textContent = isOpen ? '✕' : '☰';
+  btn.setAttribute('aria-expanded', isOpen);
 }
 
 // ─── VIEW TOGGLE ───

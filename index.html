@@ -2320,8 +2320,13 @@ function scaleRecipe() {
   const ings = f.ingredients || [];
   if (!targetVol || targetVol <= 0) { clearScale(); return; }
 
+  function isToMake(i) {
+    return (i.unit || '').toLowerCase() === 'to make' ||
+      (i.name || '').toLowerCase().includes('to make');
+  }
+
   function toMl(i) {
-    const unit = (i.unit || '').toLowerCase();
+    const unit = (i.unit || '').toLowerCase().replace(/to make/g, '').trim();
     const n = parseFloat(ingAmount(i));
     if (isNaN(n)) return 0;
     if (unit === 'ml') return n;
@@ -2329,25 +2334,25 @@ function scaleRecipe() {
     return 0;
   }
 
-  function isSolvent(i) {
-    const name = (i.name || '').toLowerCase();
-    return name.includes('water') || name.includes('deionised') || name.includes('deionized');
-  }
-
-  const parts = {};
+  const partGroups = {};
   ings.forEach(i => {
     const part = i.part || '_default';
-    if (!parts[part]) parts[part] = { water: 0, liquid: 0 };
+    if (!partGroups[part]) partGroups[part] = { makeUpMl: 0, liquidMl: 0, hasToMake: false };
     const ml = toMl(i);
     if (ml > 0) {
-      if (isSolvent(i)) { parts[part].water += ml; }
-      else { parts[part].liquid += ml; }
+      if (isToMake(i)) {
+        // Use the largest "to make" volume in case there are multiple; it defines the final volume for the part
+        if (ml > partGroups[part].makeUpMl) partGroups[part].makeUpMl = ml;
+        partGroups[part].hasToMake = true;
+      } else {
+        partGroups[part].liquidMl += ml;
+      }
     }
   });
 
   let baseMl = 0;
-  for (const p of Object.values(parts)) {
-    baseMl += p.water > 0 ? p.water : p.liquid;
+  for (const p of Object.values(partGroups)) {
+    baseMl += p.hasToMake ? p.makeUpMl : p.liquidMl;
   }
   if (baseMl <= 0) baseMl = 1000;
 

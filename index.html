@@ -2350,13 +2350,13 @@ function scaleRecipe() {
     }
   });
 
-  let baseMl = 0;
-  for (const p of Object.values(partGroups)) {
-    baseMl += p.hasToMake ? p.makeUpMl : p.liquidMl;
+  const DEFAULT_BASE_ML = 1000;
+  const partBaseMl = {};
+  for (const [partKey, g] of Object.entries(partGroups)) {
+    let base = g.hasToMake ? g.makeUpMl : g.liquidMl;
+    if (base <= 0) base = DEFAULT_BASE_ML;
+    partBaseMl[partKey] = targetVol / base;
   }
-  if (baseMl <= 0) baseMl = 1000;
-
-  const factor = targetVol / baseMl;
 
   document.querySelectorAll('.scaled-col').forEach(el => el.style.display = '');
 
@@ -2364,6 +2364,8 @@ function scaleRecipe() {
     const cell = document.getElementById('scaled-' + idx);
     if (!cell) return;
     cell.style.display = '';
+    const partKey = i.part || '_default';
+    const factor = partBaseMl[partKey] ?? (targetVol / DEFAULT_BASE_ML);
     const n = parseFloat(ingAmount(i));
     if (!isNaN(n)) {
       const scaled = n * factor;

@@ -5,1231 +5,1108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulae — Film Lab Chemical Database</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0a0905">
+<meta name="theme-color" content="#0b0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Formulae">
 <link rel="apple-touch-icon" href="icons/icon-512x512.png">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #0a0905;
-    --surface: #100f0a;
-    --surface2: #171510;
-    --border: rgba(200,170,100,0.15);
-    --border-bright: rgba(200,170,100,0.35);
-    --gold: #d4b46e;
-    --gold-dim: rgba(212,180,110,0.7);
-    --amber: #eeaa38;
-    --red: #c43030;
-    --red-glow: rgba(196,48,48,0.15);
-    --text: #ede6d4;
-    --text-dim: rgba(237,230,212,0.7);
-    --text-faint: rgba(237,230,212,0.45);
-    --white: #f5f0e8;
-    --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+/* ─── CSS VARIABLES ─── */
+:root {
+  --bg: #0b0f14;
+  --bg-secondary: #111822;
+  --surface: rgba(255,255,255,0.06);
+  --surface-hover: rgba(255,255,255,0.10);
+  --border: rgba(255,255,255,0.08);
+  --border-bright: rgba(255,255,255,0.15);
+  --accent: #00e5ff;
+  --accent-dim: rgba(0,229,255,0.7);
+  --accent-glow: rgba(0,229,255,0.15);
+  --accent-subtle: rgba(0,229,255,0.08);
+  --red: #ff4444;
+  --red-glow: rgba(255,68,68,0.15);
+  --green: #00e676;
+  --orange: #ffab40;
+  --purple: #b388ff;
+  --text: #e6edf3;
+  --text-dim: #9aa7b2;
+  --text-faint: rgba(154,167,178,0.5);
+  --white: #f0f6fc;
+  --sidebar-width: 240px;
+  --gold: #00e5ff;
+  --gold-dim: rgba(0,229,255,0.7);
+  --amber: #ffab40;
+}
+
+/* ─── DARKROOM MODE ─── */
+.darkroom-mode {
+  --bg: #0d0000;
+  --bg-secondary: #120000;
+  --surface: rgba(180,30,30,0.12);
+  --surface-hover: rgba(180,30,30,0.18);
+  --border: rgba(180,30,30,0.25);
+  --border-bright: rgba(220,60,60,0.45);
+  --accent: #ff3333;
+  --accent-dim: rgba(255,51,51,0.7);
+  --accent-glow: rgba(255,51,51,0.15);
+  --accent-subtle: rgba(255,51,51,0.08);
+  --gold: #ff3333;
+  --gold-dim: rgba(255,51,51,0.7);
+  --amber: #ff5555;
+  --text: #ff4444;
+  --text-dim: rgba(255,68,68,0.75);
+  --text-faint: rgba(200,55,55,0.5);
+  --white: #ff3333;
+}
+
+/* ─── LIGHT MODE ─── */
+.light-mode {
+  --bg: #f0f2f5;
+  --bg-secondary: #e4e8ec;
+  --surface: rgba(0,0,0,0.04);
+  --surface-hover: rgba(0,0,0,0.07);
+  --border: rgba(0,0,0,0.1);
+  --border-bright: rgba(0,0,0,0.18);
+  --accent: #0097a7;
+  --accent-dim: rgba(0,151,167,0.7);
+  --accent-glow: rgba(0,151,167,0.12);
+  --accent-subtle: rgba(0,151,167,0.06);
+  --gold: #0097a7;
+  --gold-dim: rgba(0,151,167,0.7);
+  --amber: #e65100;
+  --red: #c62828;
+  --red-glow: rgba(198,40,40,0.1);
+  --text: #1a2332;
+  --text-dim: rgba(26,35,50,0.7);
+  --text-faint: rgba(26,35,50,0.45);
+  --white: #0d1520;
+}
+
+/* ─── BASE ─── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.5s ease, color 0.5s ease;
+}
+
+/* ─── BACKGROUND GRID ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+.light-mode body::before {
+  background-image:
+    linear-gradient(rgba(0,151,167,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,151,167,0.04) 1px, transparent 1px);
+}
+.darkroom-mode body::before {
+  background-image:
+    linear-gradient(rgba(255,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,0,0,0.03) 1px, transparent 1px);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: -20%;
+  left: 30%;
+  width: 60vw;
+  height: 60vh;
+  background: radial-gradient(ellipse, rgba(0,229,255,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  transition: all 0.8s ease;
+}
+.darkroom-mode body::after {
+  background: radial-gradient(ellipse, rgba(255,0,0,0.05) 0%, transparent 70%);
+}
+.light-mode body::after {
+  background: radial-gradient(ellipse, rgba(0,151,167,0.04) 0%, transparent 70%);
+}
+
+/* ─── SAFELIGHT & VIGNETTE ─── */
+.safelight-overlay {
+  position: fixed; inset: 0;
+  background: rgba(120,0,0,0.08);
+  pointer-events: none; z-index: 900;
+  opacity: 0; transition: opacity 0.8s ease;
+  mix-blend-mode: multiply;
+}
+.darkroom-mode .safelight-overlay { opacity: 1; }
+
+.vignette {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%);
+  pointer-events: none; z-index: 1;
+}
+.light-mode .vignette { background: none; }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: var(--sidebar-width);
+  background: rgba(11,15,20,0.95);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-bright) transparent;
+}
+.light-mode .sidebar {
+  background: rgba(240,242,245,0.97);
+}
+.darkroom-mode .sidebar {
+  background: rgba(13,0,0,0.97);
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.logo {
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-mark {
+  width: 32px; height: 32px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; flex-shrink: 0;
+}
+.logo-mark::after {
+  content: '';
+  width: 10px; height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse-dot 3s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.6); }
+}
+.logo-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--white); letter-spacing: -0.02em;
+}
+.logo-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 300;
+  letter-spacing: 0.15em; color: var(--text-dim);
+  text-transform: uppercase; display: block; margin-top: 2px;
+}
+
+.sidebar-search {
+  padding: 16px 16px 12px; flex-shrink: 0;
+}
+.sidebar-search input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.sidebar-search input::placeholder { color: var(--text-faint); }
+.sidebar-search input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: var(--surface-hover);
+}
+
+.sidebar-nav {
+  flex: 1; padding: 8px 0; overflow-y: auto;
+}
+.sidebar-section-title {
+  font-size: 9px; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--text-faint);
+  padding: 16px 20px 6px; font-weight: 600;
+}
+.sidebar-item {
+  width: 100%; text-align: left;
+  padding: 9px 20px 9px 20px;
+  background: transparent; border: none;
+  border-left: 3px solid transparent;
+  color: var(--text-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-item:hover {
+  background: rgba(0,229,255,0.04);
+  color: var(--text);
+}
+.sidebar-item.active {
+  background: rgba(0,229,255,0.08);
+  border-left-color: var(--accent);
+  color: var(--accent);
+  font-weight: 500;
+}
+.light-mode .sidebar-item:hover { background: rgba(0,151,167,0.06); }
+.light-mode .sidebar-item.active {
+  background: rgba(0,151,167,0.08);
+  border-left-color: var(--accent);
+  color: var(--accent);
+}
+.darkroom-mode .sidebar-item:hover { background: rgba(255,0,0,0.06); }
+.darkroom-mode .sidebar-item.active {
+  background: rgba(255,51,51,0.1);
+  border-left-color: var(--accent);
+  color: var(--accent);
+}
+
+.sidebar-icon {
+  font-size: 14px; width: 18px;
+  text-align: center; flex-shrink: 0;
+  opacity: 0.6;
+}
+.sidebar-item.active .sidebar-icon { opacity: 1; }
+
+.sidebar-footer {
+  padding: 16px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; flex-shrink: 0;
+}
+.sidebar-footer button {
+  flex: 1; padding: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.sidebar-footer button:hover {
+  color: var(--text); border-color: var(--border-bright);
+  background: var(--surface-hover);
+}
+
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 199;
+  backdrop-filter: blur(4px);
+}
+.sidebar-overlay.open { display: block; }
+
+/* ─── MAIN CONTENT ─── */
+.main-content {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh; position: relative; z-index: 2;
+}
+
+/* ─── TOP BAR ─── */
+.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center;
+  padding: 0 28px; height: 56px;
+  background: rgba(11,15,20,0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.light-mode .top-bar { background: rgba(240,242,245,0.92); }
+.darkroom-mode .top-bar { background: rgba(13,0,0,0.94); }
+
+.top-bar-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px; font-weight: 600;
+  color: var(--text); letter-spacing: 0.02em;
+}
+.hamburger-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: transparent; color: var(--text-dim);
+  font-size: 18px; cursor: pointer;
+  margin-right: 12px; flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.hamburger-btn:hover { border-color: var(--border-bright); color: var(--text); }
+
+.top-bar-actions {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s ease;
+  border: none; text-decoration: none;
+}
+.btn-ghost {
+  background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  color: var(--text); border-color: var(--border-bright);
+  background: var(--surface);
+  transform: translateY(-1px);
+}
+.btn-primary {
+  background: var(--accent); color: #0b0f14;
+  font-weight: 600;
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+.btn-darkroom {
+  background: transparent; color: var(--red);
+  border: 1px solid rgba(255,68,68,0.3);
+  font-size: 11px;
+}
+.btn-darkroom:hover, .btn-darkroom.active {
+  background: var(--red-glow);
+  border-color: var(--red);
+  box-shadow: 0 0 16px rgba(255,68,68,0.15);
+}
+
+/* ─── HERO BAR ─── */
+.hero-bar {
+  padding: 32px 28px 24px; position: relative; overflow: hidden;
+}
+.hero-bar::before {
+  content: 'FORMULAE';
+  position: absolute; right: -10px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 120px; font-weight: 700;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0,229,255,0.05);
+  pointer-events: none; letter-spacing: -0.04em;
+  user-select: none;
+}
+.hero-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 400;
+  letter-spacing: 0.3em; color: var(--accent-dim);
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.hero-count {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 48px; font-weight: 700;
+  line-height: 1; color: var(--white);
+  letter-spacing: -0.03em;
+  display: flex; align-items: baseline; gap: 12px;
+}
+.hero-count span {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 400;
+  color: var(--text-dim);
+}
+.hero-line {
+  width: 50px; height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  margin-top: 16px; border-radius: 1px;
+}
+
+/* ─── GRID ─── */
+.grid-container {
+  padding: 20px 28px 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+.grid-container.list-view {
+  grid-template-columns: 1fr; gap: 8px;
+}
+
+/* ─── FORMULA CARD (Glass Panel) ─── */
+.formula-card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+  padding: 22px;
+  cursor: pointer; position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  opacity: 0; transform: translateY(12px);
+  animation: card-in 0.4s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+.formula-card:nth-child(1) { animation-delay: 0.03s; }
+.formula-card:nth-child(2) { animation-delay: 0.06s; }
+.formula-card:nth-child(3) { animation-delay: 0.09s; }
+.formula-card:nth-child(4) { animation-delay: 0.12s; }
+.formula-card:nth-child(5) { animation-delay: 0.15s; }
+.formula-card:nth-child(6) { animation-delay: 0.18s; }
+.formula-card:nth-child(7) { animation-delay: 0.21s; }
+.formula-card:nth-child(8) { animation-delay: 0.24s; }
+
+@keyframes card-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.formula-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0,229,255,0.15);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  background: rgba(255,255,255,0.09);
+}
+.light-mode .formula-card {
+  background: rgba(255,255,255,0.7);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.08);
+}
+.light-mode .formula-card:hover {
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  border-color: rgba(0,151,167,0.2);
+}
+
+.card-accent {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; border-radius: 3px 0 0 3px;
+}
+.card-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; margin-bottom: 12px;
+}
+.card-process {
+  font-size: 10px; letter-spacing: 0.2em;
+  color: var(--text-faint); text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+}
+.card-status {
+  font-size: 9px; letter-spacing: 0.1em;
+  padding: 3px 8px; border-radius: 4px;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+.status-tested {
+  color: var(--green);
+  border: 1px solid rgba(0,230,118,0.3);
+  background: rgba(0,230,118,0.08);
+}
+.status-experimental {
+  color: var(--orange);
+  border: 1px solid rgba(255,171,64,0.3);
+  background: rgba(255,171,64,0.08);
+}
+.status-archived {
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  background: transparent;
+}
+.card-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px; font-weight: 600;
+  color: var(--white); line-height: 1.2;
+  margin-bottom: 4px; letter-spacing: -0.01em;
+}
+.card-category {
+  font-size: 11px; color: var(--accent-dim);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.card-desc {
+  font-size: 13px; color: var(--text-dim);
+  line-height: 1.6; margin-bottom: 16px;
+  font-style: italic;
+}
+.card-ingredients {
+  display: flex; flex-wrap: wrap;
+  gap: 6px; margin-bottom: 16px;
+}
+.ingredient-tag {
+  font-size: 11px; padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text-faint);
+  transition: all 0.15s ease;
+}
+.formula-card:hover .ingredient-tag {
+  border-color: var(--border-bright); color: var(--text-dim);
+}
+.ingredient-tag.more {
+  color: var(--accent-dim);
+  border-color: rgba(0,229,255,0.15);
+}
+.card-footer {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding-top: 12px; border-top: 1px solid var(--border);
+}
+.card-meta { display: flex; gap: 16px; }
+.card-meta-item {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.meta-label {
+  font-size: 9px; letter-spacing: 0.2em;
+  color: var(--text-faint); text-transform: uppercase;
+}
+.meta-value {
+  font-size: 12px; color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+.card-version {
+  font-size: 10px; color: var(--text-faint);
+  letter-spacing: 0.1em;
+}
+
+/* ─── LIST VIEW ─── */
+.grid-container.list-view .formula-card {
+  padding: 14px 22px;
+  display: flex; flex-direction: row;
+  align-items: center; gap: 16px;
+  border-radius: 8px;
+}
+.grid-container.list-view .card-accent {
+  position: absolute; left: 0; top: 0;
+  width: 3px !important; height: 100% !important;
+  border-radius: 3px 0 0 3px;
+}
+.grid-container.list-view .card-header {
+  display: flex; align-items: center;
+  gap: 10px; flex-shrink: 0; min-width: 90px;
+  margin-bottom: 0;
+}
+.grid-container.list-view .card-name {
+  font-size: 14px; flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; margin: 0;
+}
+.grid-container.list-view .card-category,
+.grid-container.list-view .card-desc,
+.grid-container.list-view .card-ingredients { display: none; }
+.grid-container.list-view .card-footer {
+  border-top: none; padding-top: 0; flex-shrink: 0;
+}
+.grid-container.list-view .card-status { font-size: 8px; }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 40px; text-align: center; gap: 12px;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+.empty-icon { font-size: 48px; opacity: 0.3; margin-bottom: 8px; }
+.empty-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px; color: var(--text-dim);
+}
+.empty-sub { font-size: 12px; color: var(--text-faint); }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(5,8,14,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: rgba(17,24,34,0.97);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-bright);
+  border-radius: 16px;
+  width: 100%; max-width: 720px;
+  max-height: 88vh; overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  transform: translateY(16px) scale(0.98);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.light-mode .modal {
+  background: rgba(255,255,255,0.97);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.darkroom-mode .modal {
+  background: rgba(18,0,0,0.98);
+}
+.modal-overlay.open .modal {
+  transform: translateY(0) scale(1);
+}
+.modal-header {
+  padding: 28px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: inherit; z-index: 10;
+  border-radius: 16px 16px 0 0;
+}
+.modal-eyebrow {
+  font-size: 11px; letter-spacing: 0.2em;
+  color: var(--accent-dim); text-transform: uppercase;
+  margin-bottom: 6px; font-weight: 500;
+}
+.modal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px; font-weight: 700;
+  color: var(--white); letter-spacing: -0.02em;
+}
+.modal-close {
+  position: absolute; top: 20px; right: 20px;
+  width: 32px; height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px; background: transparent;
+  color: var(--text-dim); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: all 0.15s ease;
+}
+.modal-close:hover {
+  border-color: var(--border-bright);
+  color: var(--text); background: var(--surface);
+}
+.modal-body { padding: 24px 28px 28px; }
+
+/* ─── DETAIL SECTIONS ─── */
+.detail-section { margin-bottom: 24px; }
+.detail-section-label {
+  font-size: 10px; letter-spacing: 0.2em;
+  color: var(--accent-dim); text-transform: uppercase;
+  margin-bottom: 10px; font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+}
+.detail-section-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: var(--border);
+}
+.detail-text {
+  font-size: 14px; color: var(--text-dim);
+  line-height: 1.7; font-style: italic;
+}
+
+/* ─── GLASS PANEL (for sections inside modal) ─── */
+.glass-panel {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.light-mode .glass-panel {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.06);
+}
+
+/* ─── INGREDIENT TABLE ─── */
+.ingredient-table {
+  width: 100%; border-collapse: collapse;
+}
+.ingredient-table tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s ease;
+}
+.ingredient-table tr:last-child { border-bottom: none; }
+.ingredient-table tr:hover { background: rgba(0,229,255,0.03); }
+.light-mode .ingredient-table tr:hover { background: rgba(0,151,167,0.03); }
+.ingredient-table th {
+  text-align: left; font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-faint); padding: 6px 0;
+  font-weight: 500;
+}
+.ingredient-table td {
+  padding: 10px 0; font-size: 14px;
+}
+.ingredient-table td:first-child {
+  color: var(--text); font-weight: 600;
+}
+.ingredient-table td:last-child,
+.ingredient-table td.qty-col {
+  text-align: right; color: var(--accent-dim);
+  font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+.ingredient-table .scaled-col {
+  color: var(--orange); font-weight: 600;
+  text-align: right; font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+/* ─── SCALE ROW ─── */
+.scale-row {
+  display: flex; align-items: center;
+  gap: 10px; flex-wrap: wrap;
+}
+.scale-row label {
+  margin: 0; white-space: nowrap;
+  font-weight: 500; font-size: 13px; color: var(--text);
+}
+.scale-row input { width: 120px; }
+.scale-row .scale-hint {
+  font-size: 12px; color: var(--text-dim);
+}
+
+/* ─── DETAIL GRID (temp/time) ─── */
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.detail-box {
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.light-mode .detail-box {
+  background: rgba(0,0,0,0.02);
+}
+.detail-box-label {
+  font-size: 9px; letter-spacing: 0.2em;
+  color: var(--text-faint); text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.detail-box-value {
+  font-size: 15px; color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── FORM INPUTS (shared style) ─── */
+.form-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+.form-input::placeholder { color: var(--text-faint); }
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+select.form-input { cursor: pointer; }
+textarea.form-input { resize: vertical; }
+
+/* ─── CHEMISTRY ANALYSIS ─── */
+.analysis-toggle {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding: 12px 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.analysis-toggle label {
+  font-size: 13px; color: var(--text-dim); cursor: pointer;
+  flex: 1;
+}
+.toggle-switch {
+  position: relative; width: 40px; height: 22px;
+  flex-shrink: 0;
+}
+.toggle-switch input {
+  opacity: 0; width: 0; height: 0;
+}
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: var(--surface-hover);
+  border-radius: 22px; cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  height: 16px; width: 16px;
+  left: 2px; bottom: 2px;
+  background: var(--text-dim);
+  border-radius: 50%; transition: all 0.2s ease;
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(18px);
+  background: var(--accent);
+}
+
+.analysis-panel {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+.analysis-panel.visible { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.analysis-block {
+  margin-bottom: 14px; padding: 14px;
+  background: rgba(0,229,255,0.03);
+  border: 1px solid rgba(0,229,255,0.08);
+  border-radius: 8px;
+}
+.light-mode .analysis-block {
+  background: rgba(0,151,167,0.04);
+  border-color: rgba(0,151,167,0.1);
+}
+.analysis-label {
+  font-size: 10px; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 8px; font-weight: 600;
+}
+.analysis-value {
+  font-size: 16px; font-weight: 600; color: var(--white);
+  font-family: 'Space Grotesk', sans-serif;
+}
+.analysis-badge {
+  display: inline-block; padding: 4px 12px;
+  background: var(--accent-subtle); border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 6px; color: var(--accent);
+  font-size: 13px; font-weight: 500;
+}
+.analysis-roles { display: flex; flex-direction: column; gap: 6px; }
+.role-item {
+  display: flex; align-items: center;
+  gap: 8px; padding: 5px 0;
+  font-size: 13px; flex-wrap: wrap;
+}
+.role-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%; flex-shrink: 0;
+}
+.role-name { font-weight: 600; color: var(--text); }
+.role-tag {
+  font-size: 10px; padding: 2px 8px;
+  border: 1px solid; border-radius: 4px;
+  font-weight: 500;
+}
+.role-desc { color: var(--text-dim); font-size: 12px; }
+
+.analysis-chars {
+  list-style: none; padding: 0; margin: 0;
+}
+.analysis-chars li {
+  padding: 4px 0; color: var(--text-dim); font-size: 13px;
+}
+.analysis-chars li::before {
+  content: '▸ '; color: var(--accent);
+}
+
+.shelf-life-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 6px;
+}
+.shelf-item { display: flex; flex-direction: column; gap: 3px; }
+.shelf-label { font-size: 11px; color: var(--text-dim); }
+.shelf-value {
+  font-size: 14px; color: var(--text); font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+}
+.shelf-reason {
+  font-size: 12px; color: var(--text-faint);
+  font-style: italic;
+}
+
+/* ─── STATUS BAR ─── */
+.status-bar {
+  position: fixed; bottom: 0;
+  left: var(--sidebar-width); right: 0;
+  height: 30px;
+  background: rgba(11,15,20,0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 28px; gap: 20px; z-index: 100;
+}
+.light-mode .status-bar { background: rgba(240,242,245,0.95); }
+.darkroom-mode .status-bar { background: rgba(13,0,0,0.95); }
+.status-item {
+  display: flex; align-items: center;
+  gap: 6px; font-size: 10px;
+  color: var(--text-faint); letter-spacing: 0.08em;
+}
+.status-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--green);
+  animation: pulse-status 4s ease-in-out infinite;
+}
+@keyframes pulse-status {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.status-bar-right {
+  margin-left: auto; display: flex; gap: 20px;
+}
+
+/* ─── AUTOCOMPLETE ─── */
+.ac-dropdown {
+  position: absolute;
+  top: calc(100% + 3px); left: 0; right: 0;
+  background: #141c28;
+  border: 1px solid var(--border-bright);
+  border-radius: 8px; z-index: 9000;
+  max-height: 200px; overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  display: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.light-mode .ac-dropdown { background: #fff; }
+.ac-dropdown.open { display: block; }
+.ac-item {
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s ease;
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover, .ac-item.focused {
+  background: var(--accent-subtle);
+  color: var(--white);
+}
+.ac-item mark {
+  background: transparent; color: var(--accent);
+  font-weight: 600;
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed; bottom: 48px; left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: rgba(17,24,34,0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-bright);
+  color: var(--accent);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 500;
+  padding: 10px 20px; border-radius: 8px;
+  z-index: 9999; opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── MOBILE FAB ─── */
+.mobile-fab {
+  display: none; position: fixed;
+  bottom: 48px; right: 16px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--accent); color: #0b0f14;
+  border: none; font-size: 24px; font-weight: 700;
+  align-items: center; justify-content: center;
+  cursor: pointer; z-index: 300;
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transition: all 0.2s ease;
+}
+.mobile-fab:active { transform: scale(0.92); }
+
+/* ─── DARKROOM ENHANCEMENTS ─── */
+.darkroom-mode .formula-card { font-size: 15px; }
+.darkroom-mode .card-name { font-size: 24px; }
+.darkroom-mode .ingredient-table td { font-size: 16px; padding: 12px 0; }
+.darkroom-mode .modal-title { font-size: 32px; }
+.darkroom-mode .detail-text { font-size: 16px; }
+.darkroom-mode .detail-box-value { font-size: 18px; }
+
+/* ─── PART LABELS ─── */
+.part-header {
+  font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 5px 10px; margin-bottom: 0;
+  font-family: 'JetBrains Mono', monospace;
+  border-left: 2px solid;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%); z-index: 300;
   }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; }
+  .status-bar { left: 0; }
+  .hamburger-btn { display: flex; }
+  .mobile-fab { display: flex; }
+  .top-bar-actions .btn-primary { display: none; }
 
-  .darkroom-mode {
-    --bg: #0d0000;
-    --surface: #120000;
-    --surface2: #1a0000;
-    --border: rgba(180,30,30,0.25);
-    --border-bright: rgba(220,60,60,0.45);
-    --gold: #dd4444;
-    --gold-dim: rgba(220,60,60,0.7);
-    --amber: #ff5555;
-    --text: #dd5555;
-    --text-dim: rgba(200,55,55,0.75);
-    --text-faint: rgba(180,45,45,0.5);
-    --white: #ee4444;
-  }
+  .hero-bar { padding: 20px 16px 16px; }
+  .hero-count { font-size: 36px; gap: 8px; }
+  .hero-count span { font-size: 11px; }
+  .hero-title { font-size: 10px; margin-bottom: 6px; }
+  .hero-bar::before { font-size: 50px; }
 
-  .light-mode {
-    --bg: #f4f0e8;
-    --surface: #faf8f4;
-    --surface2: #ede9df;
-    --border: rgba(80,60,20,0.15);
-    --border-bright: rgba(80,60,20,0.32);
-    --gold: #7a5a10;
-    --gold-dim: rgba(100,75,20,0.7);
-    --amber: #a05508;
-    --red: #a02020;
-    --red-glow: rgba(160,32,32,0.1);
-    --text: #22190f;
-    --text-dim: rgba(34,25,15,0.72);
-    --text-faint: rgba(34,25,15,0.48);
-    --white: #1a1410;
-  }
-
-  .light-mode body::after {
-    background: radial-gradient(ellipse, rgba(180,140,60,0.06) 0%, transparent 70%);
-  }
-
-  .light-mode body::before {
-    opacity: 0.15;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    min-height: 100vh;
-    overflow-x: hidden;
-    transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
-  }
-
-  /* Grain overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: var(--grain);
-    background-size: 256px;
-    pointer-events: none;
-    z-index: 1000;
-    opacity: 0.6;
-  }
-
-  /* Ambient light */
-  body::after {
-    content: '';
-    position: fixed;
-    top: -40%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80vw;
-    height: 60vh;
-    background: radial-gradient(ellipse, rgba(200,170,100,0.04) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-    transition: all 0.8s ease;
-  }
-
-  .darkroom-mode body::after {
-    background: radial-gradient(ellipse, rgba(196,48,48,0.06) 0%, transparent 70%);
-  }
-
-  /* ─── HEADER ─── */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 48px;
-    height: 72px;
-    background: rgba(10,9,5,0.94);
-    backdrop-filter: blur(24px);
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 1px 24px rgba(0,0,0,0.3);
-  }
-
-  .logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 26px;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    color: var(--white);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .logo-mark {
-    width: 34px;
-    height: 34px;
-    border: 1.5px solid var(--gold);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-
-  .logo-mark::after {
-    content: '';
-    width: 10px;
-    height: 10px;
-    background: var(--gold);
-    border-radius: 50%;
-    animation: pulse-dot 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.6); }
-  }
-
-  .logo-sub {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    font-weight: 300;
-    letter-spacing: 0.3em;
-    color: var(--gold-dim);
-    text-transform: uppercase;
-    margin-top: 3px;
-    display: block;
-  }
-
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 18px;
-    border-radius: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    text-decoration: none;
-  }
-
-  .btn-ghost {
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px solid var(--border);
-  }
-
-  .btn-ghost:hover {
-    color: var(--text);
-    border-color: var(--border-bright);
-    background: rgba(200,170,100,0.05);
-  }
-
-  .btn-primary {
-    background: var(--gold);
-    color: #0a0905;
-    font-weight: 500;
-  }
-
-  .btn-primary:hover {
-    background: var(--amber);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 20px rgba(200,170,100,0.3);
-  }
-
-  .btn-darkroom {
-    background: transparent;
-    color: var(--red);
-    border: 1px solid rgba(196,48,48,0.3);
-    font-size: 10px;
-    letter-spacing: 0.15em;
-  }
-
-  .btn-darkroom:hover, .btn-darkroom.active {
-    background: var(--red-glow);
-    border-color: var(--red);
-    box-shadow: 0 0 20px rgba(196,48,48,0.2), inset 0 0 10px rgba(196,48,48,0.05);
-  }
-
-  .btn-darkroom.active {
-    color: #ff5555;
-  }
-
-  /* ─── HERO BAR ─── */
-  .hero-bar {
-    padding: 48px 40px 32px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero-bar::before {
-    content: 'FORMULAE';
-    position: absolute;
-    right: -10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-family: 'Playfair Display', serif;
-    font-size: 140px;
-    font-weight: 900;
-    color: transparent;
-    -webkit-text-stroke: 1px rgba(200,170,100,0.06);
-    pointer-events: none;
-    letter-spacing: -0.04em;
-    user-select: none;
-  }
-
-  .hero-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 13px;
-    font-weight: 300;
-    letter-spacing: 0.35em;
-    color: var(--gold-dim);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .hero-count {
-    font-family: 'Playfair Display', serif;
-    font-size: 64px;
-    font-weight: 900;
-    line-height: 1;
-    color: var(--white);
-    letter-spacing: -0.03em;
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-  }
-
-  .hero-count span {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    font-weight: 300;
-    color: var(--text-dim);
-    letter-spacing: 0.1em;
-  }
-
-  .hero-line {
-    width: 60px;
-    height: 1px;
-    background: linear-gradient(90deg, var(--gold), transparent);
-    margin-top: 20px;
-  }
-
-  /* ─── FILTER BAR ─── */
-  .filter-bar {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    padding: 0 40px;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .filter-bar::-webkit-scrollbar { display: none; }
-
-  .filter-section {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 12px 0;
-    border-right: 1px solid var(--border);
-    padding-right: 20px;
-    margin-right: 20px;
-    flex-shrink: 0;
-  }
-
-  .filter-section:last-of-type {
-    border-right: none;
-  }
-
-  .filter-label {
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    margin-right: 8px;
-    white-space: nowrap;
-  }
-
-  .filter-chip {
-    padding: 4px 12px;
-    border-radius: 2px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    border: 1px solid transparent;
-    color: var(--text-dim);
-    background: transparent;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-
-  .filter-chip:hover {
-    color: var(--text);
-    border-color: var(--border);
-  }
-
-  .filter-chip.active {
-    color: var(--gold);
-    border-color: var(--border-bright);
-    background: rgba(200,170,100,0.06);
-  }
-
-  .search-wrap {
-    margin-left: auto;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 0;
-  }
-
-  .search-input {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    padding: 5px 12px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    width: 180px;
-    transition: all 0.2s ease;
-    outline: none;
-  }
-
-  .search-input::placeholder { color: var(--text-faint); }
-
-  .search-input:focus {
-    border-color: var(--border-bright);
-    background: rgba(200,170,100,0.03);
-    box-shadow: 0 0 0 3px rgba(200,170,100,0.05);
-  }
-
-  /* ─── VIEW TOGGLE ─── */
-  .view-toggle-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    color: var(--text-dim);
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    padding: 4px 12px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .view-toggle-btn:hover {
-    color: var(--text);
-    border-color: var(--border-bright);
-    background: rgba(200,170,100,0.05);
-  }
-
-  /* ─── GRID ─── */
   .grid-container {
-    padding: 32px 40px 80px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1px;
-    background: var(--border-bright);
-  }
-
-  /* ─── LIST VIEW ─── */
-  .grid-container.list-view {
+    padding: 12px; gap: 12px;
     grid-template-columns: 1fr;
-    gap: 1px;
   }
-  .grid-container.list-view .formula-card {
-    padding: 14px 28px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 20px;
-  }
-  .grid-container.list-view .card-accent {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 3px !important;
-    height: 100% !important;
-    border-radius: 0;
-  }
-  .grid-container.list-view .card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    min-width: 100px;
-  }
-  .grid-container.list-view .card-name {
-    font-size: 14px;
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin: 0;
-  }
-  .grid-container.list-view .card-category,
-  .grid-container.list-view .card-desc,
-  .grid-container.list-view .card-ingredients,
-  .grid-container.list-view .formula-card::before {
-    display: none;
-  }
-  .grid-container.list-view .card-footer {
-    border-top: none;
-    padding-top: 0;
-    flex-shrink: 0;
-  }
-  .grid-container.list-view .card-status {
-    font-size: 8px;
-  }
-
-  /* ─── FORMULA CARD ─── */
-  .formula-card {
-    background: var(--surface);
-    padding: 28px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: background 0.2s ease;
-    opacity: 0;
-    transform: translateY(16px);
-    animation: card-in 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
-  }
-
-  .formula-card:nth-child(1)  { animation-delay: 0.05s; }
-  .formula-card:nth-child(2)  { animation-delay: 0.10s; }
-  .formula-card:nth-child(3)  { animation-delay: 0.15s; }
-  .formula-card:nth-child(4)  { animation-delay: 0.20s; }
-  .formula-card:nth-child(5)  { animation-delay: 0.25s; }
-  .formula-card:nth-child(6)  { animation-delay: 0.30s; }
-  .formula-card:nth-child(7)  { animation-delay: 0.35s; }
-  .formula-card:nth-child(8)  { animation-delay: 0.40s; }
-
-  @keyframes card-in {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .formula-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(200,170,100,0.04) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .formula-card:hover {
-    background: var(--surface2);
-  }
-
-  .formula-card:hover::before {
-    opacity: 1;
-  }
-
-  /* Colored accent bar from formula color */
-  .card-accent {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-  }
-
-  .card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-
-  .card-process {
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    font-family: 'DM Mono', monospace;
-  }
-
-  .card-status {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    padding: 3px 8px;
-    border-radius: 1px;
-    text-transform: uppercase;
-    font-family: 'DM Mono', monospace;
-  }
-
-  .status-tested {
-    color: #6ab04c;
-    border: 1px solid rgba(106,176,76,0.3);
-    background: rgba(106,176,76,0.06);
-  }
-
-  .status-experimental {
-    color: var(--amber);
-    border: 1px solid rgba(232,160,48,0.3);
-    background: rgba(232,160,48,0.06);
-  }
-
-  .status-archived {
-    color: var(--text-faint);
-    border: 1px solid var(--border);
-    background: transparent;
-  }
-
-  .card-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--white);
-    line-height: 1.2;
-    margin-bottom: 6px;
-    letter-spacing: -0.01em;
-  }
-
-  .card-category {
-    font-size: 11px;
-    color: var(--gold-dim);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-
-  .card-desc {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
-    font-style: italic;
-    color: var(--text-dim);
-    line-height: 1.6;
-    margin-bottom: 20px;
-  }
-
-  .card-ingredients {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 20px;
-  }
-
-  .ingredient-tag {
-    font-size: 11px;
-    padding: 3px 8px;
-    border: 1px solid var(--border);
-    border-radius: 1px;
-    color: var(--text-faint);
-    letter-spacing: 0.05em;
-    transition: all 0.15s ease;
-  }
-
-  .formula-card:hover .ingredient-tag {
-    border-color: rgba(200,170,100,0.15);
-    color: var(--text-dim);
-  }
-
-  .ingredient-tag.more {
-    color: var(--gold-dim);
-    border-color: rgba(200,170,100,0.15);
-  }
-
-  .card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
-
-  .card-meta {
-    display: flex;
-    gap: 16px;
-  }
-
-  .card-meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .meta-label {
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-  }
-
-  .meta-value {
-    font-size: 12px;
-    color: var(--text-dim);
-    font-family: 'DM Mono', monospace;
-  }
-
-  .card-version {
-    font-size: 10px;
-    color: var(--text-faint);
-    letter-spacing: 0.1em;
-  }
-
-  /* ─── EMPTY STATE ─── */
-  .empty-state {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 100px 40px;
-    text-align: center;
-    gap: 16px;
-    background: var(--surface);
-  }
-
-  .empty-icon {
-    font-size: 48px;
-    opacity: 0.3;
-    margin-bottom: 8px;
-  }
-
-  .empty-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 24px;
-    color: var(--text-dim);
-  }
-
-  .empty-sub {
-    font-size: 12px;
-    color: var(--text-faint);
-    letter-spacing: 0.1em;
-  }
-
-  /* ─── MODAL ─── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(5,4,2,0.9);
-    backdrop-filter: blur(8px);
-    z-index: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
-
-  .modal-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border-bright);
-    border-radius: 8px;
-    width: 100%;
-    max-width: 700px;
-    max-height: 88vh;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-    transform: translateY(20px) scale(0.98);
-    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-    position: relative;
-  }
-
-  .modal-overlay.open .modal {
-    transform: translateY(0) scale(1);
-  }
-
-  .modal-header {
-    padding: 32px 32px 24px;
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-    z-index: 10;
-  }
-
-  .modal-eyebrow {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--gold-dim);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .modal-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--white);
-    letter-spacing: -0.02em;
-  }
-
-  .modal-close {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    transition: all 0.15s ease;
-  }
-
-  .modal-close:hover {
-    border-color: var(--border-bright);
-    color: var(--text);
-  }
-
-  .modal-body {
-    padding: 28px 32px 32px;
-  }
-
-  .detail-section {
-    margin-bottom: 28px;
-  }
-
-  .detail-section-label {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--gold-dim);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .detail-section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .ingredient-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .ingredient-table tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s ease;
-  }
-
-  .ingredient-table tr:last-child {
-    border-bottom: none;
-  }
-
-  .ingredient-table tr:hover {
-    background: rgba(200,170,100,0.03);
-  }
-
-  .ingredient-table td {
-    padding: 10px 0;
-    font-size: 14px;
-  }
-
-  .ingredient-table td:first-child {
-    color: var(--text);
-    letter-spacing: 0.03em;
-  }
-
-  .ingredient-table td:last-child {
-    text-align: right;
-    color: var(--gold-dim);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.05em;
-  }
-
-  .ingredient-table .scaled-col {
-    color: var(--amber);
-    font-weight: 600;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.05em;
-  }
-
-  /* ─── SCALE ROW ─── */
-  .scale-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .scale-row label {
-    margin: 0;
-    white-space: nowrap;
-    font-weight: 500;
-    font-size: 13px;
-    color: var(--text);
-  }
-  .scale-row input {
-    width: 120px;
-  }
-  .scale-row .scale-hint {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  .detail-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 17px;
-    font-style: italic;
-    color: var(--text-dim);
-    line-height: 1.7;
-  }
-
-  .detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .detail-box {
-    padding: 14px 16px;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    background: rgba(200,170,100,0.02);
-  }
-
-  .detail-box-label {
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .detail-box-value {
-    font-size: 16px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.03em;
-  }
-
-  /* ─── DARKROOM SAFELIGHT OVERLAY ─── */
-  .safelight-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(120,0,0,0.08);
-    pointer-events: none;
-    z-index: 900;
-    opacity: 0;
-    transition: opacity 0.8s ease;
-    mix-blend-mode: multiply;
-  }
-
-  .darkroom-mode .safelight-overlay {
-    opacity: 1;
-  }
-
-  /* Vignette */
-  .vignette {
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
-    pointer-events: none;
-    z-index: 50;
-  }
-  .light-mode .vignette {
-    background: none;
-  }
-
-  /* ─── STATUS BAR ─── */
-  .status-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 32px;
-    background: rgba(10,9,5,0.96);
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 40px;
-    gap: 24px;
-    z-index: 200;
-  }
-
-  .status-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    color: var(--text-faint);
-    letter-spacing: 0.1em;
-  }
-
-  .status-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #6ab04c;
-    animation: pulse-status 4s ease-in-out infinite;
-  }
-
-  @keyframes pulse-status {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  .status-bar-right {
-    margin-left: auto;
-    display: flex;
-    gap: 24px;
-  }
-
-  /* ─── TRANSITIONS ─── */
-  .page-transition {
-    animation: page-in 0.6s cubic-bezier(0.4,0,0.2,1) both;
-  }
-
-  @keyframes page-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  /* ─── CHEMICAL AUTOCOMPLETE ─── */
-  .ac-dropdown {
-    position: absolute;
-    top: calc(100% + 3px);
-    left: 0; right: 0;
-    background: #1a1812;
-    border: 1px solid var(--border-bright);
-    border-radius: 3px;
-    z-index: 9000;
-    max-height: 220px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-    display: none;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-  }
-  .ac-dropdown.open { display: block; }
-  .ac-item {
-    padding: 8px 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    cursor: pointer;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s ease;
-    line-height: 1.4;
-  }
-  .ac-item:last-child { border-bottom: none; }
-  .ac-item:hover, .ac-item.focused {
-    background: rgba(200,170,100,0.08);
-    color: var(--white);
-  }
-  .ac-item mark {
-    background: transparent;
-    color: var(--gold);
-    font-weight: 500;
-  }
-  .ac-new {
-    color: var(--text-faint);
-    font-style: italic;
-    font-size: 10px;
-  }
-  .ac-new mark { color: var(--gold-dim); }
-
-  /* ─── SCROLLBAR ─── */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
-
-  /* ─── TOAST ─── */
-  .toast {
-    position: fixed;
-    bottom: 52px;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background: var(--surface2);
-    border: 1px solid var(--border-bright);
-    color: var(--gold);
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    padding: 10px 20px;
-    border-radius: 3px;
-    z-index: 9999;
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* ─── MOBILE MENU BUTTON ─── */
-  .mobile-menu-btn {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: transparent;
-    color: var(--text-dim);
-    font-size: 18px;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.15s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mobile-menu-btn:hover {
-    border-color: var(--border-bright);
-    color: var(--text);
-  }
-
-  /* ─── MOBILE FAB (New Formula) ─── */
-  .mobile-fab {
-    display: none;
-    position: fixed;
-    bottom: 48px;
-    right: 16px;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: var(--gold);
-    color: #0a0905;
-    border: none;
-    font-size: 24px;
-    font-weight: 700;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 300;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    transition: all 0.2s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mobile-fab:active {
-    transform: scale(0.92);
-  }
-
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 768px) {
-    header {
-      padding: 0 16px;
-      height: auto;
-      min-height: 56px;
-      flex-wrap: wrap;
-      gap: 0;
-    }
-    header > div:first-child {
-      display: flex;
-      align-items: center;
-      height: 56px;
-      flex: 1;
-      min-width: 0;
-    }
-    .logo { font-size: 20px; gap: 10px; }
-    .logo-mark { width: 28px; height: 28px; }
-    .logo-mark::after { width: 8px; height: 8px; }
-    .logo-sub { font-size: 8px; letter-spacing: 0.2em; }
-    .mobile-menu-btn { display: flex; }
-    .header-actions {
-      display: none;
-      width: 100%;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 0 0 12px;
-      border-top: 1px solid var(--border);
-      padding-top: 10px;
-    }
-    .header-actions.mobile-open { display: flex; }
-    .header-actions .btn {
-      flex: 1 1 auto;
-      justify-content: center;
-      min-height: 40px;
-      font-size: 10px;
-    }
-    .header-actions .btn-primary { display: none; }
-
-    .mobile-fab { display: flex; }
-
-    .hero-bar { padding: 24px 16px 20px; }
-    .hero-count { font-size: 40px; gap: 8px; }
-    .hero-count span { font-size: 11px; }
-    .hero-title { font-size: 11px; margin-bottom: 8px; }
-    .hero-line { margin-top: 14px; }
-    .hero-bar::before { font-size: 60px; opacity: 0.5; }
-
-    .filter-bar {
-      padding: 0 16px;
-      flex-wrap: wrap;
-    }
-    .filter-section {
-      padding: 8px 0;
-      padding-right: 14px;
-      margin-right: 14px;
-    }
-    .filter-chip {
-      padding: 6px 10px;
-      font-size: 10px;
-      min-height: 32px;
-      display: inline-flex;
-      align-items: center;
-    }
-    .filter-label { font-size: 8px; margin-right: 4px; }
-    .search-wrap {
-      width: 100%;
-      margin-left: 0;
-      padding: 8px 0 10px;
-      border-top: 1px solid var(--border);
-    }
-    .search-input { width: 100%; flex: 1; min-height: 36px; font-size: 12px; }
-
-    .grid-container {
-      padding: 12px;
-      gap: 1px;
-      grid-template-columns: 1fr;
-    }
-
-    .formula-card { padding: 20px 16px; }
-    .card-name { font-size: 18px; }
-    .card-desc { font-size: 14px; margin-bottom: 14px; }
-    .card-ingredients { margin-bottom: 14px; }
-
-    .modal-overlay { padding: 8px; }
-    .modal { max-height: 94vh; border-radius: 6px; }
-    .modal-header { padding: 20px 16px 16px; }
-    .modal-title { font-size: 24px; }
-    .modal-close { top: 16px; right: 16px; width: 36px; height: 36px; font-size: 16px; }
-    .modal-body { padding: 16px; }
-    .detail-section { margin-bottom: 20px; }
-    .detail-grid { grid-template-columns: 1fr; gap: 10px; }
-    .scale-row { gap: 8px; }
-    .scale-row input { width: 90px; }
-
-    .status-bar { padding: 0 16px; height: 28px; gap: 12px; }
-    .status-item { font-size: 9px; letter-spacing: 0.05em; }
-    .status-bar-right { gap: 12px; }
-
-    .toast { bottom: 44px; font-size: 10px; padding: 8px 16px; }
-  }
-
-  @media (max-width: 480px) {
-    .hero-count { font-size: 32px; }
-    .hero-bar::before { display: none; }
-    .filter-section {
-      border-right: none;
-      padding-right: 0;
-      margin-right: 0;
-      width: 100%;
-      flex-wrap: wrap;
-      padding: 6px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .filter-section:last-of-type { border-bottom: none; }
-    .modal-overlay { padding: 0; }
-    .modal { max-height: 100vh; border-radius: 0; max-width: 100%; }
-  }
+  .formula-card { padding: 16px; }
+  .card-name { font-size: 18px; }
+
+  .top-bar { padding: 0 12px; height: 52px; }
+  .top-bar-actions { gap: 4px; }
+  .top-bar-actions .btn { padding: 6px 10px; font-size: 10px; }
+
+  .modal-overlay { padding: 8px; }
+  .modal { max-height: 94vh; border-radius: 12px; }
+  .modal-header { padding: 20px 16px 16px; }
+  .modal-title { font-size: 22px; }
+  .modal-close { top: 14px; right: 14px; }
+  .modal-body { padding: 16px; }
+  .detail-grid { grid-template-columns: 1fr; gap: 8px; }
+  .scale-row input { width: 90px; }
+  .shelf-life-grid { grid-template-columns: 1fr; }
+
+  .status-bar { padding: 0 12px; height: 28px; gap: 10px; }
+  .status-item { font-size: 9px; }
+
+  .toast { bottom: 40px; font-size: 11px; padding: 8px 16px; }
+}
+
+@media (max-width: 480px) {
+  .hero-count { font-size: 28px; }
+  .hero-bar::before { display: none; }
+  .modal-overlay { padding: 0; }
+  .modal { max-height: 100vh; border-radius: 0; max-width: 100%; }
+  .top-bar-actions .btn-ghost { display: none; }
+  .top-bar-actions .btn-darkroom { padding: 6px 8px; font-size: 9px; }
+}
 </style>
 </head>
 <body class="page-transition" id="app">
@@ -1237,72 +1114,136 @@
 <div class="vignette"></div>
 <div class="safelight-overlay"></div>
 
-<!-- ─── HEADER ─── -->
-<header>
-  <div>
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
     <div class="logo">
       <div class="logo-mark"></div>
       <div>
-        Formulae
-        <span class="logo-sub">Film Lab Chemical Database</span>
+        <div class="logo-text">Formulae</div>
+        <span class="logo-sub">Chemical Database</span>
       </div>
     </div>
   </div>
-  <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu" aria-expanded="false">☰</button>
-  <div class="header-actions">
-    <button class="btn btn-ghost" id="theme-btn" onclick="cycleTheme()" title="Switch theme">◑ Theme</button>
-    <button class="btn btn-ghost" onclick="triggerImport()">↑ Import</button>
-    <button class="btn btn-ghost" onclick="exportJSON()">↓ Export</button>
-    <button class="btn btn-darkroom" id="darkroom-btn" onclick="toggleDarkroom()">⬤ Darkroom</button>
-    <button class="btn btn-primary" onclick="openNewFormula()">+ New Formula</button>
+  <div class="sidebar-search">
+    <input id="search" placeholder="Search formulas…" oninput="renderGrid()" autocomplete="off">
   </div>
-  <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importJSON(event)">
-</header>
+  <nav class="sidebar-nav" id="sidebar-nav">
+    <div class="sidebar-section-title">Process</div>
+    <button class="sidebar-item active" data-filter-type="process" onclick="setSidebarFilter('process','all',this)">
+      <span class="sidebar-icon">◉</span> All Processes
+    </button>
+    <button class="sidebar-item" data-filter-type="process" onclick="setSidebarFilter('process','B&W',this)">
+      <span class="sidebar-icon">◎</span> B&amp;W
+    </button>
+    <button class="sidebar-item" data-filter-type="process" onclick="setSidebarFilter('process','C-41',this)">
+      <span class="sidebar-icon">◎</span> C-41
+    </button>
+    <button class="sidebar-item" data-filter-type="process" onclick="setSidebarFilter('process','ECN-2',this)">
+      <span class="sidebar-icon">◎</span> ECN-2
+    </button>
+    <button class="sidebar-item" data-filter-type="process" onclick="setSidebarFilter('process','E-6',this)">
+      <span class="sidebar-icon">◎</span> E-6
+    </button>
+    <button class="sidebar-item" data-filter-type="process" onclick="setSidebarFilter('process','Ambrotype',this)">
+      <span class="sidebar-icon">◎</span> Wet Plate
+    </button>
+    <button class="sidebar-item" data-filter-type="process" onclick="setSidebarFilter('process','Tintype',this)">
+      <span class="sidebar-icon">◎</span> Tintype
+    </button>
+    <button class="sidebar-item" data-filter-type="process" onclick="setSidebarFilter('process','Dryplate',this)">
+      <span class="sidebar-icon">◎</span> Dry Plate
+    </button>
+    <button class="sidebar-item" data-filter-type="process" onclick="setSidebarFilter('process','Other',this)">
+      <span class="sidebar-icon">◎</span> Other
+    </button>
 
-<!-- ─── HERO ─── -->
-<div class="hero-bar">
-  <div class="hero-title">Chemical Formulas</div>
-  <div class="hero-count" id="hero-count">
-    0 <span>formulas stored</span>
-  </div>
-  <div class="hero-line"></div>
-</div>
+    <div class="sidebar-section-title">Type</div>
+    <button class="sidebar-item active" data-filter-type="category" onclick="setSidebarFilter('category','all',this)">
+      <span class="sidebar-icon">◉</span> All Types
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Developer',this)">
+      <span class="sidebar-icon">⚗</span> Developers
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Fixer',this)">
+      <span class="sidebar-icon">⚗</span> Fixers
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Bleach',this)">
+      <span class="sidebar-icon">⚗</span> Bleaches
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Stop Bath',this)">
+      <span class="sidebar-icon">⚗</span> Stop Bath
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Stabilizer',this)">
+      <span class="sidebar-icon">⚗</span> Stabilizers
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Collodion',this)">
+      <span class="sidebar-icon">⚗</span> Collodion
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Silver nitrate bath',this)">
+      <span class="sidebar-icon">⚗</span> Silver Baths
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Varnish',this)">
+      <span class="sidebar-icon">⚗</span> Varnishes
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Toners',this)">
+      <span class="sidebar-icon">⚗</span> Toning
+    </button>
+    <button class="sidebar-item" data-filter-type="category" onclick="setSidebarFilter('category','Other',this)">
+      <span class="sidebar-icon">⚗</span> Other
+    </button>
 
-<!-- ─── FILTER BAR ─── -->
-<div class="filter-bar">
-  <div class="filter-section">
-    <span class="filter-label">Process</span>
-    <button class="filter-chip active" onclick="setFilter('process','all',this)">All</button>
-    <button class="filter-chip" onclick="setFilter('process','B&W',this)">B&W</button>
-    <button class="filter-chip" onclick="setFilter('process','C-41',this)">C-41</button>
-    <button class="filter-chip" onclick="setFilter('process','ECN-2',this)">ECN-2</button>
-    <button class="filter-chip" onclick="setFilter('process','E-6',this)">E-6</button>
-    <button class="filter-chip" onclick="setFilter('process','Ambrotype',this)">Ambrotype</button>
-    <button class="filter-chip" onclick="setFilter('process','Tintype',this)">Tintype</button>
-    <button class="filter-chip" onclick="setFilter('process','Other',this)">Other</button>
+    <div class="sidebar-section-title">Status</div>
+    <button class="sidebar-item active" data-filter-type="status" onclick="setSidebarFilter('status','all',this)">
+      <span class="sidebar-icon">◉</span> All Status
+    </button>
+    <button class="sidebar-item" data-filter-type="status" onclick="setSidebarFilter('status','Tested',this)">
+      <span class="sidebar-icon">✓</span> Tested
+    </button>
+    <button class="sidebar-item" data-filter-type="status" onclick="setSidebarFilter('status','Experimental',this)">
+      <span class="sidebar-icon">◌</span> Experimental
+    </button>
+    <button class="sidebar-item" data-filter-type="status" onclick="setSidebarFilter('status','Archived',this)">
+      <span class="sidebar-icon">▪</span> Archived
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <button onclick="triggerImport()">↑ Import</button>
+    <button onclick="exportJSON()">↓ Export</button>
   </div>
-  <div class="filter-section">
-    <span class="filter-label">Type</span>
-    <button class="filter-chip active" onclick="setFilter('category','all',this)">All</button>
-    <button class="filter-chip" onclick="setFilter('category','Developer',this)">Developer</button>
-    <button class="filter-chip" onclick="setFilter('category','Fixer',this)">Fixer</button>
-    <button class="filter-chip" onclick="setFilter('category','Bleach',this)">Bleach</button>
-  </div>
-  <div class="filter-section">
-    <span class="filter-label">Status</span>
-    <button class="filter-chip active" onclick="setFilter('status','all',this)">All</button>
-    <button class="filter-chip" onclick="setFilter('status','Tested',this)">Tested</button>
-    <button class="filter-chip" onclick="setFilter('status','Experimental',this)">Experimental</button>
-    <button class="filter-chip" onclick="setFilter('status','Archived',this)">Archived</button>
-  </div>
-  <div class="search-wrap">
-    <input class="search-input" id="search" placeholder="Search formulas…" oninput="renderGrid()">
-    <button class="view-toggle-btn" id="view-toggle" onclick="toggleViewMode()" title="Toggle grid/list view">⊞ Grid</button>
-  </div>
-</div>
+</aside>
 
-<!-- ─── GRID ─── -->
-<div class="grid-container" id="grid"></div>
+<!-- ─── SIDEBAR OVERLAY (mobile) ─── -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ─── MAIN CONTENT ─── -->
+<main class="main-content" id="main-content">
+
+  <!-- ─── TOP BAR ─── -->
+  <header class="top-bar">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <div class="top-bar-title">Chemical Formulas</div>
+    <div class="top-bar-actions">
+      <button class="btn btn-ghost" id="theme-btn" onclick="cycleTheme()" title="Switch theme">◑ Theme</button>
+      <button class="btn btn-darkroom" id="darkroom-btn" onclick="toggleDarkroom()">⬤ Darkroom</button>
+      <button class="btn btn-ghost" id="view-toggle" onclick="toggleViewMode()" title="Toggle grid/list">⊞ Grid</button>
+      <button class="btn btn-primary" onclick="openNewFormula()">+ New Formula</button>
+    </div>
+  </header>
+
+  <!-- ─── HERO ─── -->
+  <div class="hero-bar">
+    <div class="hero-title">Chemical Formulas</div>
+    <div class="hero-count" id="hero-count">
+      0 <span>formulas stored</span>
+    </div>
+    <div class="hero-line"></div>
+  </div>
+
+  <!-- ─── GRID ─── -->
+  <div class="grid-container" id="grid"></div>
+
+</main>
 
 <!-- ─── STATUS BAR ─── -->
 <div class="status-bar">
@@ -1310,7 +1251,7 @@
   <div class="status-item" id="backup-status">Last backup: never</div>
   <div class="status-bar-right">
     <div class="status-item" id="filter-status">Showing all</div>
-    <div class="status-item">v1.1-dev</div>
+    <div class="status-item">v2.0</div>
   </div>
 </div>
 
@@ -1338,14 +1279,14 @@
       <div class="detail-section">
         <div class="detail-section-label">Identification</div>
         <div style="display:grid;gap:10px;">
-          <input id="nf-name" class="search-input" style="width:100%;padding:10px 14px;font-size:13px;" placeholder="Formula name *">
+          <input id="nf-name" class="form-input" placeholder="Formula name *">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <select id="nf-process" class="search-input" style="width:100%;">
+            <select id="nf-process" class="form-input">
               <option value="">Process *</option>
               <option>B&W</option><option>C-41</option><option>ECN-2</option><option>E-6</option>
               <option>Ambrotype</option><option>Tintype</option><option>Dryplate</option><option>Fixer</option><option>Other</option>
             </select>
-            <select id="nf-category" class="search-input" style="width:100%;">
+            <select id="nf-category" class="form-input">
               <option value="">Category *</option>
               <option>Developer</option><option>Stop Bath</option><option>Fixer</option>
               <option>Bleach</option><option>Stabilizer</option><option>Collodion</option>
@@ -1353,41 +1294,40 @@
             </select>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <select id="nf-status" class="search-input" style="width:100%;">
+            <select id="nf-status" class="form-input">
               <option>Experimental</option><option>Tested</option><option>Archived</option>
             </select>
-            <input id="nf-version" class="search-input" style="width:100%;" placeholder="Version (e.g. 1.0)">
+            <input id="nf-version" class="form-input" placeholder="Version (e.g. 1.0)">
           </div>
         </div>
       </div>
       <div class="detail-section">
         <div class="detail-section-label">Description</div>
-        <textarea id="nf-desc" class="search-input" style="width:100%;height:80px;resize:vertical;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;line-height:1.6;" placeholder="Brief description of this formula…"></textarea>
+        <textarea id="nf-desc" class="form-input" style="height:80px;line-height:1.6;" placeholder="Brief description of this formula…"></textarea>
       </div>
       <div class="detail-section">
         <div class="detail-section-label">Ingredients</div>
         <div id="nf-ingredients" style="display:grid;gap:5px;margin-bottom:10px;"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="btn btn-ghost" style="flex:1;justify-content:center;font-size:10px;" onclick="addIngredientRow()">+ Ingredient</button>
-          <button class="btn btn-ghost" style="font-size:10px;color:var(--gold-dim);" onclick="addIngredientRow('Part A')" title="Add a Part A ingredient">+ Part A</button>
-          <button class="btn btn-ghost" style="font-size:10px;color:#4a9eff;" onclick="addIngredientRow('Part B')" title="Add a Part B ingredient">+ Part B</button>
-          <button class="btn btn-ghost" style="font-size:10px;color:#6ab04c;" onclick="addIngredientRow('Part C')" title="Add a Part C ingredient">+ Part C</button>
+          <button class="btn btn-ghost" style="flex:1;justify-content:center;font-size:11px;" onclick="addIngredientRow()">+ Ingredient</button>
+          <button class="btn btn-ghost" style="font-size:11px;color:var(--accent-dim);" onclick="addIngredientRow('Part A')">+ Part A</button>
+          <button class="btn btn-ghost" style="font-size:11px;color:var(--orange);" onclick="addIngredientRow('Part B')">+ Part B</button>
+          <button class="btn btn-ghost" style="font-size:11px;color:var(--green);" onclick="addIngredientRow('Part C')">+ Part C</button>
         </div>
-        <div style="margin-top:8px;font-size:9px;letter-spacing:0.1em;color:var(--text-faint);line-height:1.6;">
-          Multi-part formulas (e.g. Divided D-23, Pyrocat, C-41 kits) keep unstable agents separate until use.
+        <div style="margin-top:8px;font-size:10px;color:var(--text-faint);line-height:1.5;">
+          Multi-part formulas keep unstable agents separate until use.
         </div>
       </div>
-
       <div class="detail-section">
         <div class="detail-section-label">Conditions</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <input id="nf-temp" class="search-input" style="width:100%;" placeholder="Temperature (e.g. 20°C)">
-          <input id="nf-time" class="search-input" style="width:100%;" placeholder="Dev time (e.g. 8 min)">
+          <input id="nf-temp" class="form-input" placeholder="Temperature (e.g. 20°C)">
+          <input id="nf-time" class="form-input" placeholder="Dev time (e.g. 8 min)">
         </div>
       </div>
       <div class="detail-section">
         <div class="detail-section-label">Notes</div>
-        <textarea id="nf-notes" class="search-input" style="width:100%;height:70px;resize:vertical;line-height:1.6;" placeholder="Additional notes…"></textarea>
+        <textarea id="nf-notes" class="form-input" style="height:70px;line-height:1.6;" placeholder="Additional notes…"></textarea>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;">
         <button class="btn btn-ghost" onclick="closeNewModal()">Cancel</button>
@@ -1398,9 +1338,8 @@
 </div>
 
 <button class="mobile-fab" onclick="openNewFormula()" aria-label="New Formula">+</button>
-
 <div class="toast" id="toast"></div>
-
+<input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importJSON(event)">
 <script>
 // ─── STATE ───
 let formulas = JSON.parse(localStorage.getItem('formulae_data') || '[]');
@@ -1408,15 +1347,33 @@ let filters = { process: 'all', category: 'all', status: 'all' };
 let darkroom = false;
 let viewMode = localStorage.getItem('formulae_view_mode') || 'grid';
 
-// ─── MOBILE MENU ───
-function toggleMobileMenu() {
-  const actions = document.querySelector('.header-actions');
-  actions.classList.toggle('mobile-open');
-  const btn = document.getElementById('mobile-menu-btn');
-  const isOpen = actions.classList.contains('mobile-open');
-  btn.textContent = isOpen ? '✕' : '☰';
-  btn.setAttribute('aria-expanded', isOpen);
+// ─── SIDEBAR ───
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
 }
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+function setSidebarFilter(type, value, btn) {
+  filters[type] = value;
+  document.querySelectorAll(`.sidebar-item[data-filter-type="${type}"]`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+  // Close sidebar on mobile after selection
+  if (window.innerWidth <= 768) closeSidebar();
+}
+
+// Keep old setFilter for backward compatibility
+function setFilter(type, value, btn) {
+  filters[type] = value;
+  renderGrid();
+}
+
+// ─── MOBILE MENU (legacy compat) ───
+function toggleMobileMenu() { toggleSidebar(); }
 
 // ─── VIEW TOGGLE ───
 function toggleViewMode() {
@@ -1435,12 +1392,12 @@ function applyViewMode() {
   }
 }
 
-// ─── INGREDIENT COMPAT: handle both 'amount' and 'qty' fields ───
+// ─── INGREDIENT COMPAT ───
 function ingAmount(ing) {
   return ing.amount !== undefined ? ing.amount : (ing.qty !== undefined ? ing.qty : '');
 }
 
-// Sample data if empty
+// ─── SAMPLE DATA ───
 if (formulas.length === 0) {
   formulas = [
     {
@@ -1455,12 +1412,12 @@ if (formulas.length === 0) {
         { name: "Distilled Water",           amount: "1",   unit: "L",      part: "Stock" },
       ],
       temp: "20°C", time: "8 min @ EI 400", notes: "1:1 dilution gives finer grain. 1:3 for pushing. Dissolve Metol first in a small amount of water before adding sulfite.",
-      color: "#c8aa64", updated: "2026-03-01"
+      color: "#00e5ff", updated: "2026-03-01"
     },
     {
       id: 2, name: "Divided D-23", process: "B&W", category: "Developer",
       status: "Tested", version: "1.0",
-      desc: "Two-bath compensating developer. Film soaks in Part A (developer), then Part B (alkali activator). Self-masking — highlights cannot overdevelop. Ideal for high-contrast scenes.",
+      desc: "Two-bath compensating developer. Film soaks in Part A (developer), then Part B (alkali activator). Self-masking — highlights cannot overdevelop.",
       ingredients: [
         { name: "Metol (Elon)",              amount: "7.5", unit: "g",  part: "Part A" },
         { name: "Sodium Sulfite (anhydrous)", amount: "100", unit: "g",  part: "Part A" },
@@ -1468,13 +1425,13 @@ if (formulas.length === 0) {
         { name: "Kodalk (Sodium Metaborate)", amount: "10",  unit: "g",  part: "Part B" },
         { name: "Distilled Water to make",   amount: "1",   unit: "L",  part: "Part B" },
       ],
-      temp: "20°C", time: "3 min Part A → 3 min Part B", notes: "Do NOT rinse between baths. The film carries developer solution from Part A into Part B where activation occurs. One-shot — dump both baths after use.",
-      color: "#e8a030", updated: "2026-02-28"
+      temp: "20°C", time: "3 min Part A → 3 min Part B", notes: "Do NOT rinse between baths.",
+      color: "#ffab40", updated: "2026-02-28"
     },
     {
       id: 3, name: "Pyrocat-HD", process: "B&W", category: "Developer",
       status: "Experimental", version: "3.1",
-      desc: "Two-solution staining developer by Sandy King. Pyrocatechol-based. Produces a UV-blocking stain ideal for alternative printing processes (platinum, palladium, carbon). Exceptional acutance.",
+      desc: "Two-solution staining developer by Sandy King. Pyrocatechol-based. Produces a UV-blocking stain ideal for alternative printing processes.",
       ingredients: [
         { name: "Catechol (Pyrocatechol)",   amount: "10",  unit: "g",  part: "Part A" },
         { name: "Phenidone",                 amount: "0.1", unit: "g",  part: "Part A" },
@@ -1483,26 +1440,26 @@ if (formulas.length === 0) {
         { name: "Potassium Carbonate",       amount: "75",  unit: "g",  part: "Part B" },
         { name: "Distilled Water to make",   amount: "500", unit: "ml", part: "Part B" },
       ],
-      temp: "21°C", time: "12 min (1:1:100 dilution)", notes: "Mix 1 part A + 1 part B + 100 parts water. Catechol is a skin sensitiser — wear nitrile gloves and work in ventilated space. Stain intensity increases with development time.",
-      color: "#a06030", updated: "2026-02-20"
+      temp: "21°C", time: "12 min (1:1:100 dilution)", notes: "Mix 1 part A + 1 part B + 100 parts water. Catechol is a skin sensitiser — wear nitrile gloves.",
+      color: "#b388ff", updated: "2026-02-20"
     },
     {
       id: 4, name: "TF-4 Archival Fixer", process: "B&W", category: "Fixer",
       status: "Tested", version: "1.0",
-      desc: "Alkaline, non-hardening fixer by Photographers' Formulary. Archival permanence. Shorter wash times than acid fixers. Safe for fibre and RC papers.",
+      desc: "Alkaline, non-hardening fixer by Photographers' Formulary. Archival permanence. Shorter wash times than acid fixers.",
       ingredients: [
         { name: "Ammonium Thiosulfate (60%)", amount: "800", unit: "ml", part: "Stock" },
         { name: "Sodium Sulfite",             amount: "60",  unit: "g",  part: "Stock" },
         { name: "Sodium Hydroxide",           amount: "8.4", unit: "g",  part: "Stock" },
         { name: "Ammonia (28%)",              amount: "9",   unit: "ml", part: "Stock" },
       ],
-      temp: "20°C", time: "3–4 min film / 1–2 min RC paper", notes: "Alkaline pH (~8.5). Fix until clear plus equal time. Capacity ~24 rolls/L. Can be replenished at 25ml/roll.",
-      color: "#4488aa", updated: "2026-01-15"
+      temp: "20°C", time: "3–4 min film / 1–2 min RC paper", notes: "Alkaline pH (~8.5). Fix until clear plus equal time.",
+      color: "#00e5ff", updated: "2026-01-15"
     },
     {
       id: 5, name: "C-41 RA Developer", process: "C-41", category: "Developer",
       status: "Tested", version: "2.2",
-      desc: "Rapid access colour negative developer. Three-part concentrate system. Part A holds the CD-4 developing agent; Part B the preservative and carbonate; Part C the anti-calcium and restrainer.",
+      desc: "Rapid access colour negative developer. Three-part concentrate system.",
       ingredients: [
         { name: "CD-4 (Color Developer 4)",  amount: "4.7",  unit: "g",  part: "Part A" },
         { name: "Hydroxylamine Sulfate",     amount: "1.75", unit: "g",  part: "Part A" },
@@ -1514,23 +1471,223 @@ if (formulas.length === 0) {
         { name: "Citric Acid",               amount: "1",    unit: "g",  part: "Part C" },
         { name: "Distilled Water to make",   amount: "1",    unit: "L",  part: "Part C" },
       ],
-      temp: "38°C ± 0.15°C", time: "3 min 15 sec", notes: "Temperature control is critical — ±0.15°C. Mix A into water, then B, then C. CD-4 oxidises in air; always cap concentrates immediately. Replenish at 11ml/roll.",
-      color: "#cc4488", updated: "2026-01-10"
+      temp: "38°C ± 0.15°C", time: "3 min 15 sec", notes: "Temperature control is critical — ±0.15°C.",
+      color: "#ff4081", updated: "2026-01-10"
     },
     {
       id: 6, name: "Silver Nitrate Bath", process: "Tintype", category: "Silver nitrate bath",
       status: "Tested", version: "1.0",
-      desc: "Sensitising bath for tintypes and ambrotypes. Standard 9% solution. Coat fresh collodion, then immerse in this bath to form light-sensitive silver halides in situ.",
+      desc: "Sensitising bath for tintypes and ambrotypes. Standard 9% solution.",
       ingredients: [
         { name: "Silver Nitrate",     amount: "90",  unit: "g", part: "Stock" },
         { name: "Distilled Water",    amount: "1",   unit: "L", part: "Stock" },
       ],
       temp: "Ambient", time: "3–5 min immersion",
-      notes: "Silver nitrate is caustic and stains skin/clothing permanently (irreversible black marks). Use in subdued tungsten light only — avoid fluorescent or daylight. Maintain pH 4–5; add a few drops of silver nitrate solution if pH rises.",
-      color: "#888888", updated: "2025-12-20"
+      notes: "Silver nitrate is caustic and stains skin/clothing permanently. Use in subdued tungsten light only.",
+      color: "#78909c", updated: "2025-12-20"
     },
   ];
   localStorage.setItem('formulae_data', JSON.stringify(formulas));
+}
+
+// ─── CHEMICAL ROLES DATABASE ───
+const CHEMICAL_ROLES = {
+  'metol': { role: 'Developer agent', color: '#ffab40', description: 'Primary developing agent (soft-working)' },
+  'elon': { role: 'Developer agent', color: '#ffab40', description: 'Primary developing agent (soft-working)' },
+  'hydroquinone': { role: 'Developer agent', color: '#ffab40', description: 'High-contrast developing agent' },
+  'phenidone': { role: 'Developer agent', color: '#ffab40', description: 'Superadditive developing agent' },
+  'dimezone': { role: 'Developer agent', color: '#ffab40', description: 'Phenidone-type developing agent' },
+  'catechol': { role: 'Developer agent', color: '#ffab40', description: 'Staining developing agent' },
+  'pyrocatechol': { role: 'Developer agent', color: '#ffab40', description: 'Staining developing agent' },
+  'pyrogallol': { role: 'Developer agent', color: '#ffab40', description: 'Staining developing agent' },
+  'ascorbic acid': { role: 'Developer agent', color: '#ffab40', description: 'Vitamin C developing agent' },
+  'cd-4': { role: 'Developer agent', color: '#ffab40', description: 'Color developing agent (C-41)' },
+  'cd-3': { role: 'Developer agent', color: '#ffab40', description: 'Color developing agent (E-6)' },
+  'cd-2': { role: 'Developer agent', color: '#ffab40', description: 'Color developing agent' },
+  'amidol': { role: 'Developer agent', color: '#ffab40', description: 'Direct developing agent' },
+  'glycin': { role: 'Developer agent', color: '#ffab40', description: 'Slow-working fine grain developer' },
+  'p-aminophenol': { role: 'Developer agent', color: '#ffab40', description: 'High acutance developer' },
+  'sodium sulfite': { role: 'Preservative', color: '#448aff', description: 'Antioxidant preservative' },
+  'potassium sulfite': { role: 'Preservative', color: '#448aff', description: 'Antioxidant preservative' },
+  'sodium metabisulfite': { role: 'Preservative', color: '#448aff', description: 'Preservative & mild restrainer' },
+  'hydroxylamine sulfate': { role: 'Preservative', color: '#448aff', description: 'Color developer preservative' },
+  'hydroxylamine': { role: 'Preservative', color: '#448aff', description: 'Developer preservative' },
+  'sodium carbonate': { role: 'Accelerator', color: '#00e676', description: 'Alkaline accelerator (moderate)' },
+  'potassium carbonate': { role: 'Accelerator', color: '#00e676', description: 'Alkaline accelerator (moderate)' },
+  'borax': { role: 'Accelerator', color: '#00e676', description: 'Mild alkaline accelerator' },
+  'sodium tetraborate': { role: 'Accelerator', color: '#00e676', description: 'Mild alkaline accelerator (borax)' },
+  'sodium hydroxide': { role: 'Accelerator', color: '#00e676', description: 'Strong alkaline accelerator' },
+  'potassium hydroxide': { role: 'Accelerator', color: '#00e676', description: 'Strong alkaline accelerator' },
+  'kodalk': { role: 'Accelerator', color: '#00e676', description: 'Balanced alkali (sodium metaborate)' },
+  'sodium metaborate': { role: 'Accelerator', color: '#00e676', description: 'Balanced alkali' },
+  'triethanolamine': { role: 'Accelerator', color: '#00e676', description: 'Organic alkali' },
+  'potassium bromide': { role: 'Restrainer', color: '#b388ff', description: 'Anti-fog restrainer' },
+  'benzotriazole': { role: 'Restrainer', color: '#b388ff', description: 'Organic anti-fog agent' },
+  'potassium iodide': { role: 'Restrainer', color: '#b388ff', description: 'Strong restrainer' },
+  'citric acid': { role: 'Restrainer', color: '#b388ff', description: 'Mild acid restrainer' },
+  'sodium thiosulfate': { role: 'Fixing agent', color: '#80cbc4', description: 'Standard fixing agent' },
+  'ammonium thiosulfate': { role: 'Fixing agent', color: '#80cbc4', description: 'Rapid fixing agent' },
+  'silver nitrate': { role: 'Sensitizer', color: '#e0e0e0', description: 'Light-sensitive silver source' },
+  'potassium ferricyanide': { role: 'Bleach agent', color: '#ffd54f', description: 'Oxidizing bleach agent' },
+  'edta': { role: 'Chelating agent', color: '#a1887f', description: 'Metal ion sequestrant' },
+  'ammonia': { role: 'pH modifier', color: '#80deea', description: 'Alkaline pH modifier' },
+  'acetic acid': { role: 'pH modifier', color: '#80deea', description: 'Acidic pH modifier' },
+  'propylene glycol': { role: 'Solvent', color: '#78909c', description: 'Organic solvent (concentrate)' },
+  'diethylene glycol': { role: 'Solvent', color: '#78909c', description: 'Organic solvent' },
+  'distilled water': { role: 'Solvent', color: '#78909c', description: 'Pure solvent base' },
+  'water': { role: 'Solvent', color: '#78909c', description: 'Solvent base' },
+};
+
+// ─── CHEMISTRY ANALYSIS ENGINE ───
+function analyzeFormula(f) {
+  const ings = f.ingredients || [];
+  const analysis = {
+    developerType: null,
+    roles: [],
+    characteristics: [],
+    shelfLife: { stock: '', working: '', reason: '' },
+    classification: ''
+  };
+
+  ings.forEach(ing => {
+    const nameLower = (ing.name || '').toLowerCase();
+    for (const [key, info] of Object.entries(CHEMICAL_ROLES)) {
+      if (nameLower.includes(key)) {
+        analysis.roles.push({ name: ing.name, ...info });
+        break;
+      }
+    }
+  });
+
+  const hasMetol = ings.some(i => /metol|elon/i.test(i.name));
+  const hasHQ = ings.some(i => /hydroquinone/i.test(i.name));
+  const hasPhenidone = ings.some(i => /phenidone|dimezone/i.test(i.name));
+  const hasPyro = ings.some(i => /pyro|catechol/i.test(i.name));
+  const hasAscorbic = ings.some(i => /ascorbic/i.test(i.name));
+  const hasCD = ings.some(i => /cd-[0-9]/i.test(i.name));
+
+  if (f.category === 'Developer') {
+    if (hasPyro) {
+      analysis.developerType = 'Staining Developer';
+      analysis.classification = 'Staining developer';
+      analysis.characteristics = ['UV-blocking stain for alt process printing', 'Pronounced grain structure', 'Excellent tonal separation', 'Self-masking highlight control'];
+    } else if (hasMetol && hasHQ) {
+      analysis.developerType = 'MQ Developer (Metol + Hydroquinone)';
+      analysis.classification = 'MQ developer';
+      analysis.characteristics = ['Medium contrast', 'Fine grain', 'Good shadow detail', 'Reliable and predictable'];
+    } else if (hasPhenidone && hasHQ) {
+      analysis.developerType = 'PQ Developer (Phenidone + Hydroquinone)';
+      analysis.classification = 'PQ developer';
+      analysis.characteristics = ['High activity', 'Long shelf life', 'Economical', 'Good film speed'];
+    } else if (hasMetol && !hasHQ) {
+      analysis.developerType = 'Metol-only Developer';
+      analysis.classification = 'Fine grain developer';
+      analysis.characteristics = ['Very fine grain', 'Soft tonality', 'Lower contrast', 'Excellent for portraits'];
+    } else if (hasAscorbic) {
+      analysis.developerType = 'Ascorbic Acid Developer';
+      analysis.classification = 'Eco-friendly developer';
+      analysis.characteristics = ['Environmentally friendly', 'Good acutance', 'Moderate contrast'];
+    } else if (hasCD) {
+      analysis.developerType = 'Color Developer';
+      analysis.classification = 'Chromogenic developer';
+      analysis.characteristics = ['Produces color dye image', 'Temperature critical', 'Precise timing required'];
+    } else {
+      analysis.developerType = 'General Developer';
+      analysis.classification = 'Developer';
+      analysis.characteristics = ['Standard development characteristics'];
+    }
+
+    if (hasPyro) {
+      analysis.shelfLife = { stock: '~3 months in concentrate', working: '~30 minutes (one-shot)', reason: 'Pyrocatechol oxidizes rapidly once diluted' };
+    } else if (hasCD) {
+      analysis.shelfLife = { stock: '~8 weeks in concentrate', working: '~6 hours at working temp', reason: 'CD-4 is air-sensitive; cap immediately' };
+    } else if (hasMetol) {
+      analysis.shelfLife = { stock: '~6 months in airtight bottle', working: '~8 hours', reason: 'Metol oxidizes quickly once diluted' };
+    } else {
+      analysis.shelfLife = { stock: '~6 months sealed', working: '~24 hours', reason: 'Standard oxidation of developing agents' };
+    }
+  } else if (f.category === 'Fixer') {
+    analysis.classification = 'Fixing solution';
+    const hasAmmonium = ings.some(i => /ammonium thiosulfate/i.test(i.name));
+    if (hasAmmonium) {
+      analysis.characteristics = ['Rapid fixing action', 'Shorter wash times', 'Higher capacity'];
+      analysis.shelfLife = { stock: '~2 months', working: '~1 month', reason: 'Ammonium thiosulfate has moderate shelf life' };
+    } else {
+      analysis.characteristics = ['Standard fixing action', 'Good archival properties'];
+      analysis.shelfLife = { stock: '~6 months', working: '~1 month', reason: 'Sodium thiosulfate is relatively stable' };
+    }
+  } else if (f.category === 'Bleach') {
+    analysis.classification = 'Bleach solution';
+    analysis.characteristics = ['Oxidizes metallic silver', 'May require re-fixing after use'];
+    analysis.shelfLife = { stock: '~3 months', working: '~1 week', reason: 'Oxidizing agents slowly decompose' };
+  } else if (f.category === 'Silver nitrate bath') {
+    analysis.classification = 'Sensitizing solution';
+    analysis.characteristics = ['Forms light-sensitive silver halides', 'Handle under safelight only', 'Caustic — stains skin permanently'];
+    analysis.shelfLife = { stock: '~12 months if maintained', working: 'N/A — continuous use', reason: 'Silver nitrate is stable if pH maintained' };
+  } else {
+    analysis.classification = f.category || 'Chemical solution';
+    analysis.characteristics = ['See formula notes for details'];
+    analysis.shelfLife = { stock: '~6 months sealed', working: 'Varies', reason: 'Depends on specific chemistry' };
+  }
+
+  return analysis;
+}
+
+function renderChemistryAnalysis(f) {
+  const analysis = analyzeFormula(f);
+  let html = '';
+
+  if (analysis.developerType) {
+    html += `<div class="analysis-block">
+      <div class="analysis-label">Developer Type</div>
+      <div class="analysis-value">${analysis.developerType}</div>
+    </div>`;
+  }
+
+  if (analysis.classification) {
+    html += `<div class="analysis-block">
+      <div class="analysis-label">Classification</div>
+      <div class="analysis-badge">${analysis.classification}</div>
+    </div>`;
+  }
+
+  if (analysis.roles.length) {
+    html += `<div class="analysis-block">
+      <div class="analysis-label">Chemical Roles</div>
+      <div class="analysis-roles">
+        ${analysis.roles.map(r => `
+          <div class="role-item">
+            <span class="role-dot" style="background:${r.color}"></span>
+            <span class="role-name">${r.name}</span>
+            <span class="role-tag" style="color:${r.color};border-color:${r.color}40">${r.role}</span>
+            <span class="role-desc">— ${r.description}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (analysis.characteristics.length) {
+    html += `<div class="analysis-block">
+      <div class="analysis-label">Expected Characteristics</div>
+      <ul class="analysis-chars">
+        ${analysis.characteristics.map(c => `<li>${c}</li>`).join('')}
+      </ul>
+    </div>`;
+  }
+
+  if (analysis.shelfLife.stock) {
+    html += `<div class="analysis-block">
+      <div class="analysis-label">Shelf Life Estimate</div>
+      <div class="shelf-life-grid">
+        <div class="shelf-item"><span class="shelf-label">Stock solution</span><span class="shelf-value">${analysis.shelfLife.stock}</span></div>
+        <div class="shelf-item"><span class="shelf-label">Working solution</span><span class="shelf-value">${analysis.shelfLife.working}</span></div>
+      </div>
+      <div class="shelf-reason">${analysis.shelfLife.reason}</div>
+    </div>`;
+  }
+
+  return html;
 }
 
 // ─── RENDER ───
@@ -1573,8 +1730,8 @@ function renderGrid() {
     const more = ings.length > 3
       ? `<span class="ingredient-tag more">+${ings.length - 3} more</span>` : '';
     return `
-    <div class="formula-card" onclick="openFormula(${f.id})" style="animation-delay:${i * 0.05}s">
-      <div class="card-accent" style="background:${f.color || '#c8aa64'};opacity:0.7;"></div>
+    <div class="formula-card" onclick="openFormula(${f.id})" style="animation-delay:${i * 0.04}s">
+      <div class="card-accent" style="background:${f.color || '#00e5ff'};opacity:0.8;"></div>
       <div class="card-header">
         <div class="card-process">${f.process}</div>
         <div class="card-status ${statusClass}">${f.status}</div>
@@ -1595,16 +1752,7 @@ function renderGrid() {
   applyViewMode();
 }
 
-// ─── FILTERS ───
-function setFilter(type, value, btn) {
-  filters[type] = value;
-  btn.closest('.filter-section').querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderGrid();
-}
-
 // ─── THEMES ───
-// Themes: dark (default) → light → darkroom → dark...
 let currentTheme = localStorage.getItem('formulae_theme') || 'dark';
 
 function applyTheme(theme) {
@@ -1641,93 +1789,20 @@ function toggleDarkroom() {
   applyTheme(currentTheme === 'darkroom' ? 'dark' : 'darkroom');
 }
 
-// ─── EDIT FORMULA ───
-let editingId = null;
-
-function openEditFormula(id) {
-  const f = formulas.find(x => x.id === id);
-  if (!f) return;
-  editingId = id;
-
-  // Reuse new formula modal but prefill it
-  ingredientRows = [];
-  document.getElementById('nf-name').value    = f.name    || '';
-  document.getElementById('nf-process').value = f.process || '';
-  document.getElementById('nf-category').value= f.category|| '';
-  document.getElementById('nf-status').value  = f.status  || 'Experimental';
-  document.getElementById('nf-version').value = f.version || '';
-  document.getElementById('nf-desc').value    = f.desc    || '';
-  document.getElementById('nf-temp').value    = f.temp    || '';
-  document.getElementById('nf-time').value    = f.time    || '';
-  document.getElementById('nf-notes').value   = f.notes   || '';
-  document.getElementById('nf-ingredients').innerHTML = '';
-
-  // Prefill ingredient rows
-  (f.ingredients || []).forEach(ing => {
-    const rowId = Date.now() + Math.floor(Math.random()*10000);
-    ingredientRows.push(rowId);
-    const row = document.createElement('div');
-    row.id = `ing-row-${rowId}`;
-    row.style.cssText = 'display:grid;grid-template-columns:90px 1fr 90px 70px 32px;gap:6px;align-items:center;position:relative;';
-    const part   = ing.part   || 'Stock';
-    const unit   = ing.unit   || 'g';
-    const name   = typeof ing === 'string' ? ing : (ing.name   || '');
-    const amount = typeof ing === 'string' ? ''  : ingAmount(ing);
-    const partOptions = ['Stock','Part A','Part B','Part C','Part D','Replen.','Bleach','Fix','Wash']
-      .map(p => `<option value="${p}" ${part===p?'selected':''}>${p}</option>`).join('');
-    const unitOptions = ['g','ml','L','mg','oz','fl oz','tsp','tbsp','parts','drops','% sol','to make']
-      .map(u => `<option value="${u}" ${unit===u?'selected':''}>${u}</option>`).join('');
-    row.innerHTML = `
-      <select class="search-input" id="ing-part-${rowId}" style="width:100%;font-size:10px;" onchange="onPartChange()">${partOptions}</select>
-      <div style="position:relative;">
-        <input class="search-input" id="ing-name-${rowId}" value="${name.replace(/"/g,'&quot;')}" placeholder="Chemical name…" style="width:100%;"
-          autocomplete="off" oninput="chemAutocomplete(this,${rowId})" onkeydown="chemKeydown(event,${rowId})" onblur="setTimeout(()=>hideAC(${rowId}),150)">
-        <div class="ac-dropdown" id="ac-${rowId}"></div>
-      </div>
-      <input class="search-input" id="ing-amt-${rowId}"  value="${amount}" placeholder="Qty" style="width:100%;text-align:right;">
-      <select class="search-input" id="ing-unit-${rowId}" style="width:100%;font-size:10px;">${unitOptions}</select>
-      <button class="btn btn-ghost" onclick="removeIngredientRow(${rowId})" style="padding:5px;justify-content:center;color:#cc4444;">✕</button>
-    `;
-    document.getElementById('nf-ingredients').appendChild(row);
-  });
-
-  updatePartHeaders();
-
-  // Change modal title and save button to indicate edit mode
-  document.querySelector('#new-modal .modal-eyebrow').textContent = 'Editing Formula';
-  document.querySelector('#new-modal .modal-title').textContent   = 'Edit Formula';
-  document.querySelector('#new-modal .btn-primary').textContent   = 'Save Changes';
-
-  closeViewModal();
-  document.getElementById('new-modal').classList.add('open');
-}
-
-function closeNewModal(e) {
-  if (!e || e.target === document.getElementById('new-modal')) {
-    document.getElementById('new-modal').classList.remove('open');
-    // Reset modal title back to "Add Formula" for next new entry
-    editingId = null;
-    document.querySelector('#new-modal .modal-eyebrow').textContent = 'New Entry';
-    document.querySelector('#new-modal .modal-title').textContent   = 'Add Formula';
-    document.querySelector('#new-modal .btn-primary').textContent   = 'Save Formula';
-  }
-}
-
-// ─── PART COLOURS (shared) ───
+// ─── PART COLOURS ───
 const PART_PALETTE = {
-  'Stock':   { color:'#c8aa64', bg:'rgba(200,170,100,0.08)' },
-  'Part A':  { color:'#4a9eff', bg:'rgba(74,158,255,0.08)'  },
-  'Part B':  { color:'#e8a030', bg:'rgba(232,160,48,0.08)'  },
-  'Part C':  { color:'#6ab04c', bg:'rgba(106,176,76,0.08)'  },
-  'Part D':  { color:'#cc88ff', bg:'rgba(204,136,255,0.08)' },
-  'Replen.': { color:'#ff8844', bg:'rgba(255,136,68,0.08)'  },
-  'Bleach':  { color:'#ffdd44', bg:'rgba(255,221,68,0.08)'  },
-  'Fix':     { color:'#88cccc', bg:'rgba(136,204,204,0.08)' },
-  'Wash':    { color:'#aaaaaa', bg:'rgba(170,170,170,0.08)' },
+  'Stock':   { color:'#00e5ff', bg:'rgba(0,229,255,0.08)' },
+  'Part A':  { color:'#448aff', bg:'rgba(68,138,255,0.08)' },
+  'Part B':  { color:'#ffab40', bg:'rgba(255,171,64,0.08)' },
+  'Part C':  { color:'#00e676', bg:'rgba(0,230,118,0.08)' },
+  'Part D':  { color:'#b388ff', bg:'rgba(179,136,255,0.08)' },
+  'Replen.': { color:'#ff8a65', bg:'rgba(255,138,101,0.08)' },
+  'Bleach':  { color:'#ffd54f', bg:'rgba(255,213,79,0.08)' },
+  'Fix':     { color:'#80cbc4', bg:'rgba(128,203,196,0.08)' },
+  'Wash':    { color:'#90a4ae', bg:'rgba(144,164,174,0.08)' },
 };
 
 function renderIngredientsByPart(ingredients) {
-  // Group by part, preserving order of first appearance
   const groups = {};
   const order  = [];
   ingredients.forEach(ing => {
@@ -1736,48 +1811,42 @@ function renderIngredientsByPart(ingredients) {
     groups[p].push(ing);
   });
 
-  // If only one part (Stock), render flat — no group header clutter
   if (order.length === 1 && order[0] === 'Stock') {
-    return `<table class="ingredient-table" id="ing-table-view">
+    return `<div class="glass-panel"><table class="ingredient-table" id="ing-table-view">
       <thead><tr>
-        <th style="text-align:left;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-faint);padding:6px 0;">Chemical</th>
-        <th style="text-align:right;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-faint);padding:6px 0;">Quantity</th>
-        <th class="scaled-col" id="scaled-header" style="display:none;padding:6px 0;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">Scaled</th>
+        <th style="text-align:left;">Chemical</th>
+        <th style="text-align:right;">Quantity</th>
+        <th class="scaled-col" id="scaled-header" style="display:none;">Scaled</th>
       </tr></thead>
       ${ingredients.map((ing, idx) => `
         <tr>
-          <td>${ing.name}</td>
-          <td style="text-align:right;color:var(--gold-dim);">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}</td>
+          <td><strong>${ing.name}</strong></td>
+          <td style="text-align:right;color:var(--accent-dim);font-family:'JetBrains Mono',monospace;font-size:13px;">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}</td>
           <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
         </tr>`).join('')}
-    </table>`;
+    </table></div>`;
   }
 
-  // Multi-part: render with labelled group headers
   let globalIdx = 0;
   return order.map(part => {
-    const palette = PART_PALETTE[part] || { color:'#c8aa64', bg:'rgba(200,170,100,0.08)' };
+    const palette = PART_PALETTE[part] || { color:'#00e5ff', bg:'rgba(0,229,255,0.08)' };
     const rows = groups[part].map(ing => {
       const idx = globalIdx++;
       return `
       <tr>
-        <td style="padding-left:12px;">${ing.name}</td>
-        <td style="text-align:right;color:${palette.color};opacity:0.8;font-variant-numeric:tabular-nums;">
+        <td style="padding-left:12px;"><strong>${ing.name}</strong></td>
+        <td style="text-align:right;color:${palette.color};opacity:0.85;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace;font-size:13px;">
           ${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' ' + ing.unit : (ing.unit === 'to make' ? ' — to make' : '')}
         </td>
         <td class="scaled-col" id="scaled-${idx}" style="display:none">—</td>
       </tr>`;
     }).join('');
     return `
-      <div style="margin-bottom:4px;">
-        <div style="
-          font-size:9px;letter-spacing:0.25em;text-transform:uppercase;
-          color:${palette.color};background:${palette.bg};
-          border-left:2px solid ${palette.color};
-          padding:5px 10px;margin-bottom:0;font-family:'DM Mono',monospace;">
+      <div class="glass-panel" style="margin-bottom:8px;">
+        <div class="part-header" style="color:${palette.color};background:${palette.bg};border-left-color:${palette.color};margin-bottom:8px;">
           ${part}
         </div>
-        <table class="ingredient-table" style="margin-bottom:8px;">${rows}</table>
+        <table class="ingredient-table">${rows}</table>
       </div>`;
   }).join('');
 }
@@ -1804,12 +1873,14 @@ function openFormula(id) {
     ${f.ingredients.length ? `
     <div class="detail-section" id="scale-section">
       <div class="detail-section-label">Scale Recipe</div>
-      <div class="scale-row">
-        <label for="scale-volume">Scale to</label>
-        <input id="scale-volume" class="search-input" type="number" min="1" placeholder="e.g. 500"
-          oninput="scaleRecipe()" style="width:120px;text-align:right;" />
-        <span class="scale-hint">ml total volume</span>
-        <button class="btn btn-ghost" onclick="clearScale()" title="Clear scaling" style="padding:4px 10px;font-size:10px;">✕ Reset</button>
+      <div class="glass-panel">
+        <div class="scale-row">
+          <label for="scale-volume">Target volume</label>
+          <input id="scale-volume" class="form-input" type="number" min="1" placeholder="e.g. 750"
+            oninput="scaleRecipe()" style="width:120px;text-align:right;" />
+          <span class="scale-hint">ml total volume</span>
+          <button class="btn btn-ghost" onclick="clearScale()" title="Clear scaling" style="padding:4px 10px;font-size:10px;">✕ Reset</button>
+        </div>
       </div>
     </div>` : ''}
     ${(f.temp || f.time) ? `
@@ -1825,8 +1896,20 @@ function openFormula(id) {
       <div class="detail-section-label">Notes</div>
       <div class="detail-text">${f.notes}</div>
     </div>` : ''}
+    <div class="detail-section">
+      <div class="analysis-toggle">
+        <label for="chem-toggle">Show Chemistry Analysis</label>
+        <div class="toggle-switch">
+          <input type="checkbox" id="chem-toggle" onchange="toggleChemAnalysis(${f.id})">
+          <span class="toggle-slider"></span>
+        </div>
+      </div>
+      <div class="analysis-panel" id="chem-analysis-panel">
+        ${renderChemistryAnalysis(f)}
+      </div>
+    </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;flex-wrap:wrap;">
-      <button class="btn btn-ghost" onclick="deleteFormula(${f.id})" style="color:#cc4444;border-color:rgba(196,48,48,0.3);">Delete</button>
+      <button class="btn btn-ghost" onclick="deleteFormula(${f.id})" style="color:var(--red);border-color:rgba(255,68,68,0.3);">Delete</button>
       <button class="btn btn-ghost" onclick="copyFormulaToClipboard(${f.id})">⎘ Copy</button>
       <button class="btn btn-ghost" onclick="exportFormulaPDF(${f.id})">↓ PDF</button>
       <button class="btn btn-ghost" onclick="exportFormulaJPEG(${f.id})">↓ JPEG</button>
@@ -1837,13 +1920,91 @@ function openFormula(id) {
   document.getElementById('view-modal').classList.add('open');
 }
 
+function toggleChemAnalysis(id) {
+  const panel = document.getElementById('chem-analysis-panel');
+  const toggle = document.getElementById('chem-toggle');
+  if (toggle && toggle.checked) {
+    panel.classList.add('visible');
+  } else {
+    panel.classList.remove('visible');
+  }
+}
+
 function closeViewModal(e) {
   if (!e || e.target === document.getElementById('view-modal')) {
     document.getElementById('view-modal').classList.remove('open');
   }
 }
 
-// ─── NEW FORMULA MODAL ───
+// ─── EDIT FORMULA ───
+let editingId = null;
+
+function openEditFormula(id) {
+  const f = formulas.find(x => x.id === id);
+  if (!f) return;
+  editingId = id;
+
+  ingredientRows = [];
+  document.getElementById('nf-name').value    = f.name    || '';
+  document.getElementById('nf-process').value = f.process || '';
+  document.getElementById('nf-category').value= f.category|| '';
+  document.getElementById('nf-status').value  = f.status  || 'Experimental';
+  document.getElementById('nf-version').value = f.version || '';
+  document.getElementById('nf-desc').value    = f.desc    || '';
+  document.getElementById('nf-temp').value    = f.temp    || '';
+  document.getElementById('nf-time').value    = f.time    || '';
+  document.getElementById('nf-notes').value   = f.notes   || '';
+  document.getElementById('nf-ingredients').innerHTML = '';
+
+  (f.ingredients || []).forEach(ing => {
+    const rowId = Date.now() + Math.floor(Math.random()*10000);
+    ingredientRows.push(rowId);
+    const row = document.createElement('div');
+    row.id = `ing-row-${rowId}`;
+    row.style.cssText = 'display:grid;grid-template-columns:90px 1fr 90px 70px 32px;gap:6px;align-items:center;position:relative;';
+    const part   = ing.part   || 'Stock';
+    const unit   = ing.unit   || 'g';
+    const name   = typeof ing === 'string' ? ing : (ing.name   || '');
+    const amount = typeof ing === 'string' ? ''  : ingAmount(ing);
+    const partOptions = ['Stock','Part A','Part B','Part C','Part D','Replen.','Bleach','Fix','Wash']
+      .map(p => `<option value="${p}" ${part===p?'selected':''}>${p}</option>`).join('');
+    const unitOptions = ['g','ml','L','mg','oz','fl oz','tsp','tbsp','parts','drops','% sol','to make']
+      .map(u => `<option value="${u}" ${unit===u?'selected':''}>${u}</option>`).join('');
+    row.innerHTML = `
+      <select class="form-input" id="ing-part-${rowId}" style="width:100%;font-size:10px;padding:6px;" onchange="onPartChange()">${partOptions}</select>
+      <div style="position:relative;">
+        <input class="form-input" id="ing-name-${rowId}" value="${name.replace(/"/g,'&quot;')}" placeholder="Chemical name…" style="width:100%;padding:6px 10px;"
+          autocomplete="off" oninput="chemAutocomplete(this,${rowId})" onkeydown="chemKeydown(event,${rowId})" onblur="setTimeout(()=>hideAC(${rowId}),150)">
+        <div class="ac-dropdown" id="ac-${rowId}"></div>
+      </div>
+      <input class="form-input" id="ing-amt-${rowId}" value="${amount}" placeholder="Qty" style="width:100%;text-align:right;padding:6px 10px;">
+      <select class="form-input" id="ing-unit-${rowId}" style="width:100%;font-size:10px;padding:6px;">${unitOptions}</select>
+      <button class="btn btn-ghost" onclick="removeIngredientRow(${rowId})" style="padding:5px;justify-content:center;color:var(--red);">✕</button>
+    `;
+    document.getElementById('nf-ingredients').appendChild(row);
+  });
+
+  updatePartHeaders();
+
+  document.querySelector('#new-modal .modal-eyebrow').textContent = 'Editing Formula';
+  document.querySelector('#new-modal .modal-title').textContent   = 'Edit Formula';
+  document.querySelector('#new-modal .btn-primary').textContent   = 'Save Changes';
+
+  closeViewModal();
+  document.getElementById('new-modal').classList.add('open');
+}
+
+function closeNewModal(e) {
+  if (!e || e.target === document.getElementById('new-modal')) {
+    document.getElementById('new-modal').classList.remove('open');
+    editingId = null;
+    document.querySelector('#new-modal .modal-eyebrow').textContent = 'New Entry';
+    document.querySelector('#new-modal .modal-title').textContent   = 'Add Formula';
+    document.querySelector('#new-modal .btn-primary').textContent   = 'Save Formula';
+  }
+}
+
+// ─── NEW FORMULA ───
 let ingredientRows = [];
 
 function openNewFormula() {
@@ -1862,6 +2023,12 @@ function openNewFormula() {
   document.getElementById('new-modal').classList.add('open');
 }
 
+const PART_COLORS = {
+  'Stock':'#00e5ff','Part A':'#448aff','Part B':'#ffab40',
+  'Part C':'#00e676','Part D':'#b388ff','Replen.':'#ff8a65',
+  'Bleach':'#ffd54f','Fix':'#80cbc4','Wash':'#90a4ae',
+};
+
 function addIngredientRow(defaultPart) {
   const id = Date.now() + Math.floor(Math.random()*1000);
   ingredientRows.push(id);
@@ -1876,7 +2043,7 @@ function addIngredientRow(defaultPart) {
   row.id = `ing-row-${id}`;
   row.style.cssText = 'display:grid;grid-template-columns:90px 1fr 90px 70px 32px;gap:6px;align-items:center;position:relative;';
   row.innerHTML = `
-    <select class="search-input" id="ing-part-${id}" title="Solution part" style="width:100%;font-size:10px;letter-spacing:0.04em;" onchange="onPartChange()">
+    <select class="form-input" id="ing-part-${id}" title="Solution part" style="width:100%;font-size:10px;padding:6px;" onchange="onPartChange()">
       <option value="Stock"   ${part==='Stock'   ?'selected':''}>Stock</option>
       <option value="Part A"  ${part==='Part A'  ?'selected':''}>Part A</option>
       <option value="Part B"  ${part==='Part B'  ?'selected':''}>Part B</option>
@@ -1888,60 +2055,36 @@ function addIngredientRow(defaultPart) {
       <option value="Wash"    ${part==='Wash'    ?'selected':''}>Wash</option>
     </select>
     <div style="position:relative;">
-      <input class="search-input" id="ing-name-${id}" placeholder="Chemical name…" style="width:100%;"
+      <input class="form-input" id="ing-name-${id}" placeholder="Chemical name…" style="width:100%;padding:6px 10px;"
         autocomplete="off"
         oninput="chemAutocomplete(this, ${id})"
         onkeydown="chemKeydown(event, ${id})"
         onblur="setTimeout(()=>hideAC(${id}), 150)">
       <div class="ac-dropdown" id="ac-${id}"></div>
     </div>
-    <input class="search-input" id="ing-amt-${id}"  placeholder="Qty" style="width:100%;text-align:right;">
-    <select class="search-input" id="ing-unit-${id}" title="Unit" style="width:100%;font-size:10px;">
-      <option value="g">g</option>
-      <option value="ml">ml</option>
-      <option value="L">L</option>
-      <option value="mg">mg</option>
-      <option value="oz">oz</option>
-      <option value="fl oz">fl oz</option>
-      <option value="tsp">tsp</option>
-      <option value="tbsp">tbsp</option>
-      <option value="parts">parts</option>
-      <option value="drops">drops</option>
-      <option value="% sol">% sol</option>
-      <option value="to make">to make</option>
+    <input class="form-input" id="ing-amt-${id}" placeholder="Qty" style="width:100%;text-align:right;padding:6px 10px;">
+    <select class="form-input" id="ing-unit-${id}" title="Unit" style="width:100%;font-size:10px;padding:6px;">
+      <option value="g">g</option><option value="ml">ml</option><option value="L">L</option>
+      <option value="mg">mg</option><option value="oz">oz</option><option value="fl oz">fl oz</option>
+      <option value="tsp">tsp</option><option value="tbsp">tbsp</option><option value="parts">parts</option>
+      <option value="drops">drops</option><option value="% sol">% sol</option><option value="to make">to make</option>
     </select>
-    <button class="btn btn-ghost" onclick="removeIngredientRow(${id})" style="padding:5px;justify-content:center;color:#cc4444;" title="Remove">✕</button>
+    <button class="btn btn-ghost" onclick="removeIngredientRow(${id})" style="padding:5px;justify-content:center;color:var(--red);" title="Remove">✕</button>
   `;
   document.getElementById('nf-ingredients').appendChild(row);
   updatePartHeaders();
 }
 
-// Re-colour part header labels whenever part dropdown changes
-function onPartChange() {
-  updatePartHeaders();
-}
-
-const PART_COLORS = {
-  'Stock':   '#c8aa64',
-  'Part A':  '#4a9eff',
-  'Part B':  '#e8a030',
-  'Part C':  '#6ab04c',
-  'Part D':  '#cc88ff',
-  'Replen.': '#ff8844',
-  'Bleach':  '#ffdd44',
-  'Fix':     '#88cccc',
-  'Wash':    '#aaaaaa',
-};
+function onPartChange() { updatePartHeaders(); }
 
 function updatePartHeaders() {
-  // Inject subtle part-group colour cues on each row
   ingredientRows.forEach(id => {
     const sel = document.getElementById(`ing-part-${id}`);
     const row = document.getElementById(`ing-row-${id}`);
     if (sel && row) {
-      const col = PART_COLORS[sel.value] || '#c8aa64';
+      const col = PART_COLORS[sel.value] || '#00e5ff';
       sel.style.color = col;
-      sel.style.borderColor = col + '55';
+      sel.style.borderColor = col + '44';
       row.style.borderLeft = `2px solid ${col}33`;
       row.style.paddingLeft = '6px';
     }
@@ -1969,7 +2112,6 @@ function saveFormula() {
   })).filter(i => i.name);
 
   if (editingId) {
-    // Update existing formula
     const idx = formulas.findIndex(x => x.id === editingId);
     if (idx !== -1) {
       formulas[idx] = { ...formulas[idx], name, process, category,
@@ -1992,12 +2134,9 @@ function saveFormula() {
     return;
   }
 
-  const colors = ['#c8aa64','#e8a030','#a06030','#4488aa','#8844aa','#44aa88','#888888'];
+  const colors = ['#00e5ff','#ffab40','#b388ff','#00e676','#ff4081','#78909c','#ffd54f'];
   const formula = {
-    id: Date.now(),
-    name,
-    process,
-    category,
+    id: Date.now(), name, process, category,
     status: document.getElementById('nf-status').value,
     version: document.getElementById('nf-version').value || '1.0',
     desc: document.getElementById('nf-desc').value.trim(),
@@ -2025,7 +2164,7 @@ function deleteFormula(id) {
   renderGrid();
 }
 
-// ─── COPY FORMULA TO CLIPBOARD ───
+// ─── COPY ───
 function copyFormulaToClipboard(id) {
   const f = formulas.find(x => x.id === id);
   if (!f) return;
@@ -2050,7 +2189,7 @@ function copyFormulaToClipboard(id) {
   });
 }
 
-// ─── EXPORT ───
+// ─── EXPORT JSON ───
 function exportJSON() {
   const blob = new Blob([JSON.stringify(formulas, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -2088,7 +2227,6 @@ function importJSON(event) {
 
       if (!confirm(msg)) return;
 
-      // Reassign IDs to avoid collisions
       newOnes.forEach(f => { f.id = Date.now() + Math.random(); });
       formulas = [...newOnes, ...formulas];
       newOnes.forEach(f => learnChemicals(f.ingredients || []));
@@ -2104,87 +2242,73 @@ function importJSON(event) {
   reader.readAsText(file);
 }
 
-// ─── JPEG EXPORT (single formula card) ───
+// ─── JPEG EXPORT ───
 async function exportFormulaJPEG(id) {
   const f = formulas.find(x => x.id === id);
   if (!f) return;
 
-  // Build an off-screen render card
   const card = document.createElement('div');
   card.style.cssText = `
     position:fixed; left:-9999px; top:0;
     width:600px; padding:40px;
-    background:#100f0a;
-    font-family:'DM Mono',monospace;
-    color:#e8e0cc;
-    border: 1px solid rgba(200,170,100,0.3);
+    background:#0b0f14;
+    font-family:'Inter',sans-serif;
+    color:#e6edf3;
+    border: 1px solid rgba(255,255,255,0.1);
   `;
   card.innerHTML = `
-    <div style="border-left:3px solid ${f.color||'#c8aa64'};padding-left:20px;margin-bottom:28px;">
-      <div style="font-size:10px;letter-spacing:0.3em;color:rgba(200,170,100,0.5);text-transform:uppercase;margin-bottom:8px;">${f.process} · ${f.category}</div>
-      <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:#f5f0e8;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;">${f.name}</div>
-      <div style="font-size:10px;letter-spacing:0.1em;color:rgba(200,170,100,0.4);">v${f.version||'1.0'} · ${f.status}</div>
+    <div style="border-left:3px solid ${f.color||'#00e5ff'};padding-left:20px;margin-bottom:28px;">
+      <div style="font-size:10px;letter-spacing:0.3em;color:rgba(0,229,255,0.5);text-transform:uppercase;margin-bottom:8px;">${f.process} · ${f.category}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:#f0f6fc;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;">${f.name}</div>
+      <div style="font-size:10px;letter-spacing:0.1em;color:rgba(154,167,178,0.6);">v${f.version||'1.0'} · ${f.status}</div>
     </div>
-    ${f.desc ? `<div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(232,224,204,0.6);line-height:1.7;margin-bottom:28px;">${f.desc}</div>` : ''}
-    <div style="margin-bottom:8px;font-size:9px;letter-spacing:0.3em;color:rgba(200,170,100,0.5);text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid rgba(200,170,100,0.12);">Ingredients</div>
+    ${f.desc ? `<div style="font-size:14px;font-style:italic;color:rgba(154,167,178,0.7);line-height:1.7;margin-bottom:28px;">${f.desc}</div>` : ''}
+    <div style="margin-bottom:8px;font-size:9px;letter-spacing:0.3em;color:rgba(0,229,255,0.5);text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08);">Ingredients</div>
     ${(() => {
-      const groups = {};
-      const order  = [];
+      const groups = {}; const order = [];
       f.ingredients.forEach(ing => {
         const p = ing.part || 'Stock';
         if (!groups[p]) { groups[p] = []; order.push(p); }
         groups[p].push(ing);
       });
-      const palette = {
-        'Stock':'#c8aa64','Part A':'#4a9eff','Part B':'#e8a030',
-        'Part C':'#6ab04c','Part D':'#cc88ff','Replen.':'#ff8844',
-        'Bleach':'#ffdd44','Fix':'#88cccc','Wash':'#aaaaaa'
-      };
+      const palette = {'Stock':'#00e5ff','Part A':'#448aff','Part B':'#ffab40','Part C':'#00e676','Part D':'#b388ff','Replen.':'#ff8a65','Bleach':'#ffd54f','Fix':'#80cbc4','Wash':'#90a4ae'};
       if (order.length === 1 && order[0] === 'Stock') {
         return f.ingredients.map(ing => `
-          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(200,170,100,0.07);">
-            <span style="color:#e8e0cc;">${ing.name}</span>
-            <span style="color:rgba(200,170,100,0.6);">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:#e6edf3;font-weight:600;">${ing.name}</span>
+            <span style="color:rgba(0,229,255,0.6);font-family:'JetBrains Mono',monospace;font-size:13px;">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
           </div>`).join('');
       }
       return order.map(part => {
-        const col = palette[part] || '#c8aa64';
+        const col = palette[part] || '#00e5ff';
         return `
           <div style="font-size:8px;letter-spacing:0.25em;text-transform:uppercase;color:${col};border-left:2px solid ${col};padding:4px 8px;margin:10px 0 4px;background:${col}15;">${part}</div>
           ${groups[part].map(ing => `
-            <div style="display:flex;justify-content:space-between;padding:7px 0 7px 10px;border-bottom:1px solid rgba(200,170,100,0.06);">
-              <span style="color:#e8e0cc;">${ing.name}</span>
-              <span style="color:${col};opacity:0.8;">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+            <div style="display:flex;justify-content:space-between;padding:7px 0 7px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <span style="color:#e6edf3;font-weight:600;">${ing.name}</span>
+              <span style="color:${col};opacity:0.8;font-family:'JetBrains Mono',monospace;font-size:13px;">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
             </div>`).join('')}`;
       }).join('');
     })()}
     ${(f.temp || f.time) ? `
     <div style="display:flex;gap:16px;margin-top:24px;">
-      ${f.temp ? `<div style="flex:1;padding:12px 16px;border:1px solid rgba(200,170,100,0.12);"><div style="font-size:8px;letter-spacing:0.25em;color:rgba(232,224,204,0.25);text-transform:uppercase;margin-bottom:4px;">Temperature</div><div style="font-size:15px;color:#e8e0cc;">${f.temp}</div></div>` : ''}
-      ${f.time ? `<div style="flex:1;padding:12px 16px;border:1px solid rgba(200,170,100,0.12);"><div style="font-size:8px;letter-spacing:0.25em;color:rgba(232,224,204,0.25);text-transform:uppercase;margin-bottom:4px;">Dev Time</div><div style="font-size:15px;color:#e8e0cc;">${f.time}</div></div>` : ''}
+      ${f.temp ? `<div style="flex:1;padding:12px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;"><div style="font-size:8px;letter-spacing:0.25em;color:rgba(154,167,178,0.4);text-transform:uppercase;margin-bottom:4px;">Temperature</div><div style="font-size:15px;color:#e6edf3;">${f.temp}</div></div>` : ''}
+      ${f.time ? `<div style="flex:1;padding:12px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;"><div style="font-size:8px;letter-spacing:0.25em;color:rgba(154,167,178,0.4);text-transform:uppercase;margin-bottom:4px;">Dev Time</div><div style="font-size:15px;color:#e6edf3;">${f.time}</div></div>` : ''}
     </div>` : ''}
-    ${f.notes ? `<div style="margin-top:20px;padding:14px 16px;border-left:2px solid rgba(200,170,100,0.2);background:rgba(200,170,100,0.03);font-size:12px;color:rgba(232,224,204,0.5);line-height:1.6;">${f.notes}</div>` : ''}
-    <div style="margin-top:32px;padding-top:16px;border-top:1px solid rgba(200,170,100,0.1);font-size:9px;letter-spacing:0.2em;color:rgba(200,170,100,0.3);text-transform:uppercase;">Formulae · Film Lab Chemical Database</div>
+    ${f.notes ? `<div style="margin-top:20px;padding:14px 16px;border-left:2px solid rgba(0,229,255,0.2);background:rgba(0,229,255,0.03);border-radius:0 8px 8px 0;font-size:12px;color:rgba(154,167,178,0.6);line-height:1.6;">${f.notes}</div>` : ''}
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);font-size:9px;letter-spacing:0.2em;color:rgba(0,229,255,0.3);text-transform:uppercase;">Formulae · Chemical Database</div>
   `;
   document.body.appendChild(card);
 
   try {
-    const canvas = await html2canvas(card, {
-      backgroundColor: '#100f0a',
-      scale: 2,
-      useCORS: true,
-      logging: false
-    });
+    const canvas = await html2canvas(card, { backgroundColor: '#0b0f14', scale: 2, useCORS: true, logging: false });
     const a = document.createElement('a');
     a.download = `${f.name.replace(/\s+/g,'-').toLowerCase()}-formula.jpg`;
     a.href = canvas.toDataURL('image/jpeg', 0.92);
     a.click();
     showToast(`✓ Exported ${f.name} as JPEG`);
-  } catch(err) {
-    alert('JPEG export failed. Try again.');
-  } finally {
-    document.body.removeChild(card);
-  }
+  } catch(err) { alert('JPEG export failed.'); }
+  finally { document.body.removeChild(card); }
 }
 
 // ─── SCALE RECIPE ───
@@ -2194,13 +2318,8 @@ function scaleRecipe() {
   if (!f) return;
 
   const ings = f.ingredients || [];
+  if (!targetVol || targetVol <= 0) { clearScale(); return; }
 
-  if (!targetVol || targetVol <= 0) {
-    clearScale();
-    return;
-  }
-
-  // Convert an ingredient's amount to ml (handles both ml and L units)
   function toMl(i) {
     const unit = (i.unit || '').toLowerCase();
     const n = parseFloat(ingAmount(i));
@@ -2210,9 +2329,6 @@ function scaleRecipe() {
     return 0;
   }
 
-  // In chemistry, "Water to make X" means total volume = X.
-  // Other liquid ingredients are already accounted for within that total.
-  // Group ingredients by part and use water/solvent entries to define each part's volume.
   function isSolvent(i) {
     const name = (i.name || '').toLowerCase();
     return name.includes('water') || name.includes('deionised') || name.includes('deionized');
@@ -2224,25 +2340,19 @@ function scaleRecipe() {
     if (!parts[part]) parts[part] = { water: 0, liquid: 0 };
     const ml = toMl(i);
     if (ml > 0) {
-      if (isSolvent(i)) {
-        parts[part].water += ml;
-      } else {
-        parts[part].liquid += ml;
-      }
+      if (isSolvent(i)) { parts[part].water += ml; }
+      else { parts[part].liquid += ml; }
     }
   });
 
   let baseMl = 0;
   for (const p of Object.values(parts)) {
-    // If a part has a water entry, it defines that part's total volume
     baseMl += p.water > 0 ? p.water : p.liquid;
   }
-  // Fall back to 1000ml if no volumetric ingredients found
   if (baseMl <= 0) baseMl = 1000;
 
   const factor = targetVol / baseMl;
 
-  // Show all scaled columns
   document.querySelectorAll('.scaled-col').forEach(el => el.style.display = '');
 
   ings.forEach((i, idx) => {
@@ -2252,7 +2362,6 @@ function scaleRecipe() {
     const n = parseFloat(ingAmount(i));
     if (!isNaN(n)) {
       const scaled = n * factor;
-      // Format: up to 4 decimal places, strip trailing zeros
       const formatted = scaled < 0.01 ? scaled.toExponential(2) : Number(scaled.toFixed(4));
       cell.textContent = formatted + ' ' + (i.unit || '');
     } else {
@@ -2275,79 +2384,66 @@ async function exportFormulaPDF(id) {
   const f = formulas.find(x => x.id === id);
   if (!f) return;
 
-  // Build off-screen card (same as JPEG but white background for PDF)
   const card = document.createElement('div');
   card.style.cssText = `
     position:fixed; left:-9999px; top:0;
     width:600px; padding:40px;
     background:#ffffff;
-    font-family:'DM Mono',monospace;
-    color:#1a1410;
+    font-family:'Inter',sans-serif;
+    color:#1a2332;
   `;
   card.innerHTML = `
-    <div style="border-left:3px solid ${f.color||'#8a6a20'};padding-left:20px;margin-bottom:28px;">
-      <div style="font-size:10px;letter-spacing:0.3em;color:#8a6a20;text-transform:uppercase;margin-bottom:8px;">${f.process} · ${f.category}</div>
-      <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:#1a1410;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;">${f.name}</div>
-      <div style="font-size:10px;letter-spacing:0.1em;color:#8a8070;">v${f.version||'1.0'} · ${f.status}</div>
+    <div style="border-left:3px solid ${f.color||'#0097a7'};padding-left:20px;margin-bottom:28px;">
+      <div style="font-size:10px;letter-spacing:0.3em;color:#0097a7;text-transform:uppercase;margin-bottom:8px;">${f.process} · ${f.category}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:#1a2332;letter-spacing:-0.02em;line-height:1.1;margin-bottom:4px;">${f.name}</div>
+      <div style="font-size:10px;letter-spacing:0.1em;color:#888;">v${f.version||'1.0'} · ${f.status}</div>
     </div>
-    ${f.desc ? `<div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#555;line-height:1.7;margin-bottom:28px;">${f.desc}</div>` : ''}
-    <div style="margin-bottom:8px;font-size:9px;letter-spacing:0.3em;color:#8a8070;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid #ddd;">Ingredients</div>
+    ${f.desc ? `<div style="font-size:14px;font-style:italic;color:#666;line-height:1.7;margin-bottom:28px;">${f.desc}</div>` : ''}
+    <div style="margin-bottom:8px;font-size:9px;letter-spacing:0.3em;color:#888;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid #ddd;">Ingredients</div>
     ${(() => {
-      const groups = {};
-      const order  = [];
+      const groups = {}; const order = [];
       f.ingredients.forEach(ing => {
         const p = ing.part || 'Stock';
         if (!groups[p]) { groups[p] = []; order.push(p); }
         groups[p].push(ing);
       });
-      const palette = {
-        'Stock':'#8a6a20','Part A':'#2a6eb8','Part B':'#c08020',
-        'Part C':'#4a8a34','Part D':'#9060cc','Replen.':'#cc6622',
-        'Bleach':'#b8a020','Fix':'#508888','Wash':'#666666'
-      };
+      const palette = {'Stock':'#0097a7','Part A':'#2a6eb8','Part B':'#c08020','Part C':'#4a8a34','Part D':'#7040b0','Replen.':'#cc6622','Bleach':'#b8a020','Fix':'#508888','Wash':'#666666'};
       if (order.length === 1 && order[0] === 'Stock') {
         return f.ingredients.map(ing => `
           <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
-            <span style="color:#1a1410;">${ing.name}</span>
-            <span style="color:#8a6a20;">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
+            <span style="color:#1a2332;font-weight:600;">${ing.name}</span>
+            <span style="color:#0097a7;">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
           </div>`).join('');
       }
       return order.map(part => {
-        const col = palette[part] || '#8a6a20';
+        const col = palette[part] || '#0097a7';
         return `
-          <div style="font-size:8px;letter-spacing:0.25em;text-transform:uppercase;color:${col};border-left:2px solid ${col};padding:4px 8px;margin:10px 0 4px;background:${col}15;">${part}</div>
+          <div style="font-size:8px;letter-spacing:0.25em;text-transform:uppercase;color:${col};border-left:2px solid ${col};padding:4px 8px;margin:10px 0 4px;background:${col}10;">${part}</div>
           ${groups[part].map(ing => `
             <div style="display:flex;justify-content:space-between;padding:7px 0 7px 10px;border-bottom:1px solid #eee;">
-              <span style="color:#1a1410;">${ing.name}</span>
+              <span style="color:#1a2332;font-weight:600;">${ing.name}</span>
               <span style="color:${col};">${ingAmount(ing)}${ing.unit && ing.unit !== 'to make' ? ' '+ing.unit : ''}</span>
             </div>`).join('')}`;
       }).join('');
     })()}
     ${(f.temp || f.time) ? `
     <div style="display:flex;gap:16px;margin-top:24px;">
-      ${f.temp ? `<div style="flex:1;padding:12px 16px;border:1px solid #ddd;"><div style="font-size:8px;letter-spacing:0.25em;color:#8a8070;text-transform:uppercase;margin-bottom:4px;">Temperature</div><div style="font-size:15px;color:#1a1410;">${f.temp}</div></div>` : ''}
-      ${f.time ? `<div style="flex:1;padding:12px 16px;border:1px solid #ddd;"><div style="font-size:8px;letter-spacing:0.25em;color:#8a8070;text-transform:uppercase;margin-bottom:4px;">Dev Time</div><div style="font-size:15px;color:#1a1410;">${f.time}</div></div>` : ''}
+      ${f.temp ? `<div style="flex:1;padding:12px 16px;border:1px solid #ddd;border-radius:8px;"><div style="font-size:8px;letter-spacing:0.25em;color:#888;text-transform:uppercase;margin-bottom:4px;">Temperature</div><div style="font-size:15px;color:#1a2332;">${f.temp}</div></div>` : ''}
+      ${f.time ? `<div style="flex:1;padding:12px 16px;border:1px solid #ddd;border-radius:8px;"><div style="font-size:8px;letter-spacing:0.25em;color:#888;text-transform:uppercase;margin-bottom:4px;">Dev Time</div><div style="font-size:15px;color:#1a2332;">${f.time}</div></div>` : ''}
     </div>` : ''}
-    ${f.notes ? `<div style="margin-top:20px;padding:14px 16px;border-left:2px solid #ddd;background:#fafaf6;font-size:12px;color:#666;line-height:1.6;">${f.notes}</div>` : ''}
-    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #ddd;font-size:9px;letter-spacing:0.2em;color:#bbb;text-transform:uppercase;">Formulae · Film Lab Chemical Database</div>
+    ${f.notes ? `<div style="margin-top:20px;padding:14px 16px;border-left:2px solid #ddd;background:#fafafa;border-radius:0 8px 8px 0;font-size:12px;color:#666;line-height:1.6;">${f.notes}</div>` : ''}
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #ddd;font-size:9px;letter-spacing:0.2em;color:#bbb;text-transform:uppercase;">Formulae · Chemical Database</div>
   `;
   document.body.appendChild(card);
 
   try {
-    const canvas = await html2canvas(card, {
-      backgroundColor: '#ffffff',
-      scale: 2,
-      useCORS: true,
-      logging: false
-    });
-
+    const canvas = await html2canvas(card, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
     const margin = 15;
     const usable = pageW - margin * 2;
-
     const imgData = canvas.toDataURL('image/png');
     const ratio = canvas.height / canvas.width;
     const imgW = usable;
@@ -2360,14 +2456,10 @@ async function exportFormulaPDF(id) {
       const scale = availH / imgH;
       pdf.addImage(imgData, 'PNG', margin, margin, imgW * scale, availH);
     }
-
     pdf.save(`${f.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}-formula.pdf`);
     showToast(`✓ Exported ${f.name} as PDF`);
-  } catch(err) {
-    alert('PDF export failed. Try again.');
-  } finally {
-    document.body.removeChild(card);
-  }
+  } catch(err) { alert('PDF export failed.'); }
+  finally { document.body.removeChild(card); }
 }
 
 function updateBackupStatus() {
@@ -2389,78 +2481,57 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-// ─── CHEMICAL AUTOCOMPLETE ENGINE ───
-
-// Seed list — curated darkroom chemicals that bootstrap the experience
-// Users' own typed chemicals get added on top of this and persist
+// ─── CHEMICAL AUTOCOMPLETE ───
 const SEED_CHEMICALS = [
-  // Developing agents
   "Metol","Hydroquinone","Phenidone","Dimezone S","Pyrocatechol","Pyrogallol",
   "PMK Pyrogallol","p-Aminophenol","Ascorbic Acid","Sodium Ascorbate","Glycin",
   "Amidol","CD-2","CD-3","CD-4","CD-6","Phenidone-A","Isoascorbic Acid",
-  // Preservatives
   "Sodium Sulfite","Potassium Sulfite","Sodium Metabisulfite","Potassium Metabisulfite",
   "Sodium Bisulfite","Hydroxylamine Sulfate","Hydroxylamine Hydrochloride",
   "Propylene Glycol","Diethylene Glycol",
-  // Accelerators / alkalis
   "Sodium Carbonate","Potassium Carbonate","Borax","Boric Acid","Kodalk",
   "Sodium Metaborate","Sodium Hydroxide","Potassium Hydroxide","Lithium Hydroxide",
   "Trisodium Phosphate","Disodium Phosphate","Triethanolamine","Diethanolamine",
   "Sodium Silicate","Ammonia","Potassium Bicarbonate","Sodium Bicarbonate",
-  // Restrainers
   "Potassium Bromide","Sodium Bromide","Ammonium Bromide",
   "Potassium Iodide","Sodium Iodide",
   "Benzotriazole","6-Nitrobenzimidazole","5-Methylbenzotriazole",
   "1-Phenyl-5-mercaptotetrazole","Sodium Thiocyanate","Potassium Thiocyanate",
   "Pinakryptol Yellow","Pinakryptol Green",
-  // Fixers & hardeners
   "Sodium Thiosulfate","Ammonium Thiosulfate","Sodium Sulfate",
   "Ammonium Chloride","Ammonium Acetate",
   "Acetic Acid","Potassium Alum","Chrome Alum","Aluminum Chloride",
   "Formaldehyde","Glutaraldehyde","Sodium Acetate",
-  // Bleaches & re-halogenating
   "Potassium Ferricyanide","Potassium Ferrocyanide","Potassium Dichromate",
   "Sodium Dichromate","Potassium Permanganate","Sodium Persulfate",
   "Ammonium Persulfate","Potassium Persulfate","Copper Sulfate",
   "Cupric Chloride","Ferric Chloride","Ferric Nitrate","Ferric EDTA",
   "Ammonium Iron(III) EDTA","PDTA","Hydrochloric Acid","Sulfuric Acid","Nitric Acid",
-  // Chelating agents
   "EDTA","Disodium EDTA","Tetrasodium EDTA","Sodium Gluconate","DTPA","NTA",
   "Sodium Hexametaphosphate","Sodium Tripolyphosphate",
-  // Stabilisers
   "Hexamethylenetetramine","Photo-Flo 200","Polyethylene Glycol 400",
   "Benzyl Alcohol","Potassium Fluoride","Ammonium Fluoride","Citric Acid","Sulfamic Acid",
-  // Toners
   "Sodium Sulfide","Ammonium Polysulfide","Selenium",
   "Gold Chloride","Gold Sodium Thiosulfate","Thiourea","Thiocarbamide",
   "Palladium Chloride","Platinum Chloride","Ferric Oxalate","Ammonium Iron(III) Oxalate",
   "Potassium Oxalate","Ammonium Dichromate","Vanadium Chloride",
-  // Intensifiers & reducers
   "Mercury(II) Chloride","Quinone","Oxalic Acid",
-  // Wet plate
   "USP Collodion","Diethyl Ether","Ethanol","Isopropyl Alcohol",
   "Cadmium Bromide","Cadmium Iodide","Lithium Bromide","Lithium Iodide",
   "Ammonium Iodide","Silver Nitrate","Sandarac Varnish","Dammar Varnish",
   "Bitumen of Judea","Pyroxylin","Lavender Oil",
-  // Dry plate / gelatin emulsion
   "Gelatin","Saponin","Formalin",
-  // Cyanotype
   "Ferric Ammonium Citrate","Hydrogen Peroxide","Tannic Acid","Gallic Acid","Tannin",
-  // Gum / carbon / bromoil
   "Gum Arabic","Potassium Chrome Alum","Linseed Oil","Lithographic Ink",
-  // Solvents
   "Distilled Water","Deionised Water","Water to make","Methanol","Acetone",
   "Glycerin","Dimethyl Sulfoxide",
-  // Wetting agents
   "Agepon","Tween 20","Triton X-100","Sodium Dodecyl Sulfate",
-  // Misc
   "Magnesium Sulfate","Calcium Chloride","Potassium Chloride","Sodium Chloride",
   "Potassium Nitrate","Sodium Nitrate","Tartaric Acid","Malic Acid","Succinic Acid",
   "Phosphoric Acid","Zinc Sulfate","Ferrous Sulfate","Manganese Sulfate",
   "Sodium Tetraborate","Lactic Acid",
 ];
 
-// Returns merged unique sorted list: learned (used most) first, then seeds
 function getChemicalLibrary() {
   const learned = JSON.parse(localStorage.getItem('formulae_chemicals') || '[]');
   const learnedSet = new Set(learned.map(s => s.toLowerCase()));
@@ -2468,7 +2539,6 @@ function getChemicalLibrary() {
   return [...learned, ...seeds];
 }
 
-// Called when a formula is saved — extracts & persists new chemical names
 function learnChemicals(ingredients) {
   const existing = JSON.parse(localStorage.getItem('formulae_chemicals') || '[]');
   const existingLower = new Set(existing.map(s => s.toLowerCase()));
@@ -2480,13 +2550,11 @@ function learnChemicals(ingredients) {
   }
 }
 
-// Also learn from formulas already in storage on boot
 function learnFromExistingFormulas() {
   formulas.forEach(f => learnChemicals(f.ingredients || []));
 }
 
-// Active autocomplete state
-let acFocus = {}; // { rowId: index }
+let acFocus = {};
 
 function chemAutocomplete(input, rowId) {
   const query = input.value.trim();
@@ -2501,7 +2569,6 @@ function chemAutocomplete(input, rowId) {
 
   acFocus[rowId] = -1;
   dd.innerHTML = matches.map((c, i) => {
-    // Highlight matching substring
     const idx = c.toLowerCase().indexOf(q);
     const hi = idx >= 0
       ? c.slice(0,idx) + '<mark>' + c.slice(idx, idx+q.length) + '</mark>' + c.slice(idx+q.length)
@@ -2536,7 +2603,6 @@ function chemKeydown(e, rowId) {
       const input = document.getElementById(`ing-name-${rowId}`);
       input.value = focused.dataset.val;
       hideAC(rowId);
-      // Move focus to amount field
       document.getElementById(`ing-amt-${rowId}`)?.focus();
     }
   } else if (e.key === 'Escape') {
@@ -2562,17 +2628,16 @@ updateBackupStatus();
 learnFromExistingFormulas();
 applyTheme(currentTheme);
 
-// Restore view toggle button text
 (function() {
   const btn = document.getElementById('view-toggle');
   if (btn) btn.textContent = viewMode === 'grid' ? '⊞ Grid' : '☰ List';
 })();
 
-// Keyboard shortcut: N for new, Escape to close
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.getElementById('view-modal').classList.remove('open');
     document.getElementById('new-modal').classList.remove('open');
+    closeSidebar();
   }
   if (e.key === 'n' && !e.target.matches('input,textarea,select')) {
     openNewFormula();
